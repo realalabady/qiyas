@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow anyone to read published quizzes
+    match /quizzes/{document=**} {
+      allow read: if resource.data.published == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Allow anyone to read published articles
+    match /articles/{document=**} {
+      allow read: if resource.data.published == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Allow anyone to read categories
+    match /categories/{document=**} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Admin-only collections
+    match /admins/{uid} {
+      allow read, write: if isAdmin() || request.auth.uid == uid;
+    }
+
+    match /analytics/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /media/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive == true;
+    }
+  }
+}

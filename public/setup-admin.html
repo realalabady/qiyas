@@ -1,0 +1,18 @@
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"; import {
+getFirestore, doc, setDoc } from
+"https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // Firebase
+config from your project const firebaseConfig = { apiKey:
+"AIzaSyCZjrpuMncFBmUWkCJb5kjHa4nCRM1YZiE", authDomain:
+"qiyas-5da06.firebaseapp.com", projectId: "qiyas-5da06", storageBucket:
+"qiyas-5da06.firebasestorage.app", messagingSenderId: "1080911495333", appId:
+"1:1080911495333:web:39908d926ce064a0308d4c", measurementId: "G-92T9FV514E" };
+console.log("🔧 Setting up admin user...\n"); const app =
+initializeApp(firebaseConfig); const db = getFirestore(app); const uid =
+"VLr9B3Yc1GOqgox3A7uptwGWOwH3"; const email = "admin@qiyas.local"; try { await
+setDoc(doc(db, "admins", uid), { email: email, role: "super_admin", isActive:
+true, createdAt: new Date().toISOString(), }); console.log("✅ Admin user
+created successfully!\n"); console.log("📧 Email: admin@qiyas.local");
+console.log("🔐 Role: super_admin"); console.log("✓ Status: Active\n");
+console.log("You can now login to the admin panel at /admin/login"); } catch
+(error) { console.error("❌ Error:", error.message); }
