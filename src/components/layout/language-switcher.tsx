@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <Button
@@ -13,7 +13,7 @@ export function LanguageSwitcher() {
       className="gap-2"
     >
       <Globe className="w-4 h-4" />
-      <span>{language === "en" ? "العربية" : "English"}</span>
+      <span>{language === "en" ? t("lang.switch_to_ar") : t("lang.switch_to_en")}</span>
     </Button>
   );
 }

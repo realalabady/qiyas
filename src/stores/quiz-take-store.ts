@@ -21,7 +21,7 @@ interface QuizTakeStore {
   nextQuestion: () => void;
   previousQuestion: () => void;
   goToQuestion: (index: number) => void;
-  calculateResult: () => void;
+  calculateResult: () => QuizResult | null;
   resetQuiz: () => void;
 
   // Queries
@@ -96,15 +96,11 @@ export const useQuizTakeStore = create<QuizTakeStore>((set, get) => ({
 
   calculateResult: () => {
     const { engine } = get();
-    if (!engine) return;
+    if (!engine) return null;
 
-    set({ isCalculating: true });
-
-    // Simulate calculation delay for UX
-    setTimeout(() => {
-      const result = engine.calculateResult();
-      set({ result, isCalculating: false });
-    }, 500);
+    const result = engine.calculateResult();
+    set({ result, isCalculating: false });
+    return result;
   },
 
   resetQuiz: () => {

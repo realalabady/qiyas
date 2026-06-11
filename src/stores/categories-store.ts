@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface Category {
   id: string;
@@ -10,35 +11,15 @@ export interface Category {
   createdAt: Date;
 }
 
-const DEFAULT_CATEGORIES: Category[] = [
-  {
-    id: "cat-1",
-    name: "Personality Tests",
-    slug: "personality-tests",
-    icon: "🧠",
-    description: "Discover your personality traits and characteristics",
-    color: "#ec4899",
-    createdAt: new Date(),
-  },
-  {
-    id: "cat-2",
-    name: "IQ Tests",
-    slug: "iq-tests",
-    icon: "🎓",
-    description: "Test your intelligence and cognitive abilities",
-    color: "#f59e0b",
-    createdAt: new Date(),
-  },
-  {
-    id: "cat-3",
-    name: "Entertainment",
-    slug: "entertainment",
-    icon: "🎬",
-    description: "Fun quizzes about movies, TV shows, and entertainment",
-    color: "#8b5cf6",
-    createdAt: new Date(),
-  },
-];
+const normalizeCategory = (raw: Partial<Category>): Category => ({
+  id: raw.id || `cat-${Date.now()}`,
+  name: raw.name || "",
+  slug: raw.slug || "",
+  icon: raw.icon || "🧠",
+  description: raw.description || "",
+  color: raw.color || "#ec4899",
+  createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+});
 
 interface CategoriesStore {
   categories: Category[];
@@ -48,33 +29,51 @@ interface CategoriesStore {
   getCategories: () => Category[];
 }
 
-export const useCategories = create<CategoriesStore>((set, get) => ({
-  categories: DEFAULT_CATEGORIES,
+export const useCategories = create<CategoriesStore>()(
+  persist(
+    (set, get) => ({
+      categories: [],
 
-  addCategory: (category) => {
-    const newCategory: Category = {
-      ...category,
-      id: `cat-${Date.now()}`,
-      createdAt: new Date(),
-    };
-    set((state) => ({
-      categories: [...state.categories, newCategory],
-    }));
-  },
+      addCategory: (category) => {
+        const newCategory: Category = {
+          ...category,
+          id: `cat-${Date.now()}`,
+          createdAt: new Date(),
+        };
+        set((state) => ({
+          categories: [...state.categories, newCategory],
+        }));
+      },
 
-  updateCategory: (id, updates) => {
-    set((state) => ({
-      categories: state.categories.map((cat) =>
-        cat.id === id ? { ...cat, ...updates } : cat,
-      ),
-    }));
-  },
+      updateCategory: (id, updates) => {
+        set((state) => ({
+          categories: state.categories.map((cat) =>
+            cat.id === id ? { ...cat, ...updates } : cat,
+          ),
+        }));
+      },
 
-  deleteCategory: (id) => {
-    set((state) => ({
-      categories: state.categories.filter((cat) => cat.id !== id),
-    }));
-  },
+      deleteCategory: (id) => {
+        set((state) => ({
+          categories: state.categories.filter((cat) => cat.id !== id),
+        }));
+      },
 
-  getCategories: () => get().categories,
-}));
+      getCategories: () => get().categories,
+    }),
+    {
+      name: "qiyas-categories-v1",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ categories: state.categories }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<CategoriesStore> | undefined;
+        return {
+          ...currentState,
+          categories: (persisted?.categories || []).map((cat) =>
+            normalizeCategory(cat),
+          ),
+        };
+      },
+    },
+  ),
+);

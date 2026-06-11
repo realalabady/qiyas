@@ -16,13 +16,13 @@ import PrivacyPage from "@/pages/privacy-page";
 import TermsPage from "@/pages/terms-page";
 import { AdminLoginPage } from "@/pages/admin-login-page";
 import { AdminDashboardPage } from "@/pages/admin-dashboard-page";
-import { AdminAnalyticsPage } from "@/pages/admin-analytics-page";
 import { AdminSettingsPage } from "@/pages/admin-settings-page";
 import { AdminArticlesPage } from "@/pages/admin-articles-page";
 import { AdminQuizzesPage } from "@/pages/admin-quizzes-page";
 import { AdminCategoriesPage } from "@/pages/admin-categories-page";
 import { AdminMediaPage } from "@/pages/admin-media-page";
 import { ArticlesPage } from "@/pages/articles-page";
+import { ArticleDetailPage } from "@/pages/article-detail-page";
 import { ProtectedAdminRoute } from "@/components/auth/protected-admin-route";
 import NotFoundPage from "@/pages/not-found-page";
 
@@ -47,6 +47,7 @@ export const appRouter = createBrowserRouter([
       { path: "about", element: <AboutPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "articles", element: <ArticlesPage /> },
+      { path: "articles/:slug", element: <ArticleDetailPage /> },
       { path: "faq", element: <FAQPage /> },
       { path: "privacy-policy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
@@ -68,7 +69,7 @@ export const appRouter = createBrowserRouter([
           </ProtectedAdminRoute>
         ),
       },
-       {
+      {
         path: "quizzes",
         element: (
           <ProtectedAdminRoute>
@@ -89,14 +90,6 @@ export const appRouter = createBrowserRouter([
         element: (
           <ProtectedAdminRoute>
             <AdminMediaPage />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "analytics",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminAnalyticsPage />
           </ProtectedAdminRoute>
         ),
       },

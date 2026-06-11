@@ -82,7 +82,9 @@ export class QuizEngine {
    * Calculate final result based on quiz type
    */
   public calculateResult(): QuizResult {
-    switch (this.config.type) {
+    const quizType = this.config.type || "weighted_personality";
+
+    switch (quizType) {
       case "weighted_personality":
         return this.calculateWeightedPersonality();
       case "score_based":
@@ -92,7 +94,7 @@ export class QuizEngine {
       case "percentage_matching":
         return this.calculatePercentageMatching();
       default:
-        throw new Error(`Unknown quiz type: ${this.config.type}`);
+        return this.calculateWeightedPersonality();
     }
   }
 
@@ -101,38 +103,8 @@ export class QuizEngine {
    * Aggregates personality weights from all answers
    */
   private calculateWeightedPersonality(): QuizResult {
-    const scores: Record<string, number> = {};
-
-    // Initialize all personality categories
-    this.config.results.forEach((result) => {
-      scores[result.id] = 0;
-    });
-
-    // Aggregate weights from user answers
-    for (const questionId in this.userAnswers) {
-      const answerIds = Array.isArray(this.userAnswers[questionId])
-        ? this.userAnswers[questionId]
-        : [this.userAnswers[questionId]];
-
-      for (const answerId of answerIds) {
-        const answer = this.findAnswer(answerId);
-        if (answer && answer.weights) {
-          for (const [personality, weight] of Object.entries(answer.weights)) {
-            scores[personality] = (scores[personality] || 0) + weight;
-          }
-        }
-      }
-    }
-
-    // Calculate percentages
-    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-    const percentages: Record<string, number> = {};
-
-    for (const [personality, score] of Object.entries(scores)) {
-      percentages[personality] =
-        totalScore > 0 ? Math.round((score / totalScore) * 100) : 0;
-    }
-
+    const scores = this.accumulateWeightedScores();
+    const percentages = this.calculatePercentagesFromTotal(scores);
     return this.buildResult(scores, percentages);
   }
 
@@ -155,7 +127,7 @@ export class QuizEngine {
     }
 
     // Map score to result (find result that matches score range)
-    const primaryResult = this.mapScoreToResult();
+    const primaryResult = this.mapScoreToResult(totalScore);
     const scores = { total: totalScore };
     const percentages = { total: 100 };
 
@@ -176,6 +148,10 @@ export class QuizEngine {
   private calculatePersonalityBased(): QuizResult {
     const resultCounts: Record<string, number> = {};
 
+    this.config.results.forEach((result) => {
+      resultCounts[result.id] = 0;
+    });
+
     // Count how many times each result was selected
     for (const questionId in this.userAnswers) {
       const answerIds = Array.isArray(this.userAnswers[questionId])
@@ -192,27 +168,33 @@ export class QuizEngine {
     }
 
     // Find result with highest count
-    const topResultId = Object.entries(resultCounts).sort(
-      ([, a], [, b]) => b - a,
-    )[0]?.[0];
+    const sortedCounts = Object.entries(resultCounts).sort(([, a], [, b]) => b - a);
+    const topResultId = sortedCounts[0]?.[0];
 
     const primaryResult =
       this.config.results.find((r) => r.id === topResultId) ||
       this.config.results[0];
 
-    const percentages: Record<string, number> = {};
     const totalAnswers = Object.values(this.userAnswers).reduce(
       (sum, ans) => sum + (Array.isArray(ans) ? ans.length : 1),
       0,
     );
-
+    const percentages: Record<string, number> = {};
     for (const [resultId, count] of Object.entries(resultCounts)) {
-      percentages[resultId] = Math.round((count / totalAnswers) * 100);
+      percentages[resultId] =
+        totalAnswers > 0 ? Math.round((count / totalAnswers) * 100) : 0;
     }
+
+    const allResults = this.config.results
+      .map((result) => ({
+        ...result,
+        percentage: percentages[result.id] || 0,
+      }))
+      .sort((a, b) => (b.percentage || 0) - (a.percentage || 0));
 
     return {
       primaryResult,
-      allResults: this.config.results,
+      allResults,
       scores: resultCounts,
       percentages,
       quizId: this.config.id,
@@ -225,38 +207,8 @@ export class QuizEngine {
    * Shows match percentage for each result category
    */
   private calculatePercentageMatching(): QuizResult {
-    const scores: Record<string, number> = {};
-
-    // Initialize all results
-    this.config.results.forEach((result) => {
-      scores[result.id] = 0;
-    });
-
-    // Aggregate weights (similar to weighted_personality)
-    for (const questionId in this.userAnswers) {
-      const answerIds = Array.isArray(this.userAnswers[questionId])
-        ? this.userAnswers[questionId]
-        : [this.userAnswers[questionId]];
-
-      for (const answerId of answerIds) {
-        const answer = this.findAnswer(answerId);
-        if (answer && answer.weights) {
-          for (const [personality, weight] of Object.entries(answer.weights)) {
-            scores[personality] = (scores[personality] || 0) + weight;
-          }
-        }
-      }
-    }
-
-    // Calculate percentages out of max possible
-    const maxScore = Math.max(...Object.values(scores));
-    const percentages: Record<string, number> = {};
-
-    for (const [personality, score] of Object.entries(scores)) {
-      percentages[personality] =
-        maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-    }
-
+    const scores = this.accumulateWeightedScores();
+    const percentages = this.calculatePercentagesFromMax(scores);
     return this.buildResult(scores, percentages);
   }
 
@@ -275,8 +227,10 @@ export class QuizEngine {
       }))
       .sort((a, b) => (b.percentage || 0) - (a.percentage || 0));
 
+    const primaryResult = sortedResults[0] || this.config.results[0];
+
     return {
-      primaryResult: sortedResults[0],
+      primaryResult,
       allResults: sortedResults,
       scores,
       percentages,
@@ -296,13 +250,94 @@ export class QuizEngine {
     return undefined;
   }
 
+  private accumulateWeightedScores(): Record<string, number> {
+    const scores: Record<string, number> = {};
+    this.config.results.forEach((result) => {
+      scores[result.id] = 0;
+    });
+
+    const validResultIds = new Set(this.config.results.map((result) => result.id));
+    for (const questionId in this.userAnswers) {
+      const answerIds = Array.isArray(this.userAnswers[questionId])
+        ? this.userAnswers[questionId]
+        : [this.userAnswers[questionId]];
+
+      for (const answerId of answerIds) {
+        const answer = this.findAnswer(answerId);
+        if (!answer?.weights) continue;
+
+        for (const [resultId, rawWeight] of Object.entries(answer.weights)) {
+          if (!validResultIds.has(resultId)) continue;
+          const weight = Number(rawWeight);
+          if (!Number.isFinite(weight)) continue;
+          scores[resultId] = (scores[resultId] || 0) + weight;
+        }
+      }
+    }
+
+    return scores;
+  }
+
+  private calculatePercentagesFromTotal(
+    scores: Record<string, number>,
+  ): Record<string, number> {
+    const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+    const percentages: Record<string, number> = {};
+
+    for (const [resultId, score] of Object.entries(scores)) {
+      percentages[resultId] = total > 0 ? Math.round((score / total) * 100) : 0;
+    }
+
+    return percentages;
+  }
+
+  private calculatePercentagesFromMax(
+    scores: Record<string, number>,
+  ): Record<string, number> {
+    const maxScore = Math.max(0, ...Object.values(scores));
+    const percentages: Record<string, number> = {};
+
+    for (const [resultId, score] of Object.entries(scores)) {
+      percentages[resultId] =
+        maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    }
+
+    return percentages;
+  }
+
   /**
    * Helper: Map numeric score to result (for score_based)
    */
-  private mapScoreToResult(): Result {
-    // Simple implementation: return first result
-    // In production, you'd map score ranges to specific results
-    return this.config.results[0];
+  private mapScoreToResult(totalScore: number): Result {
+    if (this.config.results.length === 0) {
+      throw new Error("Quiz has no results configured.");
+    }
+
+    if (this.config.results.length === 1) {
+      return this.config.results[0];
+    }
+
+    // Evenly map score ranges across results when explicit ranges are not configured.
+    const maxPossible = this.config.questions.reduce(
+      (sum, question) =>
+        sum +
+        Math.max(
+          0,
+          ...question.answers.map((answer) =>
+            Number.isFinite(answer.score) ? Number(answer.score) : 0,
+          ),
+        ),
+      0,
+    );
+
+    if (maxPossible <= 0) return this.config.results[0];
+
+    const normalized = Math.max(0, Math.min(1, totalScore / maxPossible));
+    const index = Math.min(
+      this.config.results.length - 1,
+      Math.floor(normalized * this.config.results.length),
+    );
+    return this.config.results[index];
   }
 
   /**

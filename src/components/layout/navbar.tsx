@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "./language-switcher";
 import { useLanguage } from "@/lib/i18n";
+import { useTheme } from "@/stores/theme-store";
 
 const NAV_LINKS = [
   { to: "/", label: "nav.home", end: true },
@@ -20,6 +21,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { t } = useLanguage();
+  const { theme } = useTheme();
 
   // Close drawer on route change
   useEffect(() => {
@@ -49,9 +51,17 @@ export function Navbar() {
               to="/"
               className="flex items-center gap-2 font-bold text-lg shrink-0"
             >
-              <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-lg shadow-primary/40">
-                <Zap className="size-4 text-white" />
-              </span>
+              {theme.logo ? (
+                <img
+                  src={theme.logo}
+                  alt="logo"
+                  className="size-8 rounded-xl object-cover border border-border/60"
+                />
+              ) : (
+                <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-lg shadow-primary/40">
+                  <Zap className="size-4 text-white" />
+                </span>
+              )}
               <span className="gradient-text">Qiyas</span>
             </Link>
 
@@ -84,7 +94,7 @@ export function Navbar() {
                 asChild
                 className="hidden sm:inline-flex"
               >
-                <Link to="/search" aria-label="Search">
+                <Link to="/search" aria-label={t("nav.search")}>
                   <Search className="size-4" />
                 </Link>
               </Button>
@@ -98,7 +108,7 @@ export function Navbar() {
               {/* Hamburger */}
               <button
                 onClick={() => setOpen((o) => !o)}
-                aria-label="Toggle menu"
+                aria-label={t("nav.toggle_menu")}
                 className="md:hidden flex size-9 items-center justify-center rounded-xl border border-border/50 bg-white/5 transition hover:bg-white/10"
               >
                 {open ? <X className="size-4" /> : <Menu className="size-4" />}
@@ -154,7 +164,7 @@ export function Navbar() {
                 className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors flex items-center gap-2"
               >
                 <Search className="size-4" />
-                {t("nav.home")}
+                {t("nav.search")}
               </NavLink>
 
               <div className="mt-4 border-t border-border pt-4">

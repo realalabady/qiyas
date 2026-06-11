@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import type { Result } from '@/stores/quizzes-admin-store';
+import { normalizeSlug } from '@/lib/quiz-validation';
 
 interface ResultsEditorProps {
   results: Result[];
@@ -31,11 +32,18 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
 
   const handleAddResult = () => {
     if (!formData.title.trim() || !formData.description.trim()) return;
+    const resultId = normalizeSlug(formData.id || formData.title);
+    if (!resultId) return;
+
+    const hasDuplicateId = results.some(
+      (result) => result.id === resultId && result.id !== editingId,
+    );
+    if (hasDuplicateId) return;
 
     if (editingId) {
       onChange(
         results.map((r) =>
-          r.id === editingId ? { ...formData } as Result : r
+          r.id === editingId ? ({ ...formData, id: resultId } as Result) : r
         )
       );
       setEditingId(null);
@@ -43,7 +51,7 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
       onChange([
         ...results,
         {
-          id: `result-${Date.now()}`,
+          id: resultId,
           title: formData.title,
           description: formData.description,
           image: formData.image,
@@ -93,6 +101,7 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
             >
               <div className="flex-1">
                 <p className="font-medium text-sm">{result.title}</p>
+                <p className="text-[11px] text-primary/80">ID: {result.id}</p>
                 <p className="text-xs text-muted-foreground line-clamp-1">
                   {result.description}
                 </p>
@@ -122,6 +131,20 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
       {/* Form */}
       <Card className="glass-card p-4 bg-white/2">
         <div className="space-y-3">
+          {/* Result Title */}
+          <div>
+            <label className="block text-xs font-medium mb-1">
+              Result ID (used by quiz logic)
+            </label>
+            <Input
+              value={formData.id}
+              onChange={(e) =>
+                setFormData({ ...formData, id: normalizeSlug(e.target.value) })
+              }
+              placeholder="e.g., strategic-thinker"
+            />
+          </div>
+
           {/* Result Title */}
           <div>
             <label className="block text-xs font-medium mb-1">

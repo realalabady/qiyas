@@ -18,6 +18,7 @@ import {
   staggerItem,
 } from "@/lib/motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { validateQuizConfig } from "@/lib/quiz-validation";
 
 export function QuizTakePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -30,11 +31,16 @@ export function QuizTakePage() {
   const [startTime] = useState(Date.now());
 
   // Find the quiz by slug
-  const quiz = quizStore.quizzes.find((q) => q.slug === slug);
+  const quiz = quizStore.getQuizBySlug(slug || "");
+  const validation = quiz ? validateQuizConfig(quiz) : null;
 
   useEffect(() => {
     if (!quiz) {
       navigate("/not-found");
+      return;
+    }
+
+    if (!validation?.isValid) {
       return;
     }
 
@@ -47,7 +53,12 @@ export function QuizTakePage() {
         description: q.description,
         image: q.image,
         answers: q.answers,
-        type: q.type === "personality" || q.type === "scored" ? "single" : q.type === "multiple-select" ? "multiple" : "single",
+        type:
+          q.type === "personality" || q.type === "scored"
+            ? "single"
+            : q.type === "multiple-select"
+              ? "multiple"
+              : "single",
       }));
 
       const quizConfig = {
@@ -60,9 +71,35 @@ export function QuizTakePage() {
       } as any;
       quizTakeStore.loadQuiz(quizConfig);
     }
-  }, [quiz, navigate, quizTakeStore]);
+  }, [quiz, navigate, quizTakeStore, validation?.isValid]);
 
   if (!quiz) return null;
+
+  if (!validation?.isValid) {
+    return (
+      <motion.div
+        variants={pageTransition}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4 pb-12 flex items-center justify-center"
+      >
+        <div className="text-center max-w-xl">
+          <h1 className="text-3xl font-bold text-white mb-4">
+            Quiz Setup Incomplete
+          </h1>
+          <p className="text-slate-400 mb-6">
+            This quiz needs proper question/result mapping before it can produce
+            valid results.
+          </p>
+          <Button onClick={() => navigate(`/quiz/${slug}`)} className="gap-2">
+            <ArrowLeft size={18} />
+            Back to Quiz
+          </Button>
+        </div>
+      </motion.div>
+    );
+  }
 
   const questions = quiz.questions;
   const currentQuestionIndex = quizTakeStore.currentQuestionIndex;
@@ -80,9 +117,7 @@ export function QuizTakePage() {
         className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4 pb-12 flex items-center justify-center"
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">
-            Quiz Not Ready
-          </h1>
+          <h1 className="text-3xl font-bold text-white mb-4">Quiz Not Ready</h1>
           <p className="text-slate-400 mb-6">
             This quiz doesn't have any questions configured yet.
           </p>
@@ -105,35 +140,23 @@ export function QuizTakePage() {
     if (currentQuestionIndex === questions.length - 1) {
       // Quiz completed - calculate result
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      
-      // Get the result from store
-      quizTakeStore.calculateResult();
-      
-      // Use result from store after calculation
-      setTimeout(() => {
-        const result = quizTakeStore.result;
-        
-        if (result) {
-          analyticsStore.recordCompletion({
-            quizId: quiz.id,
-            quizSlug: quiz.slug,
-            resultId: result.primaryResult.id,
-            resultTitle: result.primaryResult.title,
-            completedAt: new Date(),
-            timeSpent,
-            userAgent: navigator.userAgent,
-            source: "direct",
-          });
+      const result = quizTakeStore.calculateResult();
+      if (!result) return;
 
-          // Navigate to results
-          navigate(
-            `/quiz/${slug}/result/${result.primaryResult.id}`,
-            {
-              state: { result, timeSpent },
-            },
-          );
-        }
-      }, 600);
+      analyticsStore.recordCompletion({
+        quizId: quiz.id,
+        quizSlug: quiz.slug,
+        resultId: result.primaryResult.id,
+        resultTitle: result.primaryResult.title,
+        completedAt: new Date(),
+        timeSpent,
+        userAgent: navigator.userAgent,
+        source: "direct",
+      });
+
+      navigate(`/quiz/${slug}/result/${result.primaryResult.id}`, {
+        state: { result, timeSpent },
+      });
     } else {
       quizTakeStore.nextQuestion();
       setSelectedAnswerId(null);

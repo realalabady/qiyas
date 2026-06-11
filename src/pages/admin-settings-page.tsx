@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Upload, RotateCcw, Save } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export function AdminSettingsPage() {
   const { theme, updateTheme, resetTheme, applyTheme } = useTheme();
+  const { t } = useLanguage();
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -37,12 +39,12 @@ export function AdminSettingsPage() {
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         updateTheme({ logo: dataUrl });
-        showNotification("Logo updated successfully");
+        showNotification(t("admin.settings.logo_updated"));
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Failed to upload logo:", error);
-      showNotification("Failed to upload logo");
+      showNotification(t("admin.settings.logo_upload_failed"));
     } finally {
       setIsSaving(false);
     }
@@ -60,12 +62,12 @@ export function AdminSettingsPage() {
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         updateTheme({ favicon: dataUrl });
-        showNotification("Favicon updated successfully");
+        showNotification(t("admin.settings.favicon_updated"));
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Failed to upload favicon:", error);
-      showNotification("Failed to upload favicon");
+      showNotification(t("admin.settings.favicon_upload_failed"));
     } finally {
       setIsSaving(false);
     }
@@ -76,10 +78,10 @@ export function AdminSettingsPage() {
       setIsSaving(true);
       // Apply theme to DOM
       applyTheme();
-      showNotification("Settings saved successfully");
+      showNotification(t("admin.settings.saved"));
     } catch (error) {
       console.error("Failed to save settings:", error);
-      showNotification("Failed to save settings");
+      showNotification(t("admin.settings.save_failed"));
     } finally {
       setIsSaving(false);
     }
@@ -91,10 +93,10 @@ export function AdminSettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">
-            Website Settings
+            {t("admin.settings.page_title")}
           </h1>
           <p className="text-muted-foreground">
-            Customize your website appearance and branding
+            {t("admin.settings.page_subtitle")}
           </p>
         </div>
 
@@ -112,13 +114,13 @@ export function AdminSettingsPage() {
 
         {/* Color Settings */}
         <Card className="p-6 mb-6 glass-card">
-          <h2 className="text-xl font-bold mb-4">Color Scheme</h2>
+          <h2 className="text-xl font-bold mb-4">{t("admin.settings.color_scheme")}</h2>
 
           <div className="grid grid-cols-2 gap-6">
             {/* Primary Color */}
             <div>
               <label className="block text-sm font-medium mb-3">
-                Primary Color
+                {t("admin.settings.primary_color")}
               </label>
               <div className="flex gap-3">
                 <input
@@ -141,7 +143,7 @@ export function AdminSettingsPage() {
             {/* Accent Color */}
             <div>
               <label className="block text-sm font-medium mb-3">
-                Accent Color
+                {t("admin.settings.accent_color")}
               </label>
               <div className="flex gap-3">
                 <input
@@ -162,7 +164,7 @@ export function AdminSettingsPage() {
 
           {/* Preview */}
           <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-sm font-medium mb-3">Preview</p>
+            <p className="text-sm font-medium mb-3">{t("admin.settings.preview")}</p>
             <div className="flex gap-2">
               <div
                 className="w-24 h-24 rounded-lg"
@@ -178,12 +180,12 @@ export function AdminSettingsPage() {
 
         {/* Logo Settings */}
         <Card className="p-6 mb-6 glass-card">
-          <h2 className="text-xl font-bold mb-4">Branding</h2>
+          <h2 className="text-xl font-bold mb-4">{t("admin.settings.branding")}</h2>
 
           {/* Logo Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium mb-3">
-              Website Logo
+              {t("admin.settings.website_logo")}
             </label>
             {theme.logo && (
               <div className="mb-4">
@@ -201,7 +203,7 @@ export function AdminSettingsPage() {
               className="gap-2"
             >
               <Upload className="w-4 h-4" />
-              Upload Logo
+              {t("admin.settings.upload_logo")}
             </Button>
             <input
               ref={logoInputRef}
@@ -214,7 +216,7 @@ export function AdminSettingsPage() {
 
           {/* Favicon Upload */}
           <div>
-            <label className="block text-sm font-medium mb-3">Favicon</label>
+            <label className="block text-sm font-medium mb-3">{t("admin.settings.favicon")}</label>
             {theme.favicon && (
               <div className="mb-4">
                 <img
@@ -231,7 +233,7 @@ export function AdminSettingsPage() {
               className="gap-2"
             >
               <Upload className="w-4 h-4" />
-              Upload Favicon
+              {t("admin.settings.upload_favicon")}
             </Button>
             <input
               ref={faviconInputRef}
@@ -252,7 +254,7 @@ export function AdminSettingsPage() {
             className="gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            Reset to Default
+            {t("admin.settings.reset")}
           </Button>
           <Button
             onClick={handleSave}
@@ -260,7 +262,7 @@ export function AdminSettingsPage() {
             className="gap-2 ml-auto"
           >
             <Save className="w-4 h-4" />
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? t("admin.settings.saving") : t("admin.settings.save_changes")}
           </Button>
         </div>
       </div>

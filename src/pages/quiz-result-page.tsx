@@ -7,16 +7,23 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { ResultsDisplay } from "@/components/quiz/results-display";
-import { pageTransition, fadeUp, staggerContainer, staggerItem } from "@/lib/motion";
+import {
+  pageTransition,
+  fadeUp,
+  staggerContainer,
+  staggerItem,
+} from "@/lib/motion";
 import { Share2, Copy, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useQuizTakeStore } from "@/stores/quiz-take-store";
 
 export function QuizResultPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const quizStore = useQuizzesAdmin();
+  const quizTakeStore = useQuizTakeStore();
   const [copied, setCopied] = useState(false);
 
   // Get the result data from location state or calculate from store
@@ -67,27 +74,34 @@ export function QuizResultPage() {
 
   const handleShareTwitter = () => {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      shareText
+      shareText,
     )}&url=${encodeURIComponent(resultUrl)}`;
     window.open(twitterUrl, "_blank");
   };
 
   const handleShareFacebook = () => {
     const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      resultUrl
+      resultUrl,
     )}`;
     window.open(fbUrl, "_blank");
   };
 
   const handleShareWhatsApp = () => {
     const waUrl = `https://wa.me/?text=${encodeURIComponent(
-      shareText + " " + resultUrl
+      shareText + " " + resultUrl,
     )}`;
     window.open(waUrl, "_blank");
   };
 
   const handleRetakeQuiz = () => {
+    quizTakeStore.resetQuiz();
     navigate(`/quiz/${slug}/take`);
+  };
+
+  const handleContinueByCategory = () => {
+    if (!quiz) return;
+    const categorySlug = quiz.category.toLowerCase().replace(/\s+/g, "-");
+    navigate(`/explore?category=${encodeURIComponent(categorySlug)}`);
   };
 
   const handleDownloadResult = async () => {
@@ -147,7 +161,7 @@ export function QuizResultPage() {
               result={result}
               onShare={handleShareTwitter}
               onDownload={handleDownloadResult}
-              onContinue={handleRetakeQuiz}
+              onContinue={handleContinueByCategory}
             />
           )}
         </motion.div>

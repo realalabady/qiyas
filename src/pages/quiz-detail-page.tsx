@@ -6,7 +6,6 @@ import {
   BarChart2,
   ArrowRight,
   ChevronLeft,
-  Tag,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,30 +13,98 @@ import { Badge } from "@/components/ui/badge";
 import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp, scaleIn } from "@/lib/motion";
-import { QUIZZES, getRelatedQuizzes } from "@/data/seed-quizzes";
+import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import type { Quiz } from "@/stores/quizzes-admin-store";
+import { useLanguage } from "@/lib/i18n";
 
 export default function QuizDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const quizStore = useQuizzesAdmin();
+  const { t, language } = useLanguage();
 
-  const quiz = QUIZZES.find((q) => q.slug === slug);
+  // Find quiz by slug (includes all quizzes: published and unpublished)
+  const quiz = quizStore.getQuizBySlug(slug || "");
+
+  // Get related quizzes from same category (published only)
+  const related: Quiz[] = quiz
+    ? quizStore
+        .getQuizzesByCategory(quiz.category)
+        .filter((q) => q.published && q.id !== quiz.id)
+        .slice(0, 3)
+    : [];
 
   if (!quiz) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
         <p className="text-6xl">😕</p>
-        <h1 className="text-2xl font-bold">Quiz Not Found</h1>
+        <h1 className="text-2xl font-bold">{t("quizDetail.notFound.title")}</h1>
         <p className="text-muted-foreground">
-          This quiz doesn&apos;t exist or has been removed.
+          {t("quizDetail.notFound.subtitle")}
         </p>
         <Button asChild>
-          <Link to="/explore">Browse All Quizzes</Link>
+          <Link to="/explore">{t("quizDetail.notFound.cta")}</Link>
         </Button>
       </div>
     );
   }
 
-  const related = getRelatedQuizzes(quiz.slug, 3);
+  // Mock difficulty if not available
+  const difficulty = (quiz as any).difficulty || "Medium";
+  const localizedDifficulty =
+    difficulty === "Easy"
+      ? t("quizDetail.difficulty.easy")
+      : difficulty === "Hard"
+        ? t("quizDetail.difficulty.hard")
+        : t("quizDetail.difficulty.medium");
+
+  const localizedQuizType =
+    quiz.quizType === "weighted_personality"
+      ? t("quizDetail.type.weighted_personality")
+      : quiz.quizType === "personality_based"
+        ? t("quizDetail.type.personality_based")
+        : quiz.quizType === "score_based"
+          ? t("quizDetail.type.score_based")
+          : quiz.quizType === "percentage_matching"
+            ? t("quizDetail.type.percentage_matching")
+            : t("quizDetail.type.standard");
+
+  const localizedCategory = (() => {
+    const map: Record<string, string> = {
+      "Personality Tests": t("categories.personality"),
+      Personality: t("categories.personality"),
+      "IQ Tests": t("categories.iq"),
+      "Mental Age Tests": t("categories.mental-age"),
+      "Mental Age": t("categories.mental-age"),
+      "Career Tests": t("categories.career"),
+      Career: t("categories.career"),
+      "Relationship Tests": t("categories.relationship"),
+      Relationship: t("categories.relationship"),
+      Friendship: t("categories.friendship"),
+      "Friendship Tests": t("categories.friendship"),
+      Stress: t("categories.stress"),
+      "Stress Tests": t("categories.stress"),
+      Memory: t("categories.memory"),
+      "Memory Tests": t("categories.memory"),
+      Entertainment: t("categories.entertainment"),
+      "Entertainment Quizzes": t("categories.entertainment"),
+      Anime: t("categories.anime"),
+      "Anime Quizzes": t("categories.anime"),
+      "Color Personality": t("categories.color"),
+      "Color Personality Tests": t("categories.color"),
+      "General Knowledge": t("categories.knowledge"),
+    };
+    return map[quiz.category] || quiz.category;
+  })();
+
+  const localizedTitle =
+    language === "ar" && quiz.slug === "dark-personality-test"
+      ? t("quiz.seed.dark.title")
+      : quiz.title;
+  const localizedDescription =
+    language === "ar" && quiz.slug === "dark-personality-test"
+      ? t("quiz.seed.dark.description")
+      : quiz.description;
   const difficultyColor = {
     Easy: "success",
     Medium: "warning",
@@ -53,7 +120,7 @@ export default function QuizDetailPage() {
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ChevronLeft className="size-4" />
-          Back
+          {t("quizDetail.back")}
         </button>
       </motion.div>
 
@@ -77,51 +144,35 @@ export default function QuizDetailPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent" />
                 <Badge
                   className="absolute top-4 left-4"
-                  variant={difficultyColor[quiz.difficulty]}
+                  variant={difficultyColor[difficulty as keyof typeof difficultyColor]}
                 >
-                  {quiz.difficulty}
+                  {localizedDifficulty}
                 </Badge>
               </div>
 
               <div className="p-6 sm:p-8 space-y-4">
-                <Badge variant="secondary">{quiz.category}</Badge>
+                <Badge variant="secondary">{localizedCategory}</Badge>
                 <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
-                  {quiz.title}
+                  {localizedTitle}
                 </h1>
                 <p className="text-muted-foreground leading-relaxed">
-                  {quiz.longDescription}
+                  {localizedDescription}
                 </p>
 
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-5 text-sm text-muted-foreground border-t border-border/50 pt-4">
                   <span className="flex items-center gap-1.5">
                     <BarChart2 className="size-4 text-primary" />
-                    {quiz.questionCount} questions
+                    {quiz.questions.length} {t("quizDetail.questions")}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Clock className="size-4 text-primary" />~
-                    {quiz.estimatedMinutes} minutes
+                    <Clock className="size-4 text-primary" />
+                    ~{Math.ceil(quiz.questions.length / 2) || 5} {t("quizDetail.minutes")}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Users className="size-4 text-primary" />
-                    {quiz.completions.toLocaleString()} taken
+                    <Users className="size-4 text-primary" />0 {t("quizDetail.taken")}
                   </span>
                 </div>
-
-                {/* Tags */}
-                {quiz.tags && quiz.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <Tag className="size-3.5 text-muted-foreground" />
-                    {quiz.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-border/40 text-muted-foreground"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </motion.div>
@@ -138,7 +189,7 @@ export default function QuizDetailPage() {
               viewport={{ once: true }}
             >
               <SectionHeader
-                title="Related Quizzes"
+                title={t("quizDetail.related")}
                 viewAllTo={`/explore?category=${quiz.category}`}
               />
               <motion.div
@@ -150,7 +201,19 @@ export default function QuizDetailPage() {
               >
                 {related.map((q) => (
                   <motion.div key={q.id} variants={staggerItem}>
-                    <QuizCard quiz={q} />
+                    <QuizCard
+                      quiz={{
+                        id: q.id,
+                        slug: q.slug,
+                        title: q.title,
+                        description: q.description,
+                        category: q.category,
+                        thumbnail: q.thumbnail,
+                        questionCount: q.questions.length,
+                        estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
+                        completions: 0,
+                      }}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
@@ -169,40 +232,41 @@ export default function QuizDetailPage() {
             <div className="glass-card rounded-2xl p-6 space-y-5">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                  Ready to start?
+                  {t("quizDetail.ready")}
                 </p>
                 <p className="font-semibold text-lg">
-                  {quiz.questionCount} questions · ~{quiz.estimatedMinutes} min
+                  {quiz.questions.length} {t("quizDetail.questions")} ·{" "}
+                  ~{Math.ceil(quiz.questions.length / 2) || 5} {t("quizDetail.min")}
                 </p>
               </div>
 
               <Button size="lg" className="w-full" asChild>
                 <Link to={`/quiz/${quiz.slug}/take`}>
-                  Start Quiz <ArrowRight className="size-5" />
+                  {t("quizDetail.startQuiz")} <ArrowRight className="size-5" />
                 </Link>
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                Free · No account required · Instant results
+                {t("quizDetail.freeNote")}
               </p>
 
               <div className="border-t border-border/40 pt-4 space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Category</span>
+                  <span>{t("quizDetail.category")}</span>
                   <span className="text-foreground font-medium">
-                    {quiz.category}
+                    {localizedCategory}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Difficulty</span>
+                  <span>{t("quizDetail.difficulty")}</span>
                   <span className="text-foreground font-medium">
-                    {quiz.difficulty}
+                    {localizedDifficulty}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Completions</span>
+                  <span>{t("quizDetail.type")}</span>
                   <span className="text-foreground font-medium">
-                    {quiz.completions.toLocaleString()}
+                    {localizedQuizType}
                   </span>
                 </div>
               </div>

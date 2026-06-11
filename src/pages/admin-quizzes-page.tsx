@@ -9,6 +9,11 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, Copy, Search } from "lucide-react";
 import { ImageUpload } from "@/components/quiz/image-upload";
 import { ResultsEditor } from "@/components/quiz/results-editor";
 import { QuestionEditor } from "@/components/quiz/question-editor";
+import {
+  getResultOptions,
+  normalizeSlug,
+  validateQuizConfig,
+} from "@/lib/quiz-validation";
 
 const CATEGORIES = [
   "Personality Tests",
@@ -67,8 +72,22 @@ export function AdminQuizzesPage() {
       return;
     }
 
-    const slug =
-      formData.slug || formData.title.toLowerCase().replace(/\s+/g, "-");
+    const slug = normalizeSlug(formData.slug || formData.title);
+    if (!slug) {
+      showNotification("Please provide a valid slug or title.");
+      return;
+    }
+
+    const isDuplicateSlug = quizzes.some((quiz) => quiz.slug === slug);
+    if (isDuplicateSlug) {
+      showNotification("This slug already exists. Please choose another one.");
+      return;
+    }
+
+    if (formData.published && !validation.isValid) {
+      showNotification("Fix quiz setup errors before publishing.");
+      return;
+    }
 
     addQuiz({
       ...formData,
@@ -104,7 +123,26 @@ export function AdminQuizzesPage() {
       return;
     }
 
-    updateQuiz(editingId, formData);
+    const slug = normalizeSlug(formData.slug || formData.title);
+    if (!slug) {
+      showNotification("Please provide a valid slug or title.");
+      return;
+    }
+
+    const isDuplicateSlug = quizzes.some(
+      (quiz) => quiz.slug === slug && quiz.id !== editingId,
+    );
+    if (isDuplicateSlug) {
+      showNotification("This slug already exists. Please choose another one.");
+      return;
+    }
+
+    if (formData.published && !validation.isValid) {
+      showNotification("Fix quiz setup errors before publishing.");
+      return;
+    }
+
+    updateQuiz(editingId, { ...formData, slug });
     resetForm();
     showNotification("Quiz updated successfully");
   };
@@ -126,6 +164,13 @@ export function AdminQuizzesPage() {
       unpublishQuiz(id);
       showNotification("Quiz unpublished");
     } else {
+      const quiz = quizzes.find((q) => q.id === id);
+      if (!quiz) return;
+      const publishValidation = validateQuizConfig(quiz);
+      if (!publishValidation.isValid) {
+        showNotification("Quiz has setup errors. Edit it before publishing.");
+        return;
+      }
       publishQuiz(id);
       showNotification("Quiz published");
     }
@@ -148,6 +193,9 @@ export function AdminQuizzesPage() {
     setShowForm(false);
     setEditingId(null);
   };
+
+  const resultOptions = getResultOptions(formData.results);
+  const validation = validateQuizConfig(formData);
 
   const filteredQuizzes = quizzes.filter(
     (q) =>
@@ -220,7 +268,10 @@ export function AdminQuizzesPage() {
                 <Input
                   value={formData.slug}
                   onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
+                    setFormData({
+                      ...formData,
+                      slug: normalizeSlug(e.target.value),
+                    })
                   }
                   placeholder="quiz-slug (auto-generated if empty)"
                 />
@@ -251,7 +302,7 @@ export function AdminQuizzesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
                   }
-                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 [&>option]:bg-slate-900 [&>option]:text-slate-100"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -269,12 +320,16 @@ export function AdminQuizzesPage() {
                 <select
                   value={formData.quizType}
                   onChange={(e) =>
-                    setFormData({ ...formData, quizType: e.target.value as any })
+                    setFormData({
+                      ...formData,
+                      quizType: e.target.value as any,
+                    })
                   }
-                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 [&>option]:bg-slate-900 [&>option]:text-slate-100"
                 >
                   <option value="weighted_personality">
-                    Weighted Personality (Default - Best for personality quizzes)
+                    Weighted Personality (Default - Best for personality
+                    quizzes)
                   </option>
                   <option value="personality_based">
                     Personality-Based (Direct result mapping)
@@ -291,9 +346,7 @@ export function AdminQuizzesPage() {
               {/* Thumbnail */}
               <ImageUpload
                 value={formData.thumbnail}
-                onChange={(url) =>
-                  setFormData({ ...formData, thumbnail: url })
-                }
+                onChange={(url) => setFormData({ ...formData, thumbnail: url })}
                 label="Quiz Thumbnail"
                 placeholder="Click to upload or paste image URL"
               />
@@ -327,6 +380,31 @@ export function AdminQuizzesPage() {
                 />
               </div>
 
+              <Card className="p-4 bg-white/5 border border-border/50">
+                <p className="text-sm font-medium mb-2">Quiz Builder Workflow</p>
+                <p className="text-xs text-muted-foreground">
+                  1) Add results first. 2) Add questions and answers. 3) For
+                  weighted/percentage quizzes, each answer must assign weights to
+                  result IDs. 4) Publish only when validation is green.
+                </p>
+              </Card>
+
+              {!validation.isValid && (
+                <Card className="p-4 bg-red-500/10 border border-red-500/40">
+                  <p className="text-sm font-medium text-red-300 mb-2">
+                    Fix these issues before publishing:
+                  </p>
+                  <ul className="space-y-1 text-xs text-red-200 list-disc pl-4">
+                    {validation.errors.slice(0, 8).map((error) => (
+                      <li key={error}>{error}</li>
+                    ))}
+                    {validation.errors.length > 8 && (
+                      <li>+{validation.errors.length - 8} more...</li>
+                    )}
+                  </ul>
+                </Card>
+              )}
+
               {/* Questions Editor */}
               <div className="p-4 rounded-lg border border-border/40 bg-white/2">
                 <QuestionEditor
@@ -335,6 +413,7 @@ export function AdminQuizzesPage() {
                     setFormData({ ...formData, questions })
                   }
                   quizType={formData.quizType}
+                  resultOptions={resultOptions}
                 />
               </div>
 
@@ -342,9 +421,7 @@ export function AdminQuizzesPage() {
               <div className="p-4 rounded-lg border border-border/40 bg-white/2">
                 <ResultsEditor
                   results={formData.results}
-                  onChange={(results) =>
-                    setFormData({ ...formData, results })
-                  }
+                  onChange={(results) => setFormData({ ...formData, results })}
                 />
               </div>
 
@@ -362,6 +439,11 @@ export function AdminQuizzesPage() {
                 <label htmlFor="published" className="text-sm font-medium">
                   Publish immediately
                 </label>
+                {!validation.isValid && (
+                  <span className="text-xs text-muted-foreground">
+                    (allowed for draft, blocked for publish)
+                  </span>
+                )}
               </div>
 
               {/* Action Buttons */}

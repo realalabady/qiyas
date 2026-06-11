@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { QUIZZES } from "@/data/seed-quizzes";
 import {
   PERSONALITY_QUIZ,
@@ -8,7 +9,11 @@ import {
 } from "@/data/seed-engine-quizzes";
 import type { QuizType } from "@/lib/quiz-engine";
 
-export type QuestionType = "personality" | "scored" | "image-choice" | "multiple-select";
+export type QuestionType =
+  | "personality"
+  | "scored"
+  | "image-choice"
+  | "multiple-select";
 
 export interface Answer {
   id: string;
@@ -56,7 +61,10 @@ export interface Quiz {
   updatedAt: Date;
 }
 
-export interface QuizFormData extends Omit<Quiz, "id" | "createdAt" | "updatedAt"> {}
+export interface QuizFormData extends Omit<
+  Quiz,
+  "id" | "createdAt" | "updatedAt"
+> {}
 
 interface QuizzesStore {
   quizzes: Quiz[];
@@ -82,8 +90,8 @@ interface QuizzesStore {
   unpublishQuiz: (id: string) => void;
 }
 
-export const useQuizzesAdmin = create<QuizzesStore>((set, get) => ({
-  quizzes: [
+const seedQuizzes = (): Quiz[] =>
+  [
     PERSONALITY_QUIZ,
     IQ_QUIZ,
     CAREER_QUIZ,
@@ -104,8 +112,30 @@ export const useQuizzesAdmin = create<QuizzesStore>((set, get) => ({
       createdAt: new Date(),
       updatedAt: new Date(),
     })),
-  ] as Quiz[],
-  editingId: null,
+  ] as Quiz[];
+
+const normalizeQuiz = (raw: Partial<Quiz>): Quiz => ({
+  id: raw.id || `quiz-${Date.now()}`,
+  title: raw.title || "",
+  slug: raw.slug || "",
+  description: raw.description || "",
+  category: raw.category || "General Knowledge",
+  thumbnail: raw.thumbnail || "",
+  seoTitle: raw.seoTitle || raw.title || "",
+  seoDescription: raw.seoDescription || raw.description || "",
+  quizType: raw.quizType || "weighted_personality",
+  questions: raw.questions || [],
+  results: raw.results || [],
+  published: Boolean(raw.published),
+  createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+  updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
+});
+
+export const useQuizzesAdmin = create<QuizzesStore>()(
+  persist(
+    (set, get) => ({
+      quizzes: seedQuizzes(),
+      editingId: null,
 
   setQuizzes: (quizzes) => set({ quizzes }),
   setEditingId: (id) => set({ editingId: id }),
@@ -171,7 +201,24 @@ export const useQuizzesAdmin = create<QuizzesStore>((set, get) => ({
     get().updateQuiz(id, { published: true });
   },
 
-  unpublishQuiz: (id) => {
-    get().updateQuiz(id, { published: false });
-  },
-}));
+      unpublishQuiz: (id) => {
+        get().updateQuiz(id, { published: false });
+      },
+    }),
+    {
+      name: "qiyas-quizzes-admin-v1",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ quizzes: state.quizzes }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<QuizzesStore> | undefined;
+        const quizzes = persisted?.quizzes?.length
+          ? persisted.quizzes.map((quiz) => normalizeQuiz(quiz))
+          : currentState.quizzes;
+        return {
+          ...currentState,
+          quizzes,
+        };
+      },
+    },
+  ),
+);

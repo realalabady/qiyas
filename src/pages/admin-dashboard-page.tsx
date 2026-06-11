@@ -5,7 +5,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  BarChart3,
   FileText,
   FolderOpen,
   Image,
@@ -16,47 +15,49 @@ import {
 import { pageTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import { useAnalyticsStore } from "@/stores/analytics-store";
+import { useLanguage } from "@/lib/i18n";
 
 const QUICK_ACTIONS = [
-  { label: "Create Quiz", to: "/admin/quizzes/create", icon: FileText },
-  { label: "Manage Quizzes", to: "/admin/quizzes", icon: Brain },
-  { label: "Categories", to: "/admin/categories", icon: FolderOpen },
-  { label: "Media Library", to: "/admin/media", icon: Image },
-  { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
-  { label: "Settings", to: "/admin/settings", icon: Settings },
+  { labelKey: "admin.action.create_quiz", to: "/admin/quizzes", icon: FileText },
+  { labelKey: "admin.action.manage_quizzes", to: "/admin/quizzes", icon: Brain },
+  { labelKey: "admin.action.categories", to: "/admin/categories", icon: FolderOpen },
+  { labelKey: "admin.action.media_library", to: "/admin/media", icon: Image },
+  { labelKey: "admin.action.settings", to: "/admin/settings", icon: Settings },
 ];
 
 export function AdminDashboardPage() {
   const quizStore = useQuizzesAdmin();
   const analyticsStore = useAnalyticsStore();
+  const { t } = useLanguage();
 
   // Get real stats
   const totalQuizzes = quizStore.quizzes.length;
   const publishedQuizzes = quizStore.getPublishedQuizzes().length;
   const totalCompletions = analyticsStore.getTotalCompletions();
-  const categories = [...new Set(quizStore.quizzes.map((q) => q.category))].length;
+  const categories = [...new Set(quizStore.quizzes.map((q) => q.category))]
+    .length;
 
   const DASHBOARD_STATS = [
     {
-      label: "Total Quizzes",
+      label: t("admin.stats.total_quizzes"),
       value: totalQuizzes.toString(),
       icon: Brain,
       color: "from-blue-500 to-cyan-500",
     },
     {
-      label: "Published Quizzes",
+      label: t("admin.stats.published_quizzes"),
       value: publishedQuizzes.toString(),
       icon: FileText,
       color: "from-green-500 to-emerald-500",
     },
     {
-      label: "Quiz Completions",
+      label: t("admin.stats.quiz_completions"),
       value: totalCompletions > 0 ? totalCompletions.toLocaleString() : "0",
       icon: Users,
       color: "from-purple-500 to-pink-500",
     },
     {
-      label: "Categories",
+      label: t("admin.stats.categories"),
       value: categories.toString(),
       icon: FolderOpen,
       color: "from-orange-500 to-red-500",
@@ -73,10 +74,10 @@ export function AdminDashboardPage() {
       <div className="max-w-7xl mx-auto">
         <motion.div variants={staggerItem} className="mb-12">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Admin Dashboard
+            {t("admin.dashboard")}
           </h1>
           <p className="text-slate-400">
-            Welcome back! Here's your quiz platform overview.
+            {t("admin.welcome")}
           </p>
         </motion.div>
 
@@ -115,7 +116,7 @@ export function AdminDashboardPage() {
         </motion.div>
 
         <motion.div variants={staggerItem} className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">{t("admin.quick_actions")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {QUICK_ACTIONS.map((action) => {
               const Icon = action.icon;
@@ -131,7 +132,7 @@ export function AdminDashboardPage() {
                       className="text-slate-400 group-hover:text-blue-400 transition"
                     />
                     <span className="font-medium text-slate-300 group-hover:text-white transition">
-                      {action.label}
+                      {t(action.labelKey)}
                     </span>
                   </motion.button>
                 </Link>
@@ -140,39 +141,6 @@ export function AdminDashboardPage() {
           </div>
         </motion.div>
 
-        <motion.div
-          variants={staggerItem}
-          className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-8 border border-slate-700/50"
-        >
-          <h2 className="text-xl font-bold text-white mb-6">Recent Activity</h2>
-          <div className="space-y-4">
-            {[
-              {
-                action: "Quiz Created",
-                quiz: "Personality Color Test",
-                time: "2 hours ago",
-              },
-              { action: "Quiz Published", quiz: "IQ Test", time: "1 day ago" },
-              {
-                action: "Category Added",
-                quiz: "Career Tests",
-                time: "3 days ago",
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                variants={staggerItem}
-                className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition"
-              >
-                <div>
-                  <p className="text-white font-medium">{item.action}</p>
-                  <p className="text-sm text-slate-400">{item.quiz}</p>
-                </div>
-                <p className="text-xs text-slate-500">{item.time}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </motion.div>
   );

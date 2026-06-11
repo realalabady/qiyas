@@ -6,9 +6,11 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
+import { useLanguage } from "@/lib/i18n";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const { t } = useLanguage();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,11 +26,9 @@ export default function ContactPage() {
         className="text-center space-y-3"
       >
         <h1 className="text-4xl sm:text-5xl font-extrabold">
-          Contact <span className="gradient-text">Us</span>
+          <span className="gradient-text">{t("contact.title")}</span>
         </h1>
-        <p className="text-muted-foreground">
-          Have a question, suggestion, or just want to say hi?
-        </p>
+        <p className="text-muted-foreground">{t("contact.subtitle")}</p>
       </motion.div>
 
       <motion.div
@@ -42,7 +42,7 @@ export default function ContactPage() {
             <Mail className="size-5 text-primary" />
           </div>
           <div>
-            <p className="font-medium">Email Us</p>
+            <p className="font-medium">{t("contact.email_title")}</p>
             <a
               href="mailto:hello@qiyas.app"
               className="text-sm text-primary hover:underline"
@@ -55,45 +55,43 @@ export default function ContactPage() {
         {sent ? (
           <div className="text-center py-8 space-y-3">
             <p className="text-4xl">✅</p>
-            <p className="font-semibold text-lg">Message sent!</p>
-            <p className="text-muted-foreground text-sm">
-              We&apos;ll get back to you within 24–48 hours.
-            </p>
+            <p className="font-semibold text-lg">{t("contact.sent.title")}</p>
+            <p className="text-muted-foreground text-sm">{t("contact.sent.subtitle")}</p>
             <Button variant="outline" size="sm" onClick={() => setSent(false)}>
-              Send another
+              {t("contact.sent.another")}
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Your name" required />
+                <Label htmlFor="name">{t("contact.form.name")}</Label>
+                <Input id="name" placeholder={t("contact.form.name_placeholder")} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("contact.form.email")}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("contact.form.email_placeholder")}
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" placeholder="What's this about?" required />
+              <Label htmlFor="subject">{t("contact.form.subject")}</Label>
+              <Input id="subject" placeholder={t("contact.form.subject_placeholder")} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
+              <Label htmlFor="message">{t("contact.form.message")}</Label>
               <Textarea
                 id="message"
-                placeholder="Tell us what's on your mind…"
+                placeholder={t("contact.form.message_placeholder")}
                 required
               />
             </div>
             <Button type="submit" className="w-full gap-2">
-              <Send className="size-4" /> Send Message
+              <Send className="size-4" /> {t("contact.form.submit")}
             </Button>
           </form>
         )}

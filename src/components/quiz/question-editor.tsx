@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import type { Question, QuestionType } from "@/stores/quizzes-admin-store";
 import { AnswerEditor } from "./answer-editor";
 
@@ -11,14 +17,14 @@ interface QuestionEditorProps {
   questions: Question[];
   onChange: (questions: Question[]) => void;
   quizType: string;
-  resultCategories?: string[];
+  resultOptions?: Array<{ id: string; label: string }>;
 }
 
 export function QuestionEditor({
   questions,
   onChange,
   quizType,
-  resultCategories,
+  resultOptions,
 }: QuestionEditorProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -35,9 +41,7 @@ export function QuestionEditor({
   };
 
   const handleUpdateQuestion = (id: string, updates: Partial<Question>) => {
-    onChange(
-      questions.map((q) => (q.id === id ? { ...q, ...updates } : q))
-    );
+    onChange(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
   };
 
   const handleDeleteQuestion = (id: string) => {
@@ -108,7 +112,7 @@ export function QuestionEditor({
                   <button
                     onClick={() =>
                       setExpandedId(
-                        expandedId === question.id ? null : question.id
+                        expandedId === question.id ? null : question.id,
                       )
                     }
                     className="flex-1 text-left"
@@ -130,7 +134,7 @@ export function QuestionEditor({
                   <button
                     onClick={() =>
                       setExpandedId(
-                        expandedId === question.id ? null : question.id
+                        expandedId === question.id ? null : question.id,
                       )
                     }
                   >
@@ -162,7 +166,9 @@ export function QuestionEditor({
                         </label>
                         <textarea
                           value={question.text}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) =>
                             handleUpdateQuestion(question.id, {
                               text: e.target.value,
                             })
@@ -184,7 +190,7 @@ export function QuestionEditor({
                               type: e.target.value as QuestionType,
                             })
                           }
-                          className="mt-1 w-full px-3 py-2 bg-background border border-input rounded-md text-sm"
+                          className="mt-1 w-full px-3 py-2 bg-background text-foreground border border-input rounded-md text-sm [&>option]:bg-slate-900 [&>option]:text-slate-100"
                         >
                           {questionTypeOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -223,7 +229,7 @@ export function QuestionEditor({
                             handleAnswersChange(question.id, answers)
                           }
                           quizType={quizType}
-                          resultCategories={resultCategories}
+                          resultOptions={resultOptions}
                         />
                       </div>
 
@@ -233,7 +239,9 @@ export function QuestionEditor({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleReorderQuestion(index, index - 1)}
+                          onClick={() =>
+                            handleReorderQuestion(index, index - 1)
+                          }
                           disabled={index === 0}
                         >
                           Move Up
@@ -242,7 +250,9 @@ export function QuestionEditor({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleReorderQuestion(index, index + 1)}
+                          onClick={() =>
+                            handleReorderQuestion(index, index + 1)
+                          }
                           disabled={index === questions.length - 1}
                         >
                           Move Down

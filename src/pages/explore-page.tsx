@@ -9,16 +9,18 @@ import { Button } from "@/components/ui/button";
 import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
-import { QUIZZES, CATEGORIES } from "@/data/seed-quizzes";
-
-const SORT_OPTIONS = [
-  { value: "trending", label: "🔥 Trending" },
-  { value: "popular", label: "⭐ Popular" },
-  { value: "newest", label: "🆕 Newest" },
-  { value: "fastest", label: "⚡ Quickest" },
-];
+import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import type { QuizCardData } from "@/components/quiz/quiz-card";
+import { useLanguage } from "@/lib/i18n";
 
 export default function ExplorePage() {
+  const { t } = useLanguage();
+  const SORT_OPTIONS = [
+    { value: "trending", label: t("explore.sort.trending") },
+    { value: "popular", label: t("explore.sort.popular") },
+    { value: "newest", label: t("explore.sort.newest") },
+    { value: "fastest", label: t("explore.sort.fastest") },
+  ];
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [selectedCat, setSelectedCat] = useState(
@@ -26,8 +28,19 @@ export default function ExplorePage() {
   );
   const [sort, setSort] = useState(searchParams.get("sort") ?? "trending");
 
+  const quizStore = useQuizzesAdmin();
+  const allQuizzes = quizStore.getPublishedQuizzes();
+
+  // Dynamic categories from quizzes
+  const CATEGORIES = [
+    ...new Set(allQuizzes.map((q) => q.category)),
+  ].map((cat) => ({
+    slug: cat.toLowerCase().replace(/\s+/g, "-"),
+    label: cat,
+  }));
+
   const filtered = useMemo(() => {
-    let list = [...QUIZZES];
+    let list = [...allQuizzes];
 
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -46,20 +59,20 @@ export default function ExplorePage() {
 
     switch (sort) {
       case "popular":
-        list.sort((a, b) => b.completions - a.completions);
+        list.sort((a, b) => (b.questions?.length || 0) - (a.questions?.length || 0));
         break;
       case "newest":
-        list.sort((a, b) => Number(b.id) - Number(a.id));
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case "fastest":
-        list.sort((a, b) => a.estimatedMinutes - b.estimatedMinutes);
+        list.sort((a, b) => (a.questions?.length || 0) - (b.questions?.length || 0));
         break;
       default: // trending
-        list.sort((a, b) => b.completions - a.completions);
+        list.sort((a, b) => (b.questions?.length || 0) - (a.questions?.length || 0));
     }
 
     return list;
-  }, [query, selectedCat, sort]);
+  }, [query, selectedCat, sort, allQuizzes, CATEGORIES]);
 
   function updateParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams);
@@ -78,11 +91,10 @@ export default function ExplorePage() {
         className="text-center space-y-3"
       >
         <h1 className="text-3xl sm:text-5xl font-extrabold">
-          Explore <span className="gradient-text">All Quizzes</span>
+          <span className="gradient-text">{t("explore.title")}</span>
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          {QUIZZES.length} quizzes across {CATEGORIES.length} categories — find
-          your next favourite.
+          {allQuizzes.length} {t("explore.subtitle")}
         </p>
       </motion.div>
 
@@ -96,7 +108,7 @@ export default function ExplorePage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           className="pl-11 pr-11 h-12 text-base"
-          placeholder="Search quizzes…"
+          placeholder={t("explore.search_placeholder")}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -137,7 +149,7 @@ export default function ExplorePage() {
                 : "bg-white/5 text-muted-foreground hover:bg-white/10"
             }`}
           >
-            All
+            {t("explore.filter_all")}
           </button>
           {CATEGORIES.map((cat) => (
             <button
@@ -153,7 +165,7 @@ export default function ExplorePage() {
                   : "bg-white/5 text-muted-foreground hover:bg-white/10"
               }`}
             >
-              {cat.emoji} {cat.label}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -181,7 +193,7 @@ export default function ExplorePage() {
       {(query || selectedCat) && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+            {filtered.length} {t("explore.results_suffix")}
           </span>
           {query && <Badge variant="secondary">"{query}"</Badge>}
           {selectedCat && (
@@ -203,9 +215,9 @@ export default function ExplorePage() {
           className="text-center py-20 space-y-4"
         >
           <p className="text-5xl">🔍</p>
-          <p className="text-xl font-semibold">No quizzes found</p>
+          <p className="text-xl font-semibold">{t("explore.none_title")}</p>
           <p className="text-muted-foreground">
-            Try a different keyword or category
+            {t("explore.none_subtitle")}
           </p>
           <Button
             variant="outline"
@@ -215,13 +227,13 @@ export default function ExplorePage() {
               setSearchParams({});
             }}
           >
-            Clear Filters
+            {t("explore.clear_filters")}
           </Button>
         </motion.div>
       ) : (
         <>
           <SectionHeader
-            title={`${filtered.length} Quiz${filtered.length !== 1 ? "zes" : ""} Found`}
+            title={`${filtered.length} ${t("explore.found_suffix")}`}
           />
           <motion.div
             variants={staggerContainer}
@@ -231,7 +243,19 @@ export default function ExplorePage() {
           >
             {filtered.map((quiz) => (
               <motion.div key={quiz.id} variants={staggerItem}>
-                <QuizCard quiz={quiz} />
+                <QuizCard 
+                  quiz={{
+                    id: quiz.id,
+                    slug: quiz.slug,
+                    title: quiz.title,
+                    description: quiz.description,
+                    category: quiz.category,
+                    thumbnail: quiz.thumbnail,
+                    questionCount: quiz.questions.length,
+                    estimatedMinutes: Math.ceil(quiz.questions.length / 2) || 5,
+                    completions: 0,
+                  } as QuizCardData}
+                />
               </motion.div>
             ))}
           </motion.div>

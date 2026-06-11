@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Upload, Trash2, Copy, Download } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface MediaFile {
   id: string;
@@ -14,6 +15,7 @@ interface MediaFile {
 }
 
 export function AdminMediaPage() {
+  const { t, language } = useLanguage();
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([
     {
       id: "media-1",
@@ -69,20 +71,20 @@ export function AdminMediaPage() {
     }
 
     setUploading(false);
-    showNotification("Files uploaded successfully");
+    showNotification(t("admin.media.upload_success"));
     e.target.value = "";
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Delete this file?")) {
+    if (confirm(t("admin.media.delete_confirm"))) {
       setMediaFiles((prev) => prev.filter((f) => f.id !== id));
-      showNotification("File deleted");
+      showNotification(t("admin.media.file_deleted"));
     }
   };
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    showNotification("URL copied to clipboard");
+    showNotification(t("admin.media.url_copied"));
   };
 
   const formatSize = (bytes: number) => {
@@ -94,7 +96,7 @@ export function AdminMediaPage() {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString(language === "ar" ? "ar" : "en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -107,10 +109,10 @@ export function AdminMediaPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">
-            Media Library
+            {t("admin.media.page_title")}
           </h1>
           <p className="text-muted-foreground">
-            Manage and organize images and videos
+            {t("admin.media.page_subtitle")}
           </p>
         </div>
 
@@ -133,14 +135,16 @@ export function AdminMediaPage() {
               <Upload className="w-8 h-8 text-primary" />
             </div>
             <div className="text-center">
-              <h3 className="font-bold text-lg mb-1">Upload Files</h3>
+              <h3 className="font-bold text-lg mb-1">{t("admin.media.upload_files")}</h3>
               <p className="text-sm text-muted-foreground">
-                Drag and drop your images and videos here, or click to browse
+                {t("admin.media.upload_hint")}
               </p>
             </div>
             <label htmlFor="file-upload" className="cursor-pointer">
               <Button asChild disabled={uploading}>
-                <span>{uploading ? "Uploading..." : "Select Files"}</span>
+                <span>
+                  {uploading ? t("admin.media.uploading") : t("admin.media.select_files")}
+                </span>
               </Button>
               <input
                 id="file-upload"
@@ -152,7 +156,7 @@ export function AdminMediaPage() {
               />
             </label>
             <p className="text-xs text-muted-foreground/60">
-              Maximum file size: 50MB
+              {t("admin.media.max_size")}
             </p>
           </div>
         </Card>
@@ -163,26 +167,26 @@ export function AdminMediaPage() {
             <p className="text-2xl font-bold gradient-text">
               {mediaFiles.length}
             </p>
-            <p className="text-sm text-muted-foreground">Total Files</p>
+            <p className="text-sm text-muted-foreground">{t("admin.media.total_files")}</p>
           </Card>
           <Card className="glass-card p-4 text-center">
             <p className="text-2xl font-bold gradient-text">
               {mediaFiles.filter((f) => f.type === "image").length}
             </p>
-            <p className="text-sm text-muted-foreground">Images</p>
+            <p className="text-sm text-muted-foreground">{t("admin.media.images")}</p>
           </Card>
           <Card className="glass-card p-4 text-center">
             <p className="text-2xl font-bold gradient-text">
               {formatSize(mediaFiles.reduce((sum, f) => sum + f.size, 0))}
             </p>
-            <p className="text-sm text-muted-foreground">Total Size</p>
+            <p className="text-sm text-muted-foreground">{t("admin.media.total_size")}</p>
           </Card>
         </div>
 
         {/* Media Grid */}
         {mediaFiles.length === 0 ? (
           <Card className="glass-card p-12 text-center">
-            <p className="text-muted-foreground">No files uploaded yet</p>
+            <p className="text-muted-foreground">{t("admin.media.no_files")}</p>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -227,7 +231,7 @@ export function AdminMediaPage() {
                         size="icon-sm"
                         onClick={() => handleCopyUrl(file.url)}
                         className="flex-1"
-                        title="Copy URL"
+                        title={t("admin.media.copy_url")}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -237,7 +241,7 @@ export function AdminMediaPage() {
                         asChild
                         className="flex-1"
                       >
-                        <a href={file.url} download title="Download">
+                        <a href={file.url} download title={t("admin.media.download")}>
                           <Download className="w-4 h-4" />
                         </a>
                       </Button>
@@ -246,7 +250,7 @@ export function AdminMediaPage() {
                         size="icon-sm"
                         onClick={() => handleDelete(file.id)}
                         className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                        title="Delete"
+                        title={t("admin.media.delete")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

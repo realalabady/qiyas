@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 const ICON_OPTIONS = [
   "🧠",
@@ -28,6 +29,7 @@ const ICON_OPTIONS = [
 export function AdminCategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } =
     useCategories();
+  const { t } = useLanguage();
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function AdminCategoriesPage() {
 
   const handleAddCategory = () => {
     if (!formData.name.trim() || !formData.description.trim()) {
-      showNotification("Name and description are required");
+      showNotification(t("admin.categories.name_desc_required"));
       return;
     }
 
@@ -64,7 +66,7 @@ export function AdminCategoriesPage() {
     });
 
     resetForm();
-    showNotification("Category created successfully");
+    showNotification(t("admin.categories.created"));
   };
 
   const handleEditCategory = (id: string) => {
@@ -85,7 +87,7 @@ export function AdminCategoriesPage() {
   const handleUpdateCategory = () => {
     if (!editingId) return;
     if (!formData.name.trim() || !formData.description.trim()) {
-      showNotification("Name and description are required");
+      showNotification(t("admin.categories.name_desc_required"));
       return;
     }
 
@@ -98,13 +100,13 @@ export function AdminCategoriesPage() {
     });
 
     resetForm();
-    showNotification("Category updated successfully");
+    showNotification(t("admin.categories.updated"));
   };
 
   const handleDeleteCategory = (id: string) => {
-    if (confirm("Are you sure? This cannot be undone.")) {
+    if (confirm(t("admin.categories.delete_confirm"))) {
       deleteCategory(id);
-      showNotification("Category deleted successfully");
+      showNotification(t("admin.categories.deleted"));
     }
   };
 
@@ -127,10 +129,10 @@ export function AdminCategoriesPage() {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold gradient-text mb-2">
-              Category Management
+              {t("admin.categories.page_title")}
             </h1>
             <p className="text-muted-foreground">
-              Create and manage quiz categories
+              {t("admin.categories.page_subtitle")}
             </p>
           </div>
           <Button
@@ -141,7 +143,7 @@ export function AdminCategoriesPage() {
             className="gap-2"
           >
             <Plus className="w-4 h-4" />
-            {showForm ? "Cancel" : "New Category"}
+            {showForm ? t("admin.common.cancel") : t("admin.categories.new")}
           </Button>
         </div>
 
@@ -161,37 +163,45 @@ export function AdminCategoriesPage() {
         {showForm && (
           <Card className="glass-card p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
-              {editingId ? "Edit Category" : "Create New Category"}
+              {editingId
+                ? t("admin.categories.edit_title")
+                : t("admin.categories.create_title")}
             </h2>
 
             <div className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium mb-2">Name *</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.name_label")}
+                </label>
                 <Input
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder="Category name"
+                  placeholder={t("admin.categories.name_placeholder")}
                 />
               </div>
 
               {/* Slug */}
               <div>
-                <label className="block text-sm font-medium mb-2">Slug</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.slug_label")}
+                </label>
                 <Input
                   value={formData.slug}
                   onChange={(e) =>
                     setFormData({ ...formData, slug: e.target.value })
                   }
-                  placeholder="category-slug (auto-generated if empty)"
+                  placeholder={t("admin.categories.slug_placeholder")}
                 />
               </div>
 
               {/* Icon */}
               <div>
-                <label className="block text-sm font-medium mb-2">Icon</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.icon_label")}
+                </label>
                 <div className="flex gap-2 flex-wrap">
                   {ICON_OPTIONS.map((icon) => (
                     <button
@@ -211,7 +221,9 @@ export function AdminCategoriesPage() {
 
               {/* Color */}
               <div>
-                <label className="block text-sm font-medium mb-2">Color</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.color_label")}
+                </label>
                 <div className="flex gap-3">
                   <input
                     type="color"
@@ -235,14 +247,14 @@ export function AdminCategoriesPage() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Description *
+                  {t("admin.categories.description_label")}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Category description"
+                  placeholder={t("admin.categories.description_placeholder")}
                   className="w-full h-20 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
                 />
               </div>
@@ -250,12 +262,14 @@ export function AdminCategoriesPage() {
               {/* Action Buttons */}
               <div className="flex gap-2 justify-end pt-4">
                 <Button variant="outline" onClick={resetForm}>
-                  Cancel
+                  {t("admin.common.cancel")}
                 </Button>
                 <Button
                   onClick={editingId ? handleUpdateCategory : handleAddCategory}
                 >
-                  {editingId ? "Update Category" : "Create Category"}
+                  {editingId
+                    ? t("admin.categories.update")
+                    : t("admin.categories.create")}
                 </Button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useArticles } from "@/stores/articles-store";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,8 +39,7 @@ export function ArticlesPage() {
               {t("articles.title")}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Explore insights and tips about personality, psychology, and
-              personal development
+              {t("articles.subtitle")}
             </p>
           </motion.div>
         </div>
@@ -50,7 +50,7 @@ export function ArticlesPage() {
           <div className="relative">
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search articles..."
+              placeholder={t("articles.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-12"
@@ -64,7 +64,7 @@ export function ArticlesPage() {
               onClick={() => setSelectedCategory(null)}
               size="sm"
             >
-              All
+              {t("articles.filter_all")}
             </Button>
             {categories.map((category) => (
               <Button
@@ -89,7 +89,8 @@ export function ArticlesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="glass-card h-full flex flex-col overflow-hidden hover:border-primary/50 transition-colors cursor-pointer group">
+                <Link to={`/articles/${article.slug}`} className="block h-full">
+                  <Card className="glass-card h-full flex flex-col overflow-hidden hover:border-primary/50 transition-colors cursor-pointer group">
                   {/* Image */}
                   {article.image && (
                     <div className="overflow-hidden h-40 bg-gradient-to-br from-primary/20 to-accent/20">
@@ -123,27 +124,24 @@ export function ArticlesPage() {
                     {/* Meta */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{article.author}</span>
-                      <span>{article.views.toLocaleString()} views</span>
+                      <span>{article.views.toLocaleString()} {t("articles.views_suffix")}</span>
                     </div>
 
                     {/* Read More */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-4 gap-2 justify-start -ml-3 group/btn"
-                    >
+                    <div className="mt-4 inline-flex items-center gap-2 text-sm text-primary group/btn">
                       {t("articles.read_more")}
                       <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
+                    </div>
                   </div>
-                </Card>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
         ) : (
           <Card className="glass-card p-12 text-center">
             <p className="text-muted-foreground text-lg">
-              No articles found matching your search
+              {t("articles.no_results")}
             </p>
           </Card>
         )}

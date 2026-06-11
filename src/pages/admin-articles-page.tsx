@@ -229,7 +229,7 @@ export function AdminArticlesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
                   }
-                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 [&>option]:bg-slate-900 [&>option]:text-slate-100"
                 >
                   <option>Personality</option>
                   <option>Intelligence</option>

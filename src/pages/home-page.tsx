@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,87 +11,31 @@ import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
 import type { QuizCardData } from "@/components/quiz/quiz-card";
-
-/* ── Sample data ──────────────────────────────────────────────────────────── */
-const SAMPLE_QUIZZES: QuizCardData[] = [
-  {
-    id: "1",
-    slug: "personality-color-test",
-    title: "What Color Is Your Personality?",
-    description:
-      "Discover what your favorite colors reveal about your inner self.",
-    category: "Personality",
-    questionCount: 15,
-    estimatedMinutes: 5,
-    completions: 142800,
-  },
-  {
-    id: "2",
-    slug: "mental-age-test",
-    title: "What Is Your Mental Age?",
-    description:
-      "Find out if your mind is younger or older than your actual age.",
-    category: "Mental Age",
-    questionCount: 20,
-    estimatedMinutes: 7,
-    completions: 98500,
-  },
-  {
-    id: "3",
-    slug: "iq-test",
-    title: "Quick IQ Test — Find Your Score",
-    description: "A fun 10-minute test to estimate your intelligence quotient.",
-    category: "IQ",
-    questionCount: 25,
-    estimatedMinutes: 10,
-    completions: 215000,
-  },
-  {
-    id: "4",
-    slug: "career-personality-test",
-    title: "What Career Suits Your Personality?",
-    description:
-      "Match your strengths and preferences to the perfect career path.",
-    category: "Career",
-    questionCount: 18,
-    estimatedMinutes: 6,
-    completions: 73400,
-  },
-  {
-    id: "5",
-    slug: "friendship-test",
-    title: "What Kind of Friend Are You?",
-    description: "Are you the supportive type, the funny one, or the advisor?",
-    category: "Friendship",
-    questionCount: 12,
-    estimatedMinutes: 4,
-    completions: 61200,
-  },
-  {
-    id: "6",
-    slug: "stress-level-test",
-    title: "How Stressed Are You Really?",
-    description: "Measure your stress levels and get personalized coping tips.",
-    category: "Stress",
-    questionCount: 14,
-    estimatedMinutes: 5,
-    completions: 54700,
-  },
-];
-
-const CATEGORIES = [
-  { emoji: "🧠", label: "Personality", to: "/category/personality" },
-  { emoji: "💡", label: "IQ Tests", to: "/category/iq" },
-  { emoji: "👶", label: "Mental Age", to: "/category/mental-age" },
-  { emoji: "💼", label: "Career", to: "/category/career" },
-  { emoji: "💖", label: "Relationship", to: "/category/relationship" },
-  { emoji: "🎌", label: "Anime", to: "/category/anime" },
-  { emoji: "🎬", label: "Entertainment", to: "/category/entertainment" },
-  { emoji: "🌈", label: "Color Tests", to: "/category/color" },
-];
+import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useCategories } from "@/stores/categories-store";
+import { useLanguage } from "@/lib/i18n";
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 function HomePage() {
+  const quizStore = useQuizzesAdmin();
+  const { categories } = useCategories();
+  const { t } = useLanguage();
+
+  // Get published quizzes and convert to QuizCardData
+  const publishedQuizzes = quizStore.getPublishedQuizzes();
+  const SAMPLE_QUIZZES: QuizCardData[] = publishedQuizzes
+    .map((q) => ({
+      id: q.id,
+      slug: q.slug,
+      title: q.title,
+      description: q.description,
+      category: q.category,
+      questionCount: q.questions.length,
+      estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
+      completions: 0,
+      thumbnail: q.thumbnail,
+    }))
+    .slice(0, 6);
   return (
     <div className="relative">
       {/* Ambient gradients */}
@@ -109,15 +56,14 @@ function HomePage() {
             variants={staggerItem}
             className="text-4xl sm:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight"
           >
-            Discover Who <span className="gradient-text">You Really Are</span>
+            <span className="gradient-text">{t("hero.title")}</span>
           </motion.h1>
 
           <motion.p
             variants={staggerItem}
             className="text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed"
           >
-            Viral personality quizzes, IQ tests, and career assessments — take
-            any quiz instantly and share your results with friends.
+            {t("hero.subtitle")}
           </motion.p>
 
           <motion.div
@@ -126,11 +72,11 @@ function HomePage() {
           >
             <Button size="lg" asChild>
               <Link to="/explore">
-                Explore Quizzes <ArrowRight className="size-4" />
+                {t("hero.cta_explore")} <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/categories">Browse Categories</Link>
+              <Link to="/categories">{t("hero.cta_categories")}</Link>
             </Button>
           </motion.div>
         </motion.div>
@@ -144,7 +90,7 @@ function HomePage() {
           viewport={{ once: true, margin: "-60px" }}
         >
           <SectionHeader
-            title="🔥 Trending Quizzes"
+            title={t("home.trending")}
             viewAllTo="/explore?sort=trending"
           />
           <motion.div
@@ -164,38 +110,40 @@ function HomePage() {
         <AdBanner />
 
         {/* ── Categories ────────────────────────────────────────────────── */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          <SectionHeader
-            title="📂 Browse by Category"
-            viewAllTo="/categories"
-          />
-          <motion.div
-            variants={staggerContainer}
+        {categories.length > 0 && (
+          <motion.section
+            variants={fadeUp}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+            viewport={{ once: true, margin: "-60px" }}
           >
-            {CATEGORIES.map(({ emoji, label, to }) => (
-              <motion.div key={label} variants={staggerItem}>
-                <Link
-                  to={to}
-                  className="glass-card rounded-2xl p-4 flex flex-col items-center gap-2 text-center hover:-translate-y-1 hover:border-white/20 transition-all duration-200 block group"
-                >
-                  <span className="text-3xl">{emoji}</span>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                    {label}
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.section>
+            <SectionHeader
+              title={t("home.browse_category")}
+              viewAllTo="/categories"
+            />
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+            >
+              {categories.slice(0, 8).map((category) => (
+                <motion.div key={category.id} variants={staggerItem}>
+                  <Link
+                    to={`/explore?category=${category.slug}`}
+                    className="glass-card rounded-2xl p-4 flex flex-col items-center gap-2 text-center hover:-translate-y-1 hover:border-white/20 transition-all duration-200 block group"
+                  >
+                    <span className="text-3xl">{category.icon}</span>
+                    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                      {category.name}
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.section>
+        )}
 
         {/* ── Popular Quizzes ───────────────────────────────────────────── */}
         <motion.section
@@ -208,7 +156,7 @@ function HomePage() {
             title={
               <>
                 <TrendingUp className="inline size-5 mr-2 text-primary" />
-                Popular This Week
+                {t("home.popular_week")}
               </>
             }
             viewAllTo="/explore?sort=popular"
@@ -235,18 +183,16 @@ function HomePage() {
           className="glass-card rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center gap-6 relative overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-fuchsia-600/10 via-transparent to-violet-600/10" />
-          <Badge variant="default">Ready to discover yourself?</Badge>
+          <Badge variant="default">{t("home.cta.badge")}</Badge>
           <h2 className="text-3xl sm:text-4xl font-bold max-w-xl">
-            Take a Quiz — It&apos;s{" "}
-            <span className="gradient-text">Completely Free</span>
+            <span className="gradient-text">{t("home.cta.title")}</span>
           </h2>
           <p className="text-muted-foreground max-w-md">
-            No account needed. Start any quiz right now and share your results
-            with friends.
+            {t("home.cta.description")}
           </p>
           <Button size="xl" asChild>
             <Link to="/explore">
-              Explore All Quizzes <ArrowRight className="size-5" />
+              {t("home.cta.explore_all")} <ArrowRight className="size-5" />
             </Link>
           </Button>
         </motion.section>

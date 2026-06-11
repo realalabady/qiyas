@@ -10,14 +10,14 @@ interface AnswerEditorProps {
   answers: Answer[];
   onChange: (answers: Answer[]) => void;
   quizType: string;
-  resultCategories?: string[]; // For personality-based quizzes
+  resultOptions?: Array<{ id: string; label: string }>;
 }
 
 export function AnswerEditor({
   answers,
   onChange,
   quizType,
-  resultCategories = [],
+  resultOptions = [],
 }: AnswerEditorProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Answer>({
@@ -29,6 +29,18 @@ export function AnswerEditor({
 
   const handleAddAnswer = () => {
     if (!formData.text.trim()) return;
+    if (quizType === "personality_based" && !formData.resultId) return;
+    if (
+      (quizType === "weighted_personality" ||
+        quizType === "percentage_matching") &&
+      resultOptions.length > 0
+    ) {
+      const hasValidWeight = Object.entries(formData.weights || {}).some(
+        ([resultId, value]) =>
+          resultOptions.some((option) => option.id === resultId) && value > 0,
+      );
+      if (!hasValidWeight) return;
+    }
 
     if (editingId) {
       onChange(
@@ -153,26 +165,27 @@ export function AnswerEditor({
           </div>
 
           {/* Quiz Type Specific Fields */}
-          {quizType === "weighted_personality" &&
-            resultCategories.length > 0 && (
+          {(quizType === "weighted_personality" ||
+            quizType === "percentage_matching") &&
+            resultOptions.length > 0 && (
               <div>
                 <label className="block text-xs font-medium mb-2">
-                  Personality Weights
+                  Result Weights
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {resultCategories.map((category) => (
-                    <div key={category}>
+                  {resultOptions.map((option) => (
+                    <div key={option.id}>
                       <label className="text-xs text-muted-foreground">
-                        {category}
+                        {option.label}
                       </label>
                       <Input
                         type="number"
                         min="0"
                         max="10"
-                        value={formData.weights?.[category] || 0}
+                        value={formData.weights?.[option.id] || 0}
                         onChange={(e) =>
                           handleSetWeight(
-                            category,
+                            option.id,
                             parseInt(e.target.value) || 0,
                           )
                         }
@@ -204,7 +217,7 @@ export function AnswerEditor({
             </div>
           )}
 
-          {quizType === "personality_based" && resultCategories.length > 0 && (
+          {quizType === "personality_based" && resultOptions.length > 0 && (
             <div>
               <label className="block text-xs font-medium mb-1">
                 Maps to Result
@@ -214,12 +227,12 @@ export function AnswerEditor({
                 onChange={(e) =>
                   setFormData({ ...formData, resultId: e.target.value })
                 }
-                className="w-full p-2 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 text-sm"
+                className="w-full p-2 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 text-sm [&>option]:bg-slate-900 [&>option]:text-slate-100"
               >
                 <option value="">Select a result type</option>
-                {resultCategories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                {resultOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -227,6 +240,15 @@ export function AnswerEditor({
           )}
 
           {/* Actions */}
+          {resultOptions.length === 0 &&
+            (quizType === "weighted_personality" ||
+              quizType === "percentage_matching" ||
+              quizType === "personality_based") && (
+              <p className="text-xs text-amber-300">
+                Add quiz results first, then map answers to those results.
+              </p>
+            )}
+
           <div className="flex gap-2 justify-end pt-2">
             {editingId && (
               <Button
@@ -243,7 +265,19 @@ export function AnswerEditor({
             <Button
               size="sm"
               onClick={handleAddAnswer}
-              disabled={!formData.text.trim()}
+              disabled={
+                !formData.text.trim() ||
+                (quizType === "personality_based" && !formData.resultId) ||
+                (((quizType === "weighted_personality" ||
+                  quizType === "percentage_matching") &&
+                  resultOptions.length > 0 &&
+                  !Object.entries(formData.weights || {}).some(
+                    ([resultId, value]) =>
+                      resultOptions.some((option) => option.id === resultId) &&
+                      value > 0,
+                  )) ||
+                  false)
+              }
               className="gap-1"
             >
               <Plus className="w-3 h-3" />

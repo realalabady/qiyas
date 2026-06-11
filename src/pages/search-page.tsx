@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
-import { QUIZZES, TRENDING_QUIZZES } from "@/data/seed-quizzes";
+import { useLanguage } from "@/lib/i18n";
+import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 
 const POPULAR_SEARCHES = [
   "personality test",
@@ -19,19 +20,32 @@ const POPULAR_SEARCHES = [
 ];
 
 export default function SearchPage() {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
+  const quizStore = useQuizzesAdmin();
+  const quizzes = quizStore.getPublishedQuizzes().map((quiz) => ({
+    id: quiz.id,
+    slug: quiz.slug,
+    title: quiz.title,
+    description: quiz.description,
+    category: quiz.category,
+    thumbnail: quiz.thumbnail,
+    questionCount: quiz.questions.length,
+    estimatedMinutes: Math.ceil(quiz.questions.length / 2) || 5,
+    completions: 0,
+  }));
+  const categoryFilters = [...new Set(quizzes.map((quiz) => quiz.category))].slice(0, 6);
 
   const results = useMemo(() => {
     const q = query.toLowerCase().trim();
     if (!q) return [];
-    return QUIZZES.filter(
+    return quizzes.filter(
       (quiz) =>
         quiz.title.toLowerCase().includes(q) ||
         quiz.description.toLowerCase().includes(q) ||
-        quiz.category.toLowerCase().includes(q) ||
-        quiz.tags?.some((t) => t.includes(q)),
+        quiz.category.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, quizzes]);
 
   const showResults = query.trim().length > 0;
 
@@ -45,10 +59,10 @@ export default function SearchPage() {
         className="text-center space-y-3"
       >
         <h1 className="text-3xl sm:text-5xl font-extrabold">
-          <span className="gradient-text">Search</span> Quizzes
+          <span className="gradient-text">{t("search.title")}</span>
         </h1>
         <p className="text-muted-foreground">
-          Find your perfect quiz from our library
+          {t("search.subtitle")}
         </p>
       </motion.div>
 
@@ -63,7 +77,7 @@ export default function SearchPage() {
         <Input
           autoFocus
           className="pl-12 h-14 text-lg"
-          placeholder="Type to search…"
+          placeholder={t("search.placeholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -78,7 +92,7 @@ export default function SearchPage() {
           className="space-y-3"
         >
           <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <TrendingUp className="size-4" /> Popular Searches
+            <TrendingUp className="size-4" /> {t("search.popular")}
           </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SEARCHES.map((term) => (
@@ -104,7 +118,7 @@ export default function SearchPage() {
             className="space-y-4"
           >
             <p className="text-sm text-muted-foreground">
-              {results.length} result{results.length !== 1 ? "s" : ""} for
+              {results.length} {t("search.results_for")}
               &ldquo;{query}&rdquo;
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -123,15 +137,15 @@ export default function SearchPage() {
             className="text-center py-16 space-y-3"
           >
             <p className="text-5xl">🔍</p>
-            <p className="text-xl font-semibold">No results found</p>
+            <p className="text-xl font-semibold">{t("search.none_title")}</p>
             <p className="text-muted-foreground">
-              Try different keywords or browse categories
+              {t("search.none_subtitle")}
             </p>
             <Link
               to="/categories"
               className="inline-flex items-center gap-2 text-primary hover:underline text-sm mt-2"
             >
-              Browse all categories →
+              {t("search.browse_categories")} →
             </Link>
           </motion.div>
         )
@@ -143,11 +157,11 @@ export default function SearchPage() {
           animate="visible"
           className="space-y-6"
         >
-          <p className="font-semibold flex items-center gap-2">
-            🔥 Trending Now
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {TRENDING_QUIZZES.slice(0, 4).map((quiz) => (
+            <p className="font-semibold flex items-center gap-2">
+              {t("search.trending_now")}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {quizzes.slice(0, 4).map((quiz) => (
               <motion.div key={quiz.id} variants={staggerItem}>
                 <QuizCard quiz={quiz} />
               </motion.div>
@@ -158,7 +172,7 @@ export default function SearchPage() {
               to="/explore"
               className="text-sm text-primary hover:underline"
             >
-              View all quizzes →
+              {t("search.view_all")} →
             </Link>
           </div>
         </motion.div>
@@ -173,17 +187,10 @@ export default function SearchPage() {
           className="space-y-3"
         >
           <p className="text-sm font-medium text-muted-foreground">
-            Filter by Category
+            {t("search.filter_by_category")}
           </p>
           <div className="flex flex-wrap gap-2">
-            {[
-              "Personality",
-              "IQ Tests",
-              "Mental Age",
-              "Career",
-              "Relationship",
-              "Anime",
-            ].map((cat) => (
+            {categoryFilters.map((cat) => (
               <Badge
                 key={cat}
                 variant="outline"
