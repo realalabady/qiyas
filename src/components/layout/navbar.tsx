@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X, Zap, Search } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -51,18 +51,11 @@ export function Navbar() {
               to="/"
               className="flex items-center gap-2 font-bold text-lg shrink-0"
             >
-              {theme.logo ? (
-                <img
-                  src={theme.logo}
-                  alt="logo"
-                  className="size-8 rounded-xl object-cover border border-border/60"
-                />
-              ) : (
-                <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-lg shadow-primary/40">
-                  <Zap className="size-4 text-white" />
-                </span>
-              )}
-              <span className="gradient-text">Qiyas</span>
+              <img
+                src={theme.logo || "/al-maarefah-header.png"}
+                alt="Al-Maarefah"
+                className="h-12 sm:h-14 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop links */}

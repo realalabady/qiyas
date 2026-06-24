@@ -59,7 +59,7 @@ export function AdminLoginPage() {
         {/* Header */}
         <motion.div variants={staggerItem} className="text-center mb-8">
           <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
-            Qiyas
+            Al-Maarefah
           </div>
           <p className="text-slate-400">Admin Portal</p>
         </motion.div>

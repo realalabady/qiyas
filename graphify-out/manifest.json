@@ -1,0 +1,482 @@
+{
+  "auth_data.json": {
+    "mtime": 1780924134.2767653,
+    "ast_hash": "639569e90462f7e7c306031e2c7c08d7",
+    "semantic_hash": ""
+  },
+  "components.json": {
+    "mtime": 1780571388.604441,
+    "ast_hash": "2648399fa25b677ec0311cc0c576f0af",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1780493296.9238255,
+    "ast_hash": "0355276bc79439afe3c53e3a2470ca1e",
+    "semantic_hash": ""
+  },
+  "firebase.json": {
+    "mtime": 1780924231.4188545,
+    "ast_hash": "785f84dfdf435712fe9a861eb4d49d80",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1781477623.1466732,
+    "ast_hash": "6e278849f434aa7576a2d47576f41e1e",
+    "semantic_hash": ""
+  },
+  "setup-admin-firestore.js": {
+    "mtime": 1781177898.2166827,
+    "ast_hash": "49f49c324c355e60b3e47b397ae5b116",
+    "semantic_hash": ""
+  },
+  "setup-admin.mjs": {
+    "mtime": 1780924146.2959375,
+    "ast_hash": "84ea30c39a58e64cc0d8fc547a45762b",
+    "semantic_hash": ""
+  },
+  "src/App.tsx": {
+    "mtime": 1781185049.726693,
+    "ast_hash": "298bbb2a2215ed44dbfe742dd335251d",
+    "semantic_hash": ""
+  },
+  "src/app/router.tsx": {
+    "mtime": 1781185059.0566947,
+    "ast_hash": "b1135d89110711cac02962bc767a1682",
+    "semantic_hash": ""
+  },
+  "src/components/ads/ad-banner.tsx": {
+    "mtime": 1781177162.9607058,
+    "ast_hash": "9302a56676c387454e9eba4ea4c08695",
+    "semantic_hash": ""
+  },
+  "src/components/auth/protected-admin-route.tsx": {
+    "mtime": 1781177161.5670614,
+    "ast_hash": "65943485fa5f56552e03eeaf27234328",
+    "semantic_hash": ""
+  },
+  "src/components/layout/app-frame.tsx": {
+    "mtime": 1780572312.9037993,
+    "ast_hash": "2fa2bda7bc9b8608a02727505134687f",
+    "semantic_hash": ""
+  },
+  "src/components/layout/footer.tsx": {
+    "mtime": 1781185342.472994,
+    "ast_hash": "f6cc6db3e7261d853d56356aedeb9f44",
+    "semantic_hash": ""
+  },
+  "src/components/layout/language-switcher.tsx": {
+    "mtime": 1781180900.2286735,
+    "ast_hash": "55354ec616eea277643f53bdb9a7a362",
+    "semantic_hash": ""
+  },
+  "src/components/layout/navbar.tsx": {
+    "mtime": 1781185041.955909,
+    "ast_hash": "3ea82d932b7b2c39f849a2e68ef4ed4f",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/answer-editor.tsx": {
+    "mtime": 1781180063.910913,
+    "ast_hash": "d4dcfa4e7d584da196ea9acf9219312e",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/image-upload.tsx": {
+    "mtime": 1780931621.5529552,
+    "ast_hash": "e9e6210b48e7b3d75d446961bb026d3c",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/question-editor.tsx": {
+    "mtime": 1781179940.6593559,
+    "ast_hash": "fc2f3ee8d2ec36f781c5f76228c10c44",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/quiz-card.tsx": {
+    "mtime": 1781177162.6646688,
+    "ast_hash": "6b0f8efecea09951fbb92058451329a3",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/results-display.tsx": {
+    "mtime": 1781177896.3653383,
+    "ast_hash": "55960e52013423ef04dfbb0526bf609e",
+    "semantic_hash": ""
+  },
+  "src/components/quiz/results-editor.tsx": {
+    "mtime": 1781180045.2537115,
+    "ast_hash": "0c544e58694acd0e9c1b598eceb42adf",
+    "semantic_hash": ""
+  },
+  "src/components/ui/badge.tsx": {
+    "mtime": 1781177160.8678226,
+    "ast_hash": "5deaca4a9b1e7ebf7a68e6607c371bda",
+    "semantic_hash": ""
+  },
+  "src/components/ui/button.tsx": {
+    "mtime": 1781177160.819298,
+    "ast_hash": "f4b905358e94b4ee9d6ddcec82ff6fc9",
+    "semantic_hash": ""
+  },
+  "src/components/ui/card.tsx": {
+    "mtime": 1780571405.0251641,
+    "ast_hash": "33d0e444a91cbc7b25b17c9039d78d79",
+    "semantic_hash": ""
+  },
+  "src/components/ui/dialog.tsx": {
+    "mtime": 1781177161.4337418,
+    "ast_hash": "eab550378d1b5814cd2e28cfaa6b6926",
+    "semantic_hash": ""
+  },
+  "src/components/ui/input.tsx": {
+    "mtime": 1781177160.7982697,
+    "ast_hash": "3a576a507a36b37fb5ad1625d4bea2d8",
+    "semantic_hash": ""
+  },
+  "src/components/ui/label.tsx": {
+    "mtime": 1781177160.787233,
+    "ast_hash": "39d11827aa7c8ca5510b7c6b10cbee7b",
+    "semantic_hash": ""
+  },
+  "src/components/ui/progress.tsx": {
+    "mtime": 1781177160.8176775,
+    "ast_hash": "afec47c027194fabb0b597ed4ace604a",
+    "semantic_hash": ""
+  },
+  "src/components/ui/separator.tsx": {
+    "mtime": 1781177160.819298,
+    "ast_hash": "f9bfeb9bc9812aae5816ebcdfa3a9161",
+    "semantic_hash": ""
+  },
+  "src/components/ui/skeleton.tsx": {
+    "mtime": 1781177160.7982697,
+    "ast_hash": "b6f7b5a808f3c308c63f5d7eee3cd6ae",
+    "semantic_hash": ""
+  },
+  "src/config/env.ts": {
+    "mtime": 1780571614.2506194,
+    "ast_hash": "4b802c026521a4aa19116f40122ea4ee",
+    "semantic_hash": ""
+  },
+  "src/contexts/admin-context.tsx": {
+    "mtime": 1781177162.2431762,
+    "ast_hash": "7b77663ca8f05a5526bedf90e6c14e9e",
+    "semantic_hash": ""
+  },
+  "src/data/seed-articles.ts": {
+    "mtime": 1781177161.2399547,
+    "ast_hash": "f64cabcc5a09348c18f2b4f381537cd0",
+    "semantic_hash": ""
+  },
+  "src/data/seed-engine-quizzes.ts": {
+    "mtime": 1781177896.399663,
+    "ast_hash": "d2e73d1ab72203d4873c0db487cfbb13",
+    "semantic_hash": ""
+  },
+  "src/data/seed-questions.ts": {
+    "mtime": 1780575103.3206534,
+    "ast_hash": "9ca897a51d356fd385c95cb5448b0a0c",
+    "semantic_hash": ""
+  },
+  "src/data/seed-quizzes.ts": {
+    "mtime": 1781177160.9893904,
+    "ast_hash": "607d5e1c6389bc2b6de066ad9dbce678",
+    "semantic_hash": ""
+  },
+  "src/layouts/admin-layout.tsx": {
+    "mtime": 1781185052.276436,
+    "ast_hash": "9dfa18a8adbd197ac4732738f83caf70",
+    "semantic_hash": ""
+  },
+  "src/layouts/public-layout.tsx": {
+    "mtime": 1781180905.030777,
+    "ast_hash": "e019e4bad216c3345f8d7af64362b788",
+    "semantic_hash": ""
+  },
+  "src/lib/firebase/admins.ts": {
+    "mtime": 1780571592.851161,
+    "ast_hash": "a98c06942e4a019ad722d5c9ab9466e9",
+    "semantic_hash": ""
+  },
+  "src/lib/firebase/app.ts": {
+    "mtime": 1780571583.5013428,
+    "ast_hash": "03f82e94f1bb62cbfebe059a5b2448c4",
+    "semantic_hash": ""
+  },
+  "src/lib/firebase/services.ts": {
+    "mtime": 1780571587.467816,
+    "ast_hash": "9dc0503ecec1911f330ab206f22d8934",
+    "semantic_hash": ""
+  },
+  "src/lib/i18n.ts": {
+    "mtime": 1781185790.7731721,
+    "ast_hash": "edd70b26b8ac4cdb6453e31d2eb0878d",
+    "semantic_hash": ""
+  },
+  "src/lib/motion.ts": {
+    "mtime": 1781177161.0069182,
+    "ast_hash": "4257bd48eb3b82d3f5b698f99158be62",
+    "semantic_hash": ""
+  },
+  "src/lib/quiz-engine.ts": {
+    "mtime": 1781180034.393355,
+    "ast_hash": "31499342168cf17d30139629af0c5cb1",
+    "semantic_hash": ""
+  },
+  "src/lib/quiz-validation.ts": {
+    "mtime": 1781179932.1856582,
+    "ast_hash": "4d2e5ca3371d353a2e9b574027dec742",
+    "semantic_hash": ""
+  },
+  "src/lib/seo.ts": {
+    "mtime": 1781177161.3491845,
+    "ast_hash": "1149fa37c417a6f0feb22655588f1dd3",
+    "semantic_hash": ""
+  },
+  "src/lib/utils.ts": {
+    "mtime": 1780571391.2210095,
+    "ast_hash": "e3f848f1b39f863e6164cf58b5a8e752",
+    "semantic_hash": ""
+  },
+  "src/main.tsx": {
+    "mtime": 1780493297.0834644,
+    "ast_hash": "787e5a07efeb2bf6209d5937195f2f68",
+    "semantic_hash": ""
+  },
+  "src/pages/about-page.tsx": {
+    "mtime": 1781182029.2307985,
+    "ast_hash": "e730d026b0f2be9ce88d7422c7177104",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-analytics-page.tsx": {
+    "mtime": 1781177162.2842143,
+    "ast_hash": "4dc3b21c534f8526bce04d80eabf482b",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-articles-page.tsx": {
+    "mtime": 1781179993.3259823,
+    "ast_hash": "6731507cbfe4a72eedc62a1b4c44c0c2",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-categories-page.tsx": {
+    "mtime": 1781185738.4099312,
+    "ast_hash": "8707f671252720975f8cb899f759e821",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-dashboard-page.tsx": {
+    "mtime": 1781185552.5179808,
+    "ast_hash": "2ee74226a74e2be933e3e5f0ea3aee1f",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-login-page.tsx": {
+    "mtime": 1781177161.3390858,
+    "ast_hash": "d90e4cb7bd7ad1cfb9b4959deedcf869",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-media-library-page.tsx": {
+    "mtime": 1781177162.7919173,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-media-page.tsx": {
+    "mtime": 1781185770.9173076,
+    "ast_hash": "1bf8f17fbc9fd2f6a07df14f2b70a49c",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-quizzes-page.tsx": {
+    "mtime": 1781179988.911583,
+    "ast_hash": "c843ed2b873894a2a2d490a0d79cb6eb",
+    "semantic_hash": ""
+  },
+  "src/pages/admin-settings-page.tsx": {
+    "mtime": 1781185752.074516,
+    "ast_hash": "9febd8fce0306131ef1fcce242f2011c",
+    "semantic_hash": ""
+  },
+  "src/pages/article-detail-page.tsx": {
+    "mtime": 1781184726.3075922,
+    "ast_hash": "405d361401c856c29fe1f6e05e3cb92f",
+    "semantic_hash": ""
+  },
+  "src/pages/articles-page.tsx": {
+    "mtime": 1781184713.6887922,
+    "ast_hash": "1940e5fa3ae05d144b7dd52b2f3dfd17",
+    "semantic_hash": ""
+  },
+  "src/pages/categories-page.tsx": {
+    "mtime": 1781185370.074097,
+    "ast_hash": "4c581be198195be6a020699dc48365ec",
+    "semantic_hash": ""
+  },
+  "src/pages/contact-page.tsx": {
+    "mtime": 1781182040.402543,
+    "ast_hash": "95e051ecc056150820fd0eb73dfa1da1",
+    "semantic_hash": ""
+  },
+  "src/pages/explore-page.tsx": {
+    "mtime": 1781182264.704528,
+    "ast_hash": "fe41dc431d009f1e28e4573b87c2686f",
+    "semantic_hash": ""
+  },
+  "src/pages/faq-page.tsx": {
+    "mtime": 1781182051.2103279,
+    "ast_hash": "b1a6d47754409793fe831a64d1eabc0f",
+    "semantic_hash": ""
+  },
+  "src/pages/home-page.tsx": {
+    "mtime": 1781185335.5566432,
+    "ast_hash": "14e761912ad9728de920c287dd84f262",
+    "semantic_hash": ""
+  },
+  "src/pages/not-found-page.tsx": {
+    "mtime": 1780572166.6749198,
+    "ast_hash": "bf19c1f243b977acb6a564ef44a467de",
+    "semantic_hash": ""
+  },
+  "src/pages/placeholder-page.tsx": {
+    "mtime": 1780572162.008353,
+    "ast_hash": "95e14bd25bbe7e2cad305a4057ca734a",
+    "semantic_hash": ""
+  },
+  "src/pages/privacy-page.tsx": {
+    "mtime": 1781182063.172908,
+    "ast_hash": "3c66cf977f75a1f48552a4540d76103a",
+    "semantic_hash": ""
+  },
+  "src/pages/quiz-detail-page.tsx": {
+    "mtime": 1781182660.8394742,
+    "ast_hash": "207ea1b571e1184c0b818d378358324e",
+    "semantic_hash": ""
+  },
+  "src/pages/quiz-result-page.tsx": {
+    "mtime": 1781183733.6654687,
+    "ast_hash": "fe189c6d0ed21de359f4e6fe13987f54",
+    "semantic_hash": ""
+  },
+  "src/pages/quiz-take-page.tsx": {
+    "mtime": 1781180006.5437393,
+    "ast_hash": "bc29a252d4dc8e54cc0a6f2cf9959e9e",
+    "semantic_hash": ""
+  },
+  "src/pages/search-page.tsx": {
+    "mtime": 1781185358.2418044,
+    "ast_hash": "5fd893d5ab4b9768ed2dcca579ed0dd5",
+    "semantic_hash": ""
+  },
+  "src/pages/terms-page.tsx": {
+    "mtime": 1781182074.8075156,
+    "ast_hash": "865fe1c77431e1e513924cb7463bab48",
+    "semantic_hash": ""
+  },
+  "src/stores/analytics-store.ts": {
+    "mtime": 1781177897.078874,
+    "ast_hash": "d998a443a416bf85ada65b08710128a4",
+    "semantic_hash": ""
+  },
+  "src/stores/articles-store.ts": {
+    "mtime": 1781184454.5950985,
+    "ast_hash": "90b76f40b9baa5e7cb02ae2488920197",
+    "semantic_hash": ""
+  },
+  "src/stores/categories-store.ts": {
+    "mtime": 1781185306.5544958,
+    "ast_hash": "0b8639b3fc9a81e4428ebefe4498cebf",
+    "semantic_hash": ""
+  },
+  "src/stores/quiz-store.ts": {
+    "mtime": 1781177161.2753768,
+    "ast_hash": "88ab3a23f766e4807cf7ac85f4fa4f68",
+    "semantic_hash": ""
+  },
+  "src/stores/quiz-take-store.ts": {
+    "mtime": 1781179996.9643142,
+    "ast_hash": "82db919a21cfd2365a2310d09a85b2bd",
+    "semantic_hash": ""
+  },
+  "src/stores/quizzes-admin-store.ts": {
+    "mtime": 1781183895.863107,
+    "ast_hash": "0fe6a874dd8ba66d88be90071cf5b9f7",
+    "semantic_hash": ""
+  },
+  "src/stores/theme-store.ts": {
+    "mtime": 1781185088.0571535,
+    "ast_hash": "05f743e51fae13ebc64d446ce3427826",
+    "semantic_hash": ""
+  },
+  "src/vite-env.d.ts": {
+    "mtime": 1780571574.1344795,
+    "ast_hash": "45908e7a2a624546f1f6c536551f59fc",
+    "semantic_hash": ""
+  },
+  "tsconfig.app.json": {
+    "mtime": 1780571426.3519063,
+    "ast_hash": "413a85ae27266546b8b3ae8516ef4496",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1780493296.9632204,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": ""
+  },
+  "tsconfig.node.json": {
+    "mtime": 1780493296.9632204,
+    "ast_hash": "70bdd0a673bcfc0e828080b306e7c680",
+    "semantic_hash": ""
+  },
+  "vercel.json": {
+    "mtime": 1780956467.2382345,
+    "ast_hash": "bf01dc826e901a2ff470a1680e15ea43",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1780571379.393633,
+    "ast_hash": "537c5e601b6eceaafe9886f17671ba09",
+    "semantic_hash": ""
+  },
+  "ADMIN_SETUP.md": {
+    "mtime": 1781177160.9563909,
+    "ast_hash": "d1a0660a148f9c63351457c97b26a6cb",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1781462614.8055918,
+    "ast_hash": "1c7bc79bf90a7ff6de09253143d3a9b1",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1780956053.7977574,
+    "ast_hash": "3bee3ad0032f00c040dc49c17b635fb2",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1780571206.2993772,
+    "ast_hash": "c5e8615b879f5908d1b2f02eaaa2711c",
+    "semantic_hash": ""
+  },
+  "public/setup-admin.html": {
+    "mtime": 1780924209.6247323,
+    "ast_hash": "4e1bf70f483dd8b15c50efb424bbba08",
+    "semantic_hash": ""
+  },
+  "public/favicon.svg": {
+    "mtime": 1780493297.01238,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": ""
+  },
+  "public/icons.svg": {
+    "mtime": 1780493297.0266852,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": ""
+  },
+  "src/assets/hero.png": {
+    "mtime": 1780493296.9952066,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": ""
+  },
+  "src/assets/react.svg": {
+    "mtime": 1780493297.0480494,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": ""
+  },
+  "src/assets/vite.svg": {
+    "mtime": 1780493297.059238,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": ""
+  }
+}

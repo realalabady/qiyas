@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/lib/i18n";
@@ -17,10 +16,8 @@ const LEGAL_LINKS = [
 ];
 
 const SOCIAL = [
-  { href: "#", label: "X (Twitter)", abbr: "𝕏" },
-  { href: "#", label: "Instagram", abbr: "IG" },
-  { href: "#", label: "YouTube", abbr: "YT" },
-  { href: "#", label: "Facebook", abbr: "FB" },
+  { href: "https://x.com/almaarefahh", label: "X (Twitter)", abbr: "𝕏" },
+  { href: "https://instagram.com/almaarefahh", label: "Instagram", abbr: "IG" },
 ];
 
 function FooterCol({
@@ -63,10 +60,11 @@ export function Footer() {
               to="/"
               className="flex items-center gap-2 font-bold text-lg w-fit"
             >
-              <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-lg shadow-primary/40">
-                <Zap className="size-4 text-white" />
-              </span>
-              <span className="gradient-text">Qiyas</span>
+              <img
+                src="/al-maarefah-header.png"
+                alt="Al-Maarefah"
+                className="h-14 w-auto object-contain"
+              />
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">
               {t("footer.description")}
@@ -76,6 +74,8 @@ export function Footer() {
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="flex size-8 items-center justify-center rounded-lg border border-border/50 bg-white/5 text-muted-foreground hover:text-foreground hover:border-border transition-colors text-xs font-bold"
                 >
@@ -86,7 +86,9 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold text-foreground">{t("footer.categories")}</p>
+            <p className="text-sm font-semibold text-foreground">
+              {t("footer.categories")}
+            </p>
             <Link
               to="/categories"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -112,7 +114,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground">
           <p>
-            © {new Date().getFullYear()} Qiyas. {t("footer.rights_only")}
+            © {new Date().getFullYear()} Al-Maarefah. {t("footer.rights_only")}
           </p>
           <p>{t("footer.made_with")}</p>
         </div>

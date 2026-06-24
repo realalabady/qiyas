@@ -59,10 +59,13 @@ export function getStructuredData(type: "Quiz" | "FAQPage" | "Organization") {
     return {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "Qiyas",
+      name: "Al-Maarefah",
       url: baseUrl,
-      logo: `${baseUrl}/logo.png`,
-      sameAs: ["https://twitter.com/qiyas", "https://instagram.com/qiyas"],
+      logo: `${baseUrl}/al-maarefah-icon.png`,
+      sameAs: [
+        "https://x.com/almaarefahh",
+        "https://instagram.com/almaarefahh",
+      ],
     };
   }
 

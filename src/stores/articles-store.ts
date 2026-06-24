@@ -42,7 +42,7 @@ const normalizeArticle = (raw: Partial<Article>): Article => ({
   excerpt: raw.excerpt || "",
   content: raw.content || "",
   category: raw.category || "General",
-  author: raw.author || "Qiyas Team",
+  author: raw.author || "Al-Maarefah Team",
   tags: raw.tags || [],
   image: raw.image ?? null,
   published: Boolean(raw.published),

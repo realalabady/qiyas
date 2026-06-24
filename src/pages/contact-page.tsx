@@ -44,10 +44,10 @@ export default function ContactPage() {
           <div>
             <p className="font-medium">{t("contact.email_title")}</p>
             <a
-              href="mailto:hello@qiyas.app"
+              href="mailto:hello@al-maarefah.app"
               className="text-sm text-primary hover:underline"
             >
-              hello@qiyas.app
+              hello@al-maarefah.app
             </a>
           </div>
         </div>

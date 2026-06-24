@@ -77,7 +77,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "admin.settings": "Settings",
     "admin.overview": "Overview",
     "admin.area": "Admin Area",
-    "admin.console": "Qiyas Console",
+    "admin.console": "Al-Maarefah Console",
     "admin.secure_workspace": "Secure Workspace",
     "admin.secure_note": "Admin-only workspace.",
     "admin.welcome": "Welcome back! Here's your quiz platform overview.",
@@ -297,12 +297,12 @@ export const translations: Record<Language, Record<string, string>> = {
     "footer.terms": "Terms of Service",
     "footer.made_with": "Made with ❤️ for curious minds",
     "footer.rights_only": "All rights reserved.",
-    "footer.copyright": "© 2026 Qiyas. All rights reserved.",
+    "footer.copyright": "© 2026 Al-Maarefah. All rights reserved.",
 
     // About page
-    "about.title": "About Qiyas",
+    "about.title": "About Al-Maarefah",
     "about.subtitle":
-      "Qiyas is a viral quiz platform built for curious minds. We believe self-discovery should be fun, fast, and free — no account required.",
+      "Al-Maarefah is a viral quiz platform built for curious minds. We believe self-discovery should be fun, fast, and free — no account required.",
     "about.value.speed.title": "Speed First",
     "about.value.speed.body":
       "Every quiz loads instantly and results appear the second you finish.",
@@ -311,12 +311,12 @@ export const translations: Record<Language, Record<string, string>> = {
       "Our quizzes are researched and validated to give meaningful, reliable insights.",
     "about.value.free.title": "Always Free",
     "about.value.free.body":
-      "No paywall, no registration, no tricks. Qiyas is free for everyone, forever.",
+      "No paywall, no registration, no tricks. Al-Maarefah is free for everyone, forever.",
     "about.mission.title": "Our Mission",
     "about.mission.p1":
-      "We created Qiyas because great personality insights and IQ tests were locked behind paywalls, email signups, and intrusive apps. We wanted something different: a platform where you open the site, take a quiz, get your result, and share it — all in under five minutes.",
+      "We created Al-Maarefah because great personality insights and IQ tests were locked behind paywalls, email signups, and intrusive apps. We wanted something different: a platform where you open the site, take a quiz, get your result, and share it — all in under five minutes.",
     "about.mission.p2":
-      "Every quiz on Qiyas is crafted with care: researched by psychology enthusiasts, written by storytellers, and designed by people who care about user experience. We're building the quiz platform we always wanted to use.",
+      "Every quiz on Al-Maarefah is crafted with care: researched by psychology enthusiasts, written by storytellers, and designed by people who care about user experience. We're building the quiz platform we always wanted to use.",
 
     // Contact page
     "contact.title": "Contact Us",
@@ -337,10 +337,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // FAQ page
     "faq.title": "Frequently Asked Questions",
-    "faq.subtitle": "Everything you need to know about Qiyas.",
+    "faq.subtitle": "Everything you need to know about Al-Maarefah.",
     "faq.q1": "Are all quizzes free?",
     "faq.a1":
-      "Yes! Every quiz on Qiyas is 100% free. No subscriptions, no hidden fees, no paywalls — ever.",
+      "Yes! Every quiz on Al-Maarefah is 100% free. No subscriptions, no hidden fees, no paywalls — ever.",
     "faq.q2": "Do I need to create an account?",
     "faq.a2":
       "Absolutely not. You can take any quiz instantly without signing up. Just visit the quiz page and start.",
@@ -365,7 +365,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "privacy.updated": "Last updated: June 2025",
     "privacy.s1.title": "1. Information We Collect",
     "privacy.s1.p1":
-      "Qiyas does not require account creation. We collect no personally identifiable information from quiz takers.",
+      "Al-Maarefah does not require account creation. We collect no personally identifiable information from quiz takers.",
     "privacy.s1.p2":
       "We collect anonymous, aggregated usage data — such as which quizzes are viewed or started — to improve the platform.",
     "privacy.s2.title": "2. Cookies",
@@ -378,13 +378,13 @@ export const translations: Record<Language, Record<string, string>> = {
       "We use privacy-respecting analytics to understand how visitors use the site. This includes page views and quiz completion rates — no personal data is collected.",
     "privacy.s4.title": "4. Google AdSense",
     "privacy.s4.p1":
-      "Qiyas may display advertisements served by Google AdSense. Google may use cookies to show relevant ads based on your browsing history. You can opt out via Google's Ad Settings.",
+      "Al-Maarefah may display advertisements served by Google AdSense. Google may use cookies to show relevant ads based on your browsing history. You can opt out via Google's Ad Settings.",
     "privacy.s5.title": "5. Third-Party Services",
     "privacy.s5.p1":
       "We use Firebase (Google) for our backend infrastructure. Firebase may process anonymized usage data in accordance with Google's Privacy Policy.",
     "privacy.s6.title": "6. Children's Privacy",
     "privacy.s6.p1":
-      "Qiyas is not directed at children under 13. We do not knowingly collect data from children.",
+      "Al-Maarefah is not directed at children under 13. We do not knowingly collect data from children.",
     "privacy.s7.title": "7. Changes to This Policy",
     "privacy.s7.p1":
       "We may update this policy periodically. Changes will be posted on this page with an updated date.",
@@ -396,25 +396,25 @@ export const translations: Record<Language, Record<string, string>> = {
     "terms.updated": "Last updated: June 2025",
     "terms.s1.title": "1. Acceptance of Terms",
     "terms.s1.p1":
-      "By accessing or using Qiyas, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the platform.",
+      "By accessing or using Al-Maarefah, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the platform.",
     "terms.s2.title": "2. Use of the Platform",
     "terms.s2.p1":
-      "Qiyas is provided for entertainment and personal insight purposes only. You agree to use it only for lawful purposes and in a manner that does not infringe the rights of others.",
+      "Al-Maarefah is provided for entertainment and personal insight purposes only. You agree to use it only for lawful purposes and in a manner that does not infringe the rights of others.",
     "terms.s2.p2":
       "You must not attempt to scrape, copy, reproduce, or distribute our quiz content without written permission.",
     "terms.s3.title": "3. Content Ownership",
     "terms.s3.p1":
-      "All quiz content, including questions, results, and design, is the intellectual property of Qiyas. Results generated are for personal, non-commercial use.",
+      "All quiz content, including questions, results, and design, is the intellectual property of Al-Maarefah. Results generated are for personal, non-commercial use.",
     "terms.s3.p2":
       "When you share a result, you grant us a non-exclusive license to display that shared content.",
     "terms.s4.title": "4. Disclaimer",
     "terms.s4.p1":
-      "Qiyas quizzes are for entertainment and self-reflection only. They are not a substitute for professional psychological, medical, or career advice.",
+      "Al-Maarefah quizzes are for entertainment and self-reflection only. They are not a substitute for professional psychological, medical, or career advice.",
     "terms.s4.p2":
       "Results are indicative and not scientifically validated clinical assessments.",
     "terms.s5.title": "5. Limitation of Liability",
     "terms.s5.p1":
-      "Qiyas is provided \"as is\" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform.",
+      "Al-Maarefah is provided \"as is\" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform.",
     "terms.s6.title": "6. Changes to Terms",
     "terms.s6.p1":
       "We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the new terms.",
@@ -491,7 +491,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "admin.settings": "الإعدادات",
     "admin.overview": "نظرة عامة",
     "admin.area": "منطقة الإدارة",
-    "admin.console": "لوحة قياس",
+    "admin.console": "لوحة المعرفة",
     "admin.secure_workspace": "مساحة عمل آمنة",
     "admin.secure_note": "مساحة مخصصة للمشرفين فقط.",
     "admin.welcome": "مرحبًا بعودتك! هذه نظرة عامة على منصة الاختبارات.",
@@ -711,12 +711,12 @@ export const translations: Record<Language, Record<string, string>> = {
     "footer.terms": "الشروط والأحكام",
     "footer.made_with": "صُنع بـ ❤️ للعقول الفضولية",
     "footer.rights_only": "جميع الحقوق محفوظة.",
-    "footer.copyright": "© 2026 Qiyas. جميع الحقوق محفوظة.",
+    "footer.copyright": "© 2026 Al-Maarefah. جميع الحقوق محفوظة.",
 
     // About page
-    "about.title": "عن قياس",
+    "about.title": "عن المعرفة",
     "about.subtitle":
-      "قياس منصة اختبارات فيروسية للعقول الفضولية. نؤمن أن اكتشاف الذات يجب أن يكون ممتعًا وسريعًا ومجانيًا — بدون إنشاء حساب.",
+      "المعرفة منصة اختبارات فيروسية للعقول الفضولية. نؤمن أن اكتشاف الذات يجب أن يكون ممتعًا وسريعًا ومجانيًا — بدون إنشاء حساب.",
     "about.value.speed.title": "السرعة أولًا",
     "about.value.speed.body":
       "كل اختبار يفتح فورًا وتظهر النتيجة مباشرة بعد الانتهاء.",
@@ -725,12 +725,12 @@ export const translations: Record<Language, Record<string, string>> = {
       "اختباراتنا مبنية بعناية لتقديم نتائج مفيدة وموثوقة.",
     "about.value.free.title": "مجانًا دائمًا",
     "about.value.free.body":
-      "لا جدار دفع، لا تسجيل، ولا حيل. قياس مجاني للجميع دائمًا.",
+      "لا جدار دفع، لا تسجيل، ولا حيل. المعرفة مجاني للجميع دائمًا.",
     "about.mission.title": "مهمتنا",
     "about.mission.p1":
-      "أنشأنا قياس لأن اختبارات الشخصية والذكاء كانت غالبًا خلف اشتراكات وتسجيل بريد وتطبيقات مزعجة. أردنا تجربة مختلفة: تدخل الموقع، تجيب الاختبار، تحصل على النتيجة، وتشاركها — خلال دقائق.",
+      "أنشأنا المعرفة لأن اختبارات الشخصية والذكاء كانت غالبًا خلف اشتراكات وتسجيل بريد وتطبيقات مزعجة. أردنا تجربة مختلفة: تدخل الموقع، تجيب الاختبار، تحصل على النتيجة، وتشاركها — خلال دقائق.",
     "about.mission.p2":
-      "كل اختبار في قياس يُصنع بعناية: بحث، كتابة، وتجربة استخدام عالية. نحن نبني منصة الاختبارات التي تمنينا استخدامها دائمًا.",
+      "كل اختبار في المعرفة يُصنع بعناية: بحث، كتابة، وتجربة استخدام عالية. نحن نبني منصة الاختبارات التي تمنينا استخدامها دائمًا.",
 
     // Contact page
     "contact.title": "اتصل بنا",
@@ -751,10 +751,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // FAQ page
     "faq.title": "الأسئلة الشائعة",
-    "faq.subtitle": "كل ما تحتاج معرفته عن قياس.",
+    "faq.subtitle": "كل ما تحتاج معرفته عن المعرفة.",
     "faq.q1": "هل كل الاختبارات مجانية؟",
     "faq.a1":
-      "نعم! كل الاختبارات في قياس مجانية 100٪. بدون اشتراكات أو رسوم مخفية أو جدار دفع.",
+      "نعم! كل الاختبارات في المعرفة مجانية 100٪. بدون اشتراكات أو رسوم مخفية أو جدار دفع.",
     "faq.q2": "هل أحتاج إلى إنشاء حساب؟",
     "faq.a2":
       "أبدًا. يمكنك البدء بأي اختبار فورًا بدون تسجيل.",
@@ -779,7 +779,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "privacy.updated": "آخر تحديث: يونيو 2025",
     "privacy.s1.title": "1. المعلومات التي نجمعها",
     "privacy.s1.p1":
-      "قياس لا يتطلب إنشاء حساب. نحن لا نجمع بيانات تعريف شخصية من المستخدمين.",
+      "المعرفة لا يتطلب إنشاء حساب. نحن لا نجمع بيانات تعريف شخصية من المستخدمين.",
     "privacy.s1.p2":
       "نجمع بيانات استخدام مجهولة ومجمعة — مثل الاختبارات التي تمت مشاهدتها أو البدء بها — لتحسين المنصة.",
     "privacy.s2.title": "2. ملفات تعريف الارتباط",
@@ -792,13 +792,13 @@ export const translations: Record<Language, Record<string, string>> = {
       "نستخدم تحليلات تراعي الخصوصية لفهم استخدام الموقع، مثل مشاهدات الصفحات ومعدلات إكمال الاختبارات.",
     "privacy.s4.title": "4. إعلانات Google AdSense",
     "privacy.s4.p1":
-      "قد يعرض قياس إعلانات عبر Google AdSense. قد تستخدم Google ملفات تعريف ارتباط لعرض إعلانات مناسبة ويمكنك إيقاف ذلك من إعدادات الإعلانات لدى Google.",
+      "قد يعرض المعرفة إعلانات عبر Google AdSense. قد تستخدم Google ملفات تعريف ارتباط لعرض إعلانات مناسبة ويمكنك إيقاف ذلك من إعدادات الإعلانات لدى Google.",
     "privacy.s5.title": "5. خدمات الطرف الثالث",
     "privacy.s5.p1":
       "نستخدم Firebase (من Google) للبنية الخلفية، وقد تتم معالجة بيانات استخدام مجهولة حسب سياسة خصوصية Google.",
     "privacy.s6.title": "6. خصوصية الأطفال",
     "privacy.s6.p1":
-      "قياس غير موجه للأطفال دون 13 عامًا، ولا نجمع بيانات منهم عمدًا.",
+      "المعرفة غير موجه للأطفال دون 13 عامًا، ولا نجمع بيانات منهم عمدًا.",
     "privacy.s7.title": "7. التغييرات على هذه السياسة",
     "privacy.s7.p1":
       "قد نقوم بتحديث هذه السياسة بشكل دوري، وسيتم نشر أي تعديل في هذه الصفحة مع تاريخ التحديث.",
@@ -810,25 +810,25 @@ export const translations: Record<Language, Record<string, string>> = {
     "terms.updated": "آخر تحديث: يونيو 2025",
     "terms.s1.title": "1. قبول الشروط",
     "terms.s1.p1":
-      "باستخدامك منصة قياس، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا لم توافق، يرجى عدم استخدام المنصة.",
+      "باستخدامك منصة المعرفة، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا لم توافق، يرجى عدم استخدام المنصة.",
     "terms.s2.title": "2. استخدام المنصة",
     "terms.s2.p1":
-      "قياس مخصص للترفيه وفهم الذات. يجب استخدامه بشكل قانوني ودون انتهاك حقوق الآخرين.",
+      "المعرفة مخصص للترفيه وفهم الذات. يجب استخدامه بشكل قانوني ودون انتهاك حقوق الآخرين.",
     "terms.s2.p2":
       "يُمنع نسخ أو سحب أو إعادة نشر محتوى الاختبارات دون إذن كتابي.",
     "terms.s3.title": "3. ملكية المحتوى",
     "terms.s3.p1":
-      "جميع محتويات الاختبارات وتصميمها ملكية فكرية لقياس. النتائج للاستخدام الشخصي وغير التجاري.",
+      "جميع محتويات الاختبارات وتصميمها ملكية فكرية للمعرفة. النتائج للاستخدام الشخصي وغير التجاري.",
     "terms.s3.p2":
       "عند مشاركة نتيجتك، تمنحنا ترخيصًا غير حصريًا لعرض المحتوى الذي تمت مشاركته.",
     "terms.s4.title": "4. إخلاء المسؤولية",
     "terms.s4.p1":
-      "اختبارات قياس للترفيه والتأمل الذاتي فقط، ولا تعد بديلاً عن الاستشارة النفسية أو الطبية أو المهنية.",
+      "اختبارات المعرفة للترفيه والتأمل الذاتي فقط، ولا تعد بديلاً عن الاستشارة النفسية أو الطبية أو المهنية.",
     "terms.s4.p2":
       "النتائج استرشادية وليست تقييمات سريرية معتمدة علميًا.",
     "terms.s5.title": "5. حدود المسؤولية",
     "terms.s5.p1":
-      "تُقدم منصة قياس كما هي دون ضمانات، ولسنا مسؤولين عن أي أضرار مباشرة أو غير مباشرة تنتج عن الاستخدام.",
+      "تُقدم منصة المعرفة كما هي دون ضمانات، ولسنا مسؤولين عن أي أضرار مباشرة أو غير مباشرة تنتج عن الاستخدام.",
     "terms.s6.title": "6. تعديل الشروط",
     "terms.s6.p1":
       "نحتفظ بحق تعديل هذه الشروط في أي وقت، ويعد استمرارك في الاستخدام موافقة على الشروط الجديدة.",
