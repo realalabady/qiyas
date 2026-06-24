@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -19,6 +19,7 @@ import { staggerContainer, staggerItem, fadeUp, scaleIn } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import type { Quiz } from "@/stores/quizzes-admin-store";
 import { useLanguage } from "@/lib/i18n";
+import { setSEOMetadata } from "@/lib/seo";
 
 export default function QuizDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +30,35 @@ export default function QuizDetailPage() {
 
   // Find quiz by slug (includes all quizzes: published and unpublished)
   const quiz = quizStore.getQuizBySlug(slug || "");
+
+  // Reflect the quiz name in the page title and share/link metadata
+  useEffect(() => {
+    if (!quiz) return;
+    const title =
+      language === "ar" && quiz.slug === "dark-personality-test"
+        ? t("quiz.seed.dark.title")
+        : quiz.title;
+    const description =
+      language === "ar" && quiz.slug === "dark-personality-test"
+        ? t("quiz.seed.dark.description")
+        : quiz.description;
+    const origin = window.location.origin;
+    setSEOMetadata({
+      title: `${title} · Al-Maarefah`,
+      description,
+      ogUrl: `${origin}/quiz/${quiz.slug}`,
+      ogImage: quiz.thumbnail
+        ? quiz.thumbnail.startsWith("http")
+          ? quiz.thumbnail
+          : `${origin}${quiz.thumbnail}`
+        : `${origin}/al-maarefah-header.png`,
+      canonical: `${origin}/quiz/${quiz.slug}`,
+      twitterHandle: "@almaarefahh",
+    });
+    return () => {
+      document.title = "Al-Maarefah";
+    };
+  }, [quiz, language, t]);
 
   // Get related quizzes from same category (published only)
   const related: Quiz[] = quiz
