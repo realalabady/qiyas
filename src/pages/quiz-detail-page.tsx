@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -6,6 +7,8 @@ import {
   BarChart2,
   ArrowRight,
   ChevronLeft,
+  Share2,
+  Check,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +25,7 @@ export default function QuizDetailPage() {
   const navigate = useNavigate();
   const quizStore = useQuizzesAdmin();
   const { t, language } = useLanguage();
+  const [shared, setShared] = useState(false);
 
   // Find quiz by slug (includes all quizzes: published and unpublished)
   const quiz = quizStore.getQuizBySlug(slug || "");
@@ -110,6 +114,30 @@ export default function QuizDetailPage() {
     Medium: "warning",
     Hard: "destructive",
   } as const;
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/quiz/${quiz.slug}`;
+    const shareData = {
+      title: localizedTitle,
+      text: localizedDescription,
+      url,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // user cancelled or share failed — fall back to copy
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch {
+      // clipboard unavailable — ignore
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10">
@@ -270,6 +298,24 @@ export default function QuizDetailPage() {
                   </span>
                 </div>
               </div>
+
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleShare}
+              >
+                {shared ? (
+                  <>
+                    <Check className="size-5" />
+                    {t("quizDetail.shareCopied")}
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="size-5" />
+                    {t("quizDetail.share")}
+                  </>
+                )}
+              </Button>
             </div>
 
             {/* Sidebar ad */}
