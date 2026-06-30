@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -26,6 +27,7 @@ export function QuestionEditor({
   quizType,
   resultOptions,
 }: QuestionEditorProps) {
+  const { t } = useLanguage();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAddQuestion = () => {
@@ -60,16 +62,16 @@ export function QuestionEditor({
   };
 
   const questionTypeOptions: Array<{ value: QuestionType; label: string }> = [
-    { value: "personality", label: "Personality" },
-    { value: "scored", label: "Scored" },
-    { value: "image-choice", label: "Image Choice" },
-    { value: "multiple-select", label: "Multiple Select" },
+    { value: "personality", label: t("admin.quiz.questions.type_personality") },
+    { value: "scored", label: t("admin.quiz.questions.type_scored") },
+    { value: "image-choice", label: t("admin.quiz.questions.type_image") },
+    { value: "multiple-select", label: t("admin.quiz.questions.type_multi") },
   ];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-foreground">Questions</label>
+        <label className="text-sm font-medium text-foreground">{t("admin.quiz.questions.heading")}</label>
         <Button
           type="button"
           onClick={handleAddQuestion}
@@ -77,7 +79,7 @@ export function QuestionEditor({
           className="gap-2"
         >
           <Plus size={16} />
-          Add Question
+          {t("admin.quiz.questions.add")}
         </Button>
       </div>
 
@@ -118,7 +120,7 @@ export function QuestionEditor({
                     className="flex-1 text-left"
                   >
                     <p className="text-sm font-medium truncate text-foreground">
-                      {question.text || "Untitled question"}
+                      {question.text || t("admin.quiz.questions.untitled")}
                     </p>
                   </button>
 
@@ -162,7 +164,7 @@ export function QuestionEditor({
                       {/* Question Text */}
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
-                          Question Text
+                          {t("admin.quiz.questions.text_label")}
                         </label>
                         <textarea
                           value={question.text}
@@ -173,7 +175,7 @@ export function QuestionEditor({
                               text: e.target.value,
                             })
                           }
-                          placeholder="Enter question text"
+                          placeholder={t("admin.quiz.questions.text_placeholder")}
                           className="mt-1 min-h-20 w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
@@ -181,7 +183,7 @@ export function QuestionEditor({
                       {/* Question Type */}
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
-                          Question Type
+                          {t("admin.quiz.questions.type_label")}
                         </label>
                         <select
                           value={question.type}
@@ -203,7 +205,7 @@ export function QuestionEditor({
                       {/* Question Image */}
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
-                          Question Image (URL)
+                          {t("admin.quiz.questions.image_label")}
                         </label>
                         <Input
                           type="text"
@@ -221,7 +223,7 @@ export function QuestionEditor({
                       {/* Answers Editor */}
                       <div>
                         <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                          Answers
+                          {t("admin.quiz.questions.answers_label")}
                         </label>
                         <AnswerEditor
                           answers={question.answers}
@@ -244,7 +246,7 @@ export function QuestionEditor({
                           }
                           disabled={index === 0}
                         >
-                          Move Up
+                          {t("admin.quiz.questions.move_up")}
                         </Button>
                         <Button
                           type="button"
@@ -255,7 +257,7 @@ export function QuestionEditor({
                           }
                           disabled={index === questions.length - 1}
                         >
-                          Move Down
+                          {t("admin.quiz.questions.move_down")}
                         </Button>
                       </div>
                     </motion.div>
@@ -270,11 +272,11 @@ export function QuestionEditor({
       {questions.length === 0 && (
         <Card className="p-8 text-center bg-card/50">
           <p className="text-sm text-muted-foreground mb-4">
-            No questions yet. Add your first question to get started.
+            {t("admin.quiz.questions.empty")}
           </p>
           <Button onClick={handleAddQuestion} className="gap-2">
             <Plus size={16} />
-            Add First Question
+            {t("admin.quiz.questions.add_first")}
           </Button>
         </Card>
       )}

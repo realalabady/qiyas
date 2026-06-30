@@ -2,15 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow anyone to read published quizzes
+    // Public can read published quizzes; admins can read everything (drafts too)
     match /quizzes/{document=**} {
-      allow read: if resource.data.published == true;
+      allow read: if resource.data.published == true || isAdmin();
       allow create, update, delete: if isAdmin();
     }
 
-    // Allow anyone to read published articles
+    // Public can read published articles; admins can read everything (drafts too)
     match /articles/{document=**} {
-      allow read: if resource.data.published == true;
+      allow read: if resource.data.published == true || isAdmin();
       allow create, update, delete: if isAdmin();
     }
 

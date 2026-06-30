@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { Article } from "@/data/seed-articles";
 import { SAMPLE_ARTICLES } from "@/data/seed-articles";
+import {
+  deleteDocById,
+  fetchAllDocs,
+  fetchPublishedDocs,
+  saveDocById,
+} from "@/lib/firebase/firestore-data";
+
+const COLLECTION = "articles";
 
 interface ArticlesStore {
   articles: Article[];
@@ -12,6 +20,11 @@ interface ArticlesStore {
   setArticles: (articles: Article[]) => void;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (category: string | null) => void;
+
+  // Firestore sync
+  hydrate: () => Promise<void>;
+  syncOnAdmin: () => Promise<void>;
+  pushAllToCloud: () => Promise<number>;
 
   // CRUD
   addArticle: (
@@ -62,6 +75,41 @@ export const useArticles = create<ArticlesStore>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSelectedCategory: (category) => set({ selectedCategory: category }),
 
+      // Public load: pull published articles from Firestore. Keep seed/cache
+      // content if the collection hasn't been populated yet.
+      hydrate: async () => {
+        try {
+          const remote = await fetchPublishedDocs<Article>(COLLECTION);
+          if (remote.length > 0) {
+            set({ articles: remote.map(normalizeArticle) });
+          }
+        } catch (error) {
+          console.error("articles hydrate failed", error);
+        }
+      },
+
+      // Admin load: read everything (including drafts) from Firestore.
+      // Non-destructive — keeps local content if the cloud is still empty.
+      syncOnAdmin: async () => {
+        try {
+          const remote = await fetchAllDocs<Article>(COLLECTION);
+          if (remote.length > 0) {
+            set({ articles: remote.map(normalizeArticle) });
+          }
+        } catch (error) {
+          console.error("articles syncOnAdmin failed", error);
+        }
+      },
+
+      // Explicit "sync my local content to the cloud" action (admin button).
+      pushAllToCloud: async () => {
+        const local = get().articles;
+        await Promise.all(
+          local.map((article) => saveDocById(COLLECTION, article.id, article)),
+        );
+        return local.length;
+      },
+
       addArticle: (article) => {
         const newArticle: Article = {
           ...article,
@@ -73,6 +121,9 @@ export const useArticles = create<ArticlesStore>()(
         set((state) => ({
           articles: [newArticle, ...state.articles],
         }));
+        saveDocById(COLLECTION, newArticle.id, newArticle).catch((error) =>
+          console.error("addArticle save failed", error),
+        );
       },
 
       updateArticle: (id, updates) => {
@@ -83,12 +134,21 @@ export const useArticles = create<ArticlesStore>()(
               : article,
           ),
         }));
+        const updated = get().articles.find((article) => article.id === id);
+        if (updated) {
+          saveDocById(COLLECTION, id, updated).catch((error) =>
+            console.error("updateArticle save failed", error),
+          );
+        }
       },
 
       deleteArticle: (id) => {
         set((state) => ({
           articles: state.articles.filter((article) => article.id !== id),
         }));
+        deleteDocById(COLLECTION, id).catch((error) =>
+          console.error("deleteArticle failed", error),
+        );
       },
 
       getFilteredArticles: () => {

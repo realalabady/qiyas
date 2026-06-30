@@ -8,6 +8,14 @@ import {
   COMPATIBILITY_QUIZ,
 } from "@/data/seed-engine-quizzes";
 import type { QuizType } from "@/lib/quiz-engine";
+import {
+  deleteDocById,
+  fetchAllDocs,
+  fetchPublishedDocs,
+  saveDocById,
+} from "@/lib/firebase/firestore-data";
+
+const COLLECTION = "quizzes";
 
 export type QuestionType =
   | "personality"
@@ -73,6 +81,11 @@ interface QuizzesStore {
   // Actions
   setQuizzes: (quizzes: Quiz[]) => void;
   setEditingId: (id: string | null) => void;
+
+  // Firestore sync
+  hydrate: () => Promise<void>;
+  syncOnAdmin: () => Promise<void>;
+  pushAllToCloud: () => Promise<number>;
 
   // CRUD
   addQuiz: (quiz: Omit<Quiz, "id" | "createdAt" | "updatedAt">) => void;
@@ -140,6 +153,41 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
   setQuizzes: (quizzes) => set({ quizzes }),
   setEditingId: (id) => set({ editingId: id }),
 
+  // Public load: pull published quizzes from Firestore. Keep seed/cache
+  // content if the collection hasn't been populated yet.
+  hydrate: async () => {
+    try {
+      const remote = await fetchPublishedDocs<Quiz>(COLLECTION);
+      if (remote.length > 0) {
+        set({ quizzes: remote.map((quiz) => normalizeQuiz(quiz)) });
+      }
+    } catch (error) {
+      console.error("quizzes hydrate failed", error);
+    }
+  },
+
+  // Admin load: read everything (including drafts) from Firestore.
+  // Non-destructive — keeps local content if the cloud is still empty.
+  syncOnAdmin: async () => {
+    try {
+      const remote = await fetchAllDocs<Quiz>(COLLECTION);
+      if (remote.length > 0) {
+        set({ quizzes: remote.map((quiz) => normalizeQuiz(quiz)) });
+      }
+    } catch (error) {
+      console.error("quizzes syncOnAdmin failed", error);
+    }
+  },
+
+  // Explicit "sync my local content to the cloud" action (admin button).
+  pushAllToCloud: async () => {
+    const local = get().quizzes;
+    await Promise.all(
+      local.map((quiz) => saveDocById(COLLECTION, quiz.id, quiz)),
+    );
+    return local.length;
+  },
+
   addQuiz: (quiz) => {
     const newQuiz: Quiz = {
       ...quiz,
@@ -150,6 +198,9 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
     set((state) => ({
       quizzes: [newQuiz, ...state.quizzes],
     }));
+    saveDocById(COLLECTION, newQuiz.id, newQuiz).catch((error) =>
+      console.error("addQuiz save failed", error),
+    );
   },
 
   updateQuiz: (id, updates) => {
@@ -158,12 +209,21 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
         quiz.id === id ? { ...quiz, ...updates, updatedAt: new Date() } : quiz,
       ),
     }));
+    const updated = get().quizzes.find((quiz) => quiz.id === id);
+    if (updated) {
+      saveDocById(COLLECTION, id, updated).catch((error) =>
+        console.error("updateQuiz save failed", error),
+      );
+    }
   },
 
   deleteQuiz: (id) => {
     set((state) => ({
       quizzes: state.quizzes.filter((quiz) => quiz.id !== id),
     }));
+    deleteDocById(COLLECTION, id).catch((error) =>
+      console.error("deleteQuiz failed", error),
+    );
   },
 
   duplicateQuiz: (id) => {
@@ -183,6 +243,9 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
     set((state) => ({
       quizzes: [duplicated, ...state.quizzes],
     }));
+    saveDocById(COLLECTION, duplicated.id, duplicated).catch((error) =>
+      console.error("duplicateQuiz save failed", error),
+    );
   },
 
   getQuizBySlug: (slug) => {

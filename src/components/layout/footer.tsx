@@ -95,7 +95,10 @@ export function Footer() {
             >
               {t("footer.all_categories")}
             </Link>
-            {categories.slice(0, 4).map((category) => (
+            {categories
+              .filter((category) => category.type === "quiz")
+              .slice(0, 4)
+              .map((category) => (
               <Link
                 key={category.id}
                 to={`/explore?category=${category.slug}`}

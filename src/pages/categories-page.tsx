@@ -11,6 +11,7 @@ import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 export default function CategoriesPage() {
   const { t } = useLanguage();
   const { categories } = useCategories();
+  const quizCategories = categories.filter((cat) => cat.type === "quiz");
   const { getPublishedQuizzes } = useQuizzesAdmin();
   const publishedQuizzes = getPublishedQuizzes();
 
@@ -40,7 +41,7 @@ export default function CategoriesPage() {
         animate="visible"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
       >
-        {categories.map((cat) => (
+        {quizCategories.map((cat) => (
           <motion.div key={cat.slug} variants={staggerItem}>
             <Link
               to={`/explore?category=${cat.slug}`}
@@ -68,7 +69,7 @@ export default function CategoriesPage() {
           </motion.div>
         ))}
       </motion.div>
-      {categories.length === 0 && (
+      {quizCategories.length === 0 && (
         <motion.div variants={fadeUp} initial="hidden" animate="visible" className="text-center py-12 text-muted-foreground">
           {t("categories.subtitle")}
         </motion.div>

@@ -29,34 +29,41 @@ export function getResultOptions(results: QuizLike["results"]): Array<{
     .filter((result) => result.id.length > 0);
 }
 
-export function validateQuizConfig(quiz: QuizLike): QuizValidationResult {
+type TFn = (key: string) => string;
+
+const defaultT: TFn = (key) => key;
+
+export function validateQuizConfig(
+  quiz: QuizLike,
+  t: TFn = defaultT,
+): QuizValidationResult {
   const errors: string[] = [];
 
-  if (!quiz.title.trim()) errors.push("Quiz title is required.");
-  if (!quiz.description.trim()) errors.push("Quiz description is required.");
-  if (quiz.questions.length === 0) errors.push("Add at least 1 question.");
-  if (quiz.results.length === 0) errors.push("Add at least 1 result.");
+  if (!quiz.title.trim()) errors.push(t("admin.quiz.validation.title_required"));
+  if (!quiz.description.trim()) errors.push(t("admin.quiz.validation.desc_required"));
+  if (quiz.questions.length === 0) errors.push(t("admin.quiz.validation.min_questions"));
+  if (quiz.results.length === 0) errors.push(t("admin.quiz.validation.min_results"));
 
   const resultIds = new Set(
     quiz.results.map((result) => result.id.trim()).filter(Boolean),
   );
 
   if (resultIds.size !== quiz.results.length) {
-    errors.push("Each result must have a unique non-empty ID.");
+    errors.push(t("admin.quiz.validation.unique_result_ids"));
   }
 
   quiz.questions.forEach((question, questionIndex) => {
     const prefix = `Q${questionIndex + 1}`;
     if (!question.text.trim())
-      errors.push(`${prefix}: question text is required.`);
+      errors.push(`${prefix}: ${t("admin.quiz.validation.question_text_required")}`);
     if (question.answers.length < 2) {
-      errors.push(`${prefix}: add at least 2 answers.`);
+      errors.push(`${prefix}: ${t("admin.quiz.validation.min_answers")}`);
     }
 
     question.answers.forEach((answer, answerIndex) => {
       const answerPrefix = `${prefix} A${answerIndex + 1}`;
       if (!answer.text.trim()) {
-        errors.push(`${answerPrefix}: answer text is required.`);
+        errors.push(`${answerPrefix}: ${t("admin.quiz.validation.answer_text_required")}`);
       }
 
       if (
@@ -70,7 +77,7 @@ export function validateQuizConfig(quiz: QuizLike): QuizValidationResult {
         );
         if (validWeightedEntries.length === 0) {
           errors.push(
-            `${answerPrefix}: add at least one positive weight mapped to a valid result ID.`,
+            `${answerPrefix}: ${t("admin.quiz.validation.answer_weight_required")}`,
           );
         }
       }
@@ -78,14 +85,14 @@ export function validateQuizConfig(quiz: QuizLike): QuizValidationResult {
       if (quiz.quizType === "personality_based") {
         if (!answer.resultId || !resultIds.has(answer.resultId)) {
           errors.push(
-            `${answerPrefix}: map the answer to an existing result ID.`,
+            `${answerPrefix}: ${t("admin.quiz.validation.answer_result_required")}`,
           );
         }
       }
 
       if (quiz.quizType === "score_based") {
         if (!Number.isFinite(answer.score)) {
-          errors.push(`${answerPrefix}: score must be a valid number.`);
+          errors.push(`${answerPrefix}: ${t("admin.quiz.validation.answer_score_required")}`);
         }
       }
     });

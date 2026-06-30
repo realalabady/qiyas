@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Secrets / Firebase auth exports — never commit credential material
+auth_data.json
+firebase-export-*/
+.firebase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

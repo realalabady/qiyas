@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -23,6 +24,7 @@ interface FormResult {
 }
 
 export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
+  const { t } = useLanguage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormResult>({
     id: '',
@@ -85,8 +87,8 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">Quiz Results</h3>
-        <span className="text-sm text-muted-foreground">{results.length} results</span>
+        <h3 className="text-lg font-bold">{t("admin.quiz.results.heading")}</h3>
+        <span className="text-sm text-muted-foreground">{results.length} {t("admin.quiz.results.count")}</span>
       </div>
 
       {/* Results List */}
@@ -131,45 +133,45 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
       {/* Form */}
       <Card className="glass-card p-4 bg-white/2">
         <div className="space-y-3">
-          {/* Result Title */}
+          {/* Result ID */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Result ID (used by quiz logic)
+              {t("admin.quiz.results.id_label")}
             </label>
             <Input
               value={formData.id}
               onChange={(e) =>
                 setFormData({ ...formData, id: normalizeSlug(e.target.value) })
               }
-              placeholder="e.g., strategic-thinker"
+              placeholder={t("admin.quiz.results.id_placeholder")}
             />
           </div>
 
           {/* Result Title */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Result Title
+              {t("admin.quiz.results.title_label")}
             </label>
             <Input
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              placeholder="e.g., The Analyst, The Creative"
+              placeholder={t("admin.quiz.results.title_placeholder")}
             />
           </div>
 
           {/* Result Description */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Result Description
+              {t("admin.quiz.results.desc_label")}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              placeholder="Describe this result type..."
+              placeholder={t("admin.quiz.results.desc_placeholder")}
               className="w-full h-16 p-2 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 text-sm"
             />
           </div>
@@ -177,7 +179,7 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
           {/* Image URL */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Image URL (Optional)
+              {t("admin.quiz.results.image_label")}
             </label>
             <Input
               value={formData.image || ''}
@@ -199,7 +201,7 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
                   setEditingId(null);
                 }}
               >
-                Cancel
+                {t("admin.common.cancel")}
               </Button>
             )}
             <Button
@@ -209,7 +211,7 @@ export function ResultsEditor({ results, onChange }: ResultsEditorProps) {
               className="gap-1"
             >
               <Plus className="w-3 h-3" />
-              {editingId ? 'Update' : 'Add Result'}
+              {editingId ? t("admin.quiz.results.update") : t("admin.quiz.results.add")}
             </Button>
           </div>
         </div>

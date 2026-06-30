@@ -18,6 +18,7 @@ import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp, scaleIn } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import type { Quiz } from "@/stores/quizzes-admin-store";
+import { useAnalyticsStore } from "@/stores/analytics-store";
 import { useLanguage } from "@/lib/i18n";
 import { setSEOMetadata } from "@/lib/seo";
 
@@ -25,11 +26,18 @@ export default function QuizDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const quizStore = useQuizzesAdmin();
+  const recordView = useAnalyticsStore((s) => s.recordView);
   const { t, language } = useLanguage();
   const [shared, setShared] = useState(false);
 
   // Find quiz by slug (includes all quizzes: published and unpublished)
   const quiz = quizStore.getQuizBySlug(slug || "");
+
+  // Record a view once per quiz visit (real analytics).
+  useEffect(() => {
+    if (quiz) recordView(quiz.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz?.id]);
 
   // Reflect the quiz name in the page title and share/link metadata
   useEffect(() => {

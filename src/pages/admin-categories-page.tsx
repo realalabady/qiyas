@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCategories } from "@/stores/categories-store";
+import type { CategoryType } from "@/stores/categories-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -31,9 +32,13 @@ export function AdminCategoriesPage() {
     useCategories();
   const { t } = useLanguage();
 
+  const [kind, setKind] = useState<CategoryType>("quiz");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Categories shown for the active tab (quiz vs article).
+  const visibleCategories = categories.filter((c) => c.type === kind);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -63,6 +68,7 @@ export function AdminCategoriesPage() {
       icon: formData.icon,
       description: formData.description,
       color: formData.color,
+      type: kind,
     });
 
     resetForm();
@@ -73,6 +79,7 @@ export function AdminCategoriesPage() {
     const category = categories.find((c) => c.id === id);
     if (!category) return;
 
+    setKind(category.type);
     setFormData({
       name: category.name,
       slug: category.slug,
@@ -97,6 +104,7 @@ export function AdminCategoriesPage() {
       icon: formData.icon,
       description: formData.description,
       color: formData.color,
+      type: kind,
     });
 
     resetForm();
@@ -145,6 +153,28 @@ export function AdminCategoriesPage() {
             <Plus className="w-4 h-4" />
             {showForm ? t("admin.common.cancel") : t("admin.categories.new")}
           </Button>
+        </div>
+
+        {/* Quiz / Article tabs */}
+        <div className="mb-6 inline-flex rounded-lg border border-border/50 bg-white/5 p-1">
+          {(["quiz", "article"] as const).map((value) => (
+            <button
+              key={value}
+              onClick={() => {
+                setKind(value);
+                if (showForm && !editingId) resetForm();
+              }}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                kind === value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {value === "quiz"
+                ? t("admin.categories.tab_quizzes")
+                : t("admin.categories.tab_articles")}
+            </button>
+          ))}
         </div>
 
         {/* Notification */}
@@ -277,8 +307,16 @@ export function AdminCategoriesPage() {
         )}
 
         {/* Categories Grid */}
+        {visibleCategories.length === 0 && !showForm && (
+          <Card className="glass-card p-8 text-center text-muted-foreground">
+            {kind === "quiz"
+              ? t("admin.categories.tab_quizzes")
+              : t("admin.categories.tab_articles")}{" "}
+            — 0
+          </Card>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 10 }}

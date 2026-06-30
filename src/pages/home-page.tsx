@@ -19,6 +19,7 @@ import { useLanguage } from "@/lib/i18n";
 function HomePage() {
   const quizStore = useQuizzesAdmin();
   const { categories } = useCategories();
+  const quizCategories = categories.filter((c) => c.type === "quiz");
   const { t } = useLanguage();
 
   // Get published quizzes and convert to QuizCardData
@@ -110,7 +111,7 @@ function HomePage() {
         <AdBanner />
 
         {/* ── Categories ────────────────────────────────────────────────── */}
-        {categories.length > 0 && (
+        {quizCategories.length > 0 && (
           <motion.section
             variants={fadeUp}
             initial="hidden"
@@ -128,7 +129,7 @@ function HomePage() {
               viewport={{ once: true }}
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
-              {categories.slice(0, 8).map((category) => (
+              {quizCategories.slice(0, 8).map((category) => (
                 <motion.div key={category.id} variants={staggerItem}>
                   <Link
                     to={`/explore?category=${category.slug}`}

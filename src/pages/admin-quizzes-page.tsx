@@ -14,6 +14,7 @@ import {
   normalizeSlug,
   validateQuizConfig,
 } from "@/lib/quiz-validation";
+import { useLanguage } from "@/lib/i18n";
 
 const CATEGORIES = [
   "Personality Tests",
@@ -41,6 +42,7 @@ export function AdminQuizzesPage() {
     publishQuiz,
     unpublishQuiz,
   } = useQuizzesAdmin();
+  const { t } = useLanguage();
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -68,34 +70,30 @@ export function AdminQuizzesPage() {
 
   const handleAddQuiz = () => {
     if (!formData.title.trim() || !formData.description.trim()) {
-      showNotification("Title and description are required");
+      showNotification(t("admin.quizzes.title_desc_required"));
       return;
     }
 
     const slug = normalizeSlug(formData.slug || formData.title);
     if (!slug) {
-      showNotification("Please provide a valid slug or title.");
+      showNotification(t("admin.quizzes.slug_required"));
       return;
     }
 
     const isDuplicateSlug = quizzes.some((quiz) => quiz.slug === slug);
     if (isDuplicateSlug) {
-      showNotification("This slug already exists. Please choose another one.");
+      showNotification(t("admin.quizzes.slug_duplicate"));
       return;
     }
 
     if (formData.published && !validation.isValid) {
-      showNotification("Fix quiz setup errors before publishing.");
+      showNotification(t("admin.quizzes.fix_errors"));
       return;
     }
 
-    addQuiz({
-      ...formData,
-      slug,
-    });
-
+    addQuiz({ ...formData, slug });
     resetForm();
-    showNotification("Quiz created successfully");
+    showNotification(t("admin.quizzes.created"));
   };
 
   const handleEditQuiz = (quiz: Quiz) => {
@@ -119,13 +117,13 @@ export function AdminQuizzesPage() {
   const handleUpdateQuiz = () => {
     if (!editingId) return;
     if (!formData.title.trim() || !formData.description.trim()) {
-      showNotification("Title and description are required");
+      showNotification(t("admin.quizzes.title_desc_required"));
       return;
     }
 
     const slug = normalizeSlug(formData.slug || formData.title);
     if (!slug) {
-      showNotification("Please provide a valid slug or title.");
+      showNotification(t("admin.quizzes.slug_required"));
       return;
     }
 
@@ -133,46 +131,46 @@ export function AdminQuizzesPage() {
       (quiz) => quiz.slug === slug && quiz.id !== editingId,
     );
     if (isDuplicateSlug) {
-      showNotification("This slug already exists. Please choose another one.");
+      showNotification(t("admin.quizzes.slug_duplicate"));
       return;
     }
 
     if (formData.published && !validation.isValid) {
-      showNotification("Fix quiz setup errors before publishing.");
+      showNotification(t("admin.quizzes.fix_errors"));
       return;
     }
 
     updateQuiz(editingId, { ...formData, slug });
     resetForm();
-    showNotification("Quiz updated successfully");
+    showNotification(t("admin.quizzes.updated"));
   };
 
   const handleDeleteQuiz = (id: string) => {
-    if (confirm("Are you sure? This cannot be undone.")) {
+    if (confirm(t("admin.quizzes.delete_confirm"))) {
       deleteQuiz(id);
-      showNotification("Quiz deleted successfully");
+      showNotification(t("admin.quizzes.deleted"));
     }
   };
 
   const handleDuplicateQuiz = (id: string) => {
     duplicateQuiz(id);
-    showNotification("Quiz duplicated successfully");
+    showNotification(t("admin.quizzes.duplicated"));
   };
 
   const handleTogglePublish = (id: string, published: boolean) => {
     if (published) {
       unpublishQuiz(id);
-      showNotification("Quiz unpublished");
+      showNotification(t("admin.quizzes.unpublished_msg"));
     } else {
       const quiz = quizzes.find((q) => q.id === id);
       if (!quiz) return;
-      const publishValidation = validateQuizConfig(quiz);
+      const publishValidation = validateQuizConfig(quiz, t);
       if (!publishValidation.isValid) {
-        showNotification("Quiz has setup errors. Edit it before publishing.");
+        showNotification(t("admin.quizzes.publish_errors"));
         return;
       }
       publishQuiz(id);
-      showNotification("Quiz published");
+      showNotification(t("admin.quizzes.published_msg"));
     }
   };
 
@@ -195,7 +193,7 @@ export function AdminQuizzesPage() {
   };
 
   const resultOptions = getResultOptions(formData.results);
-  const validation = validateQuizConfig(formData);
+  const validation = validateQuizConfig(formData, t);
 
   const filteredQuizzes = quizzes.filter(
     (q) =>
@@ -210,10 +208,10 @@ export function AdminQuizzesPage() {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold gradient-text mb-2">
-              Quiz Management
+              {t("admin.quizzes.page_title")}
             </h1>
             <p className="text-muted-foreground">
-              Create, edit, and manage quizzes
+              {t("admin.quizzes.page_subtitle")}
             </p>
           </div>
           <Button
@@ -224,7 +222,7 @@ export function AdminQuizzesPage() {
             className="gap-2"
           >
             <Plus className="w-4 h-4" />
-            {showForm ? "Cancel" : "New Quiz"}
+            {showForm ? t("admin.common.cancel") : t("admin.quizzes.new")}
           </Button>
         </div>
 
@@ -244,27 +242,31 @@ export function AdminQuizzesPage() {
         {showForm && (
           <Card className="glass-card p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
-              {editingId ? "Edit Quiz" : "Create New Quiz"}
+              {editingId
+                ? t("admin.quizzes.edit_title")
+                : t("admin.quizzes.create_title")}
             </h2>
 
             <div className="space-y-4">
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Title *
+                  {t("admin.quizzes.title_label")}
                 </label>
                 <Input
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="Quiz title"
+                  placeholder={t("admin.quizzes.title_placeholder")}
                 />
               </div>
 
               {/* Slug */}
               <div>
-                <label className="block text-sm font-medium mb-2">Slug</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.quizzes.slug_label")}
+                </label>
                 <Input
                   value={formData.slug}
                   onChange={(e) =>
@@ -273,21 +275,21 @@ export function AdminQuizzesPage() {
                       slug: normalizeSlug(e.target.value),
                     })
                   }
-                  placeholder="quiz-slug (auto-generated if empty)"
+                  placeholder={t("admin.quizzes.slug_placeholder")}
                 />
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Description *
+                  {t("admin.quizzes.description_label")}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Quiz description"
+                  placeholder={t("admin.quizzes.description_placeholder")}
                   className="w-full h-24 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
                 />
               </div>
@@ -295,7 +297,7 @@ export function AdminQuizzesPage() {
               {/* Category */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Category
+                  {t("admin.quizzes.category_label")}
                 </label>
                 <select
                   value={formData.category}
@@ -315,30 +317,29 @@ export function AdminQuizzesPage() {
               {/* Quiz Type */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Quiz Type
+                  {t("admin.quizzes.type_label")}
                 </label>
                 <select
                   value={formData.quizType}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      quizType: e.target.value as any,
+                      quizType: e.target.value as QuizFormData["quizType"],
                     })
                   }
                   className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 [&>option]:bg-slate-900 [&>option]:text-slate-100"
                 >
                   <option value="weighted_personality">
-                    Weighted Personality (Default - Best for personality
-                    quizzes)
+                    {t("admin.quizzes.type_weighted")}
                   </option>
                   <option value="personality_based">
-                    Personality-Based (Direct result mapping)
+                    {t("admin.quizzes.type_personality")}
                   </option>
                   <option value="score_based">
-                    Score-Based (Numeric scoring)
+                    {t("admin.quizzes.type_score")}
                   </option>
                   <option value="percentage_matching">
-                    Percentage Matching (Show match percentages)
+                    {t("admin.quizzes.type_percentage")}
                   </option>
                 </select>
               </div>
@@ -347,59 +348,57 @@ export function AdminQuizzesPage() {
               <ImageUpload
                 value={formData.thumbnail}
                 onChange={(url) => setFormData({ ...formData, thumbnail: url })}
-                label="Quiz Thumbnail"
-                placeholder="Click to upload or paste image URL"
               />
 
               {/* SEO Title */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  SEO Title
+                  {t("admin.quizzes.seo_title_label")}
                 </label>
                 <Input
                   value={formData.seoTitle}
                   onChange={(e) =>
                     setFormData({ ...formData, seoTitle: e.target.value })
                   }
-                  placeholder="SEO optimized title"
+                  placeholder={t("admin.quizzes.seo_title_placeholder")}
                 />
               </div>
 
               {/* SEO Description */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  SEO Description
+                  {t("admin.quizzes.seo_desc_label")}
                 </label>
                 <textarea
                   value={formData.seoDescription}
                   onChange={(e) =>
                     setFormData({ ...formData, seoDescription: e.target.value })
                   }
-                  placeholder="SEO optimized description"
+                  placeholder={t("admin.quizzes.seo_desc_placeholder")}
                   className="w-full h-20 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
                 />
               </div>
 
               <Card className="p-4 bg-white/5 border border-border/50">
-                <p className="text-sm font-medium mb-2">Quiz Builder Workflow</p>
+                <p className="text-sm font-medium mb-2">
+                  {t("admin.quizzes.workflow_title")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  1) Add results first. 2) Add questions and answers. 3) For
-                  weighted/percentage quizzes, each answer must assign weights to
-                  result IDs. 4) Publish only when validation is green.
+                  {t("admin.quizzes.workflow_hint")}
                 </p>
               </Card>
 
               {!validation.isValid && (
                 <Card className="p-4 bg-red-500/10 border border-red-500/40">
                   <p className="text-sm font-medium text-red-300 mb-2">
-                    Fix these issues before publishing:
+                    {t("admin.quizzes.validation_title")}
                   </p>
                   <ul className="space-y-1 text-xs text-red-200 list-disc pl-4">
                     {validation.errors.slice(0, 8).map((error) => (
                       <li key={error}>{error}</li>
                     ))}
                     {validation.errors.length > 8 && (
-                      <li>+{validation.errors.length - 8} more...</li>
+                      <li>+{validation.errors.length - 8} more…</li>
                     )}
                   </ul>
                 </Card>
@@ -437,11 +436,11 @@ export function AdminQuizzesPage() {
                   className="w-4 h-4"
                 />
                 <label htmlFor="published" className="text-sm font-medium">
-                  Publish immediately
+                  {t("admin.quizzes.publish_immediately")}
                 </label>
                 {!validation.isValid && (
                   <span className="text-xs text-muted-foreground">
-                    (allowed for draft, blocked for publish)
+                    {t("admin.quizzes.draft_note")}
                   </span>
                 )}
               </div>
@@ -449,10 +448,12 @@ export function AdminQuizzesPage() {
               {/* Action Buttons */}
               <div className="flex gap-2 justify-end pt-4">
                 <Button variant="outline" onClick={resetForm}>
-                  Cancel
+                  {t("admin.common.cancel")}
                 </Button>
                 <Button onClick={editingId ? handleUpdateQuiz : handleAddQuiz}>
-                  {editingId ? "Update Quiz" : "Create Quiz"}
+                  {editingId
+                    ? t("admin.quizzes.update")
+                    : t("admin.quizzes.create")}
                 </Button>
               </div>
             </div>
@@ -464,7 +465,7 @@ export function AdminQuizzesPage() {
           <div className="relative">
             <Search className="absolute left-4 top-3 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search quizzes..."
+              placeholder={t("admin.quizzes.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-10"
@@ -478,8 +479,8 @@ export function AdminQuizzesPage() {
             <Card className="glass-card p-8 text-center">
               <p className="text-muted-foreground">
                 {searchQuery
-                  ? "No quizzes match your search"
-                  : "No quizzes yet"}
+                  ? t("admin.quizzes.no_search_results")
+                  : t("admin.quizzes.no_quizzes")}
               </p>
             </Card>
           ) : (
@@ -490,7 +491,6 @@ export function AdminQuizzesPage() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Card className="glass-card p-4 flex items-center gap-4 hover:border-primary/50 transition-colors">
-                  {/* Thumbnail */}
                   {quiz.thumbnail && (
                     <img
                       src={quiz.thumbnail}
@@ -499,21 +499,23 @@ export function AdminQuizzesPage() {
                     />
                   )}
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg truncate">{quiz.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {quiz.category} • {quiz.questions.length} questions
+                      {quiz.category} • {quiz.questions.length}{" "}
+                      {t("admin.quizzes.questions_unit")}
                     </p>
                   </div>
 
-                  {/* Stats */}
                   <div className="hidden sm:flex gap-4 text-sm text-muted-foreground">
-                    <span>{quiz.questions.length} Q's</span>
-                    <span>{quiz.results.length} Results</span>
+                    <span>
+                      {quiz.questions.length} {t("admin.quizzes.questions_unit")}
+                    </span>
+                    <span>
+                      {quiz.results.length} {t("admin.quizzes.results_label")}
+                    </span>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
@@ -521,7 +523,11 @@ export function AdminQuizzesPage() {
                       onClick={() =>
                         handleTogglePublish(quiz.id, quiz.published)
                       }
-                      title={quiz.published ? "Unpublish" : "Publish"}
+                      title={
+                        quiz.published
+                          ? t("admin.quizzes.unpublish_btn")
+                          : t("admin.quizzes.publish_btn")
+                      }
                     >
                       {quiz.published ? (
                         <Eye className="w-4 h-4" />
@@ -533,7 +539,7 @@ export function AdminQuizzesPage() {
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => handleDuplicateQuiz(quiz.id)}
-                      title="Duplicate"
+                      title={t("admin.quizzes.duplicate_btn")}
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -563,19 +569,25 @@ export function AdminQuizzesPage() {
         <div className="mt-8 grid grid-cols-3 gap-4">
           <Card className="glass-card p-4 text-center">
             <p className="text-2xl font-bold gradient-text">{quizzes.length}</p>
-            <p className="text-sm text-muted-foreground">Total Quizzes</p>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.stats.total_quizzes")}
+            </p>
           </Card>
           <Card className="glass-card p-4 text-center">
             <p className="text-2xl font-bold gradient-text">
               {quizzes.filter((q) => q.published).length}
             </p>
-            <p className="text-sm text-muted-foreground">Published</p>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.quizzes.published_stat")}
+            </p>
           </Card>
           <Card className="glass-card p-4 text-center">
             <p className="text-2xl font-bold gradient-text">
               {quizzes.filter((q) => !q.published).length}
             </p>
-            <p className="text-sm text-muted-foreground">Drafts</p>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.quizzes.drafts_stat")}
+            </p>
           </Card>
         </div>
       </div>

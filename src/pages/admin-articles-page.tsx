@@ -6,46 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export function AdminArticlesPage() {
   const { articles, addArticle, updateArticle, deleteArticle } = useArticles();
+  const { t } = useLanguage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<
-    Omit<Article, "id" | "createdAt" | "updatedAt" | "views">
-  >({
-    title: "",
-    slug: "",
-    content: "",
-    excerpt: "",
-    image: null,
-    author: "Admin",
-    category: "Personality",
-    tags: [],
-    published: false,
-  });
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleAddArticle = () => {
-    if (!formData.title.trim() || !formData.content.trim()) {
-      showNotification("Title and content are required");
-      return;
-    }
-
-    const slug =
-      formData.slug || formData.title.toLowerCase().replace(/\s+/g, "-");
-    addArticle({
-      ...formData,
-      slug,
-    });
-
-    setFormData({
+  const emptyForm: Omit<Article, "id" | "createdAt" | "updatedAt" | "views"> =
+    {
       title: "",
       slug: "",
       content: "",
@@ -55,10 +26,32 @@ export function AdminArticlesPage() {
       category: "Personality",
       tags: [],
       published: false,
-    });
+    };
+
+  const [formData, setFormData] =
+    useState<Omit<Article, "id" | "createdAt" | "updatedAt" | "views">>(
+      emptyForm,
+    );
+
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleAddArticle = () => {
+    if (!formData.title.trim() || !formData.content.trim()) {
+      showNotification(t("admin.articles.title_content_required"));
+      return;
+    }
+
+    const slug =
+      formData.slug || formData.title.toLowerCase().replace(/\s+/g, "-");
+    addArticle({ ...formData, slug });
+
+    setFormData(emptyForm);
     setShowForm(false);
     setEditingId(null);
-    showNotification("Article created successfully");
+    showNotification(t("admin.articles.created"));
   };
 
   const handleEditArticle = (article: Article) => {
@@ -79,33 +72,28 @@ export function AdminArticlesPage() {
 
   const handleUpdateArticle = () => {
     if (!editingId) return;
-
     updateArticle(editingId, formData);
-    setFormData({
-      title: "",
-      slug: "",
-      content: "",
-      excerpt: "",
-      image: null,
-      author: "Admin",
-      category: "Personality",
-      tags: [],
-      published: false,
-    });
+    setFormData(emptyForm);
     setShowForm(false);
     setEditingId(null);
-    showNotification("Article updated successfully");
+    showNotification(t("admin.articles.updated"));
   };
 
   const handleDeleteArticle = (id: string) => {
-    if (confirm("Are you sure you want to delete this article?")) {
+    if (confirm(t("admin.articles.delete_confirm"))) {
       deleteArticle(id);
-      showNotification("Article deleted successfully");
+      showNotification(t("admin.articles.deleted"));
     }
   };
 
   const handleTogglePublish = (id: string, currentState: boolean) => {
     updateArticle(id, { published: !currentState });
+  };
+
+  const resetForm = () => {
+    setFormData(emptyForm);
+    setShowForm(false);
+    setEditingId(null);
   };
 
   return (
@@ -115,34 +103,21 @@ export function AdminArticlesPage() {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold gradient-text mb-2">
-              Manage Articles
+              {t("admin.articles")}
             </h1>
             <p className="text-muted-foreground">
-              Create, edit, and manage articles for your platform
+              {t("admin.articles.page_subtitle")}
             </p>
           </div>
           <Button
             onClick={() => {
-              setShowForm(!showForm);
-              setEditingId(null);
-              if (showForm) {
-                setFormData({
-                  title: "",
-                  slug: "",
-                  content: "",
-                  excerpt: "",
-                  image: null,
-                  author: "Admin",
-                  category: "Personality",
-                  tags: [],
-                  published: false,
-                });
-              }
+              if (showForm) resetForm();
+              else setShowForm(true);
             }}
             className="gap-2"
           >
             <Plus className="w-4 h-4" />
-            {showForm ? "Cancel" : "New Article"}
+            {showForm ? t("admin.common.cancel") : t("admin.articles.new")}
           </Button>
         </div>
 
@@ -162,59 +137,65 @@ export function AdminArticlesPage() {
         {showForm && (
           <Card className="glass-card p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
-              {editingId ? "Edit Article" : "Create New Article"}
+              {editingId
+                ? t("admin.articles.edit_title")
+                : t("admin.articles.create_title")}
             </h2>
 
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.articles.title_label")}
+                </label>
                 <Input
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="Article title"
+                  placeholder={t("admin.articles.title_placeholder")}
                 />
               </div>
 
               {/* Slug */}
               <div>
-                <label className="block text-sm font-medium mb-2">Slug</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.articles.slug_label")}
+                </label>
                 <Input
                   value={formData.slug}
                   onChange={(e) =>
                     setFormData({ ...formData, slug: e.target.value })
                   }
-                  placeholder="auto-generated-slug (auto-generated if empty)"
+                  placeholder={t("admin.articles.slug_placeholder")}
                 />
               </div>
 
               {/* Excerpt */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Excerpt
+                  {t("admin.articles.excerpt_label")}
                 </label>
                 <Input
                   value={formData.excerpt}
                   onChange={(e) =>
                     setFormData({ ...formData, excerpt: e.target.value })
                   }
-                  placeholder="Brief summary of the article"
+                  placeholder={t("admin.articles.excerpt_placeholder")}
                 />
               </div>
 
               {/* Content */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Content
+                  {t("admin.articles.content_label")}
                 </label>
                 <textarea
                   value={formData.content}
                   onChange={(e) =>
                     setFormData({ ...formData, content: e.target.value })
                   }
-                  placeholder="Article content..."
+                  placeholder={t("admin.articles.content_placeholder")}
                   className="w-full h-40 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
                 />
               </div>
@@ -222,7 +203,7 @@ export function AdminArticlesPage() {
               {/* Category */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Category
+                  {t("admin.articles.category_label")}
                 </label>
                 <select
                   value={formData.category}
@@ -242,7 +223,7 @@ export function AdminArticlesPage() {
               {/* Image URL */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Image URL
+                  {t("admin.articles.image_label")}
                 </label>
                 <Input
                   value={formData.image || ""}
@@ -265,36 +246,21 @@ export function AdminArticlesPage() {
                   className="w-4 h-4"
                 />
                 <label htmlFor="published" className="text-sm font-medium">
-                  Publish immediately
+                  {t("admin.articles.publish_immediately")}
                 </label>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-2 justify-end pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingId(null);
-                    setFormData({
-                      title: "",
-                      slug: "",
-                      content: "",
-                      excerpt: "",
-                      image: null,
-                      author: "Admin",
-                      category: "Personality",
-                      tags: [],
-                      published: false,
-                    });
-                  }}
-                >
-                  Cancel
+                <Button variant="outline" onClick={resetForm}>
+                  {t("admin.common.cancel")}
                 </Button>
                 <Button
                   onClick={editingId ? handleUpdateArticle : handleAddArticle}
                 >
-                  {editingId ? "Update Article" : "Create Article"}
+                  {editingId
+                    ? t("admin.articles.update")
+                    : t("admin.articles.create")}
                 </Button>
               </div>
             </div>
@@ -306,7 +272,7 @@ export function AdminArticlesPage() {
           {articles.length === 0 ? (
             <Card className="glass-card p-8 text-center">
               <p className="text-muted-foreground">
-                No articles yet. Create one to get started!
+                {t("admin.articles.no_articles")}
               </p>
             </Card>
           ) : (
@@ -317,7 +283,6 @@ export function AdminArticlesPage() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Card className="glass-card p-5 flex items-center gap-4 hover:border-primary/50 transition-colors">
-                  {/* Image */}
                   {article.image && (
                     <img
                       src={article.image}
@@ -326,17 +291,16 @@ export function AdminArticlesPage() {
                     />
                   )}
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg truncate">
                       {article.title}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {article.category} • {article.views} views
+                      {article.category} • {article.views}{" "}
+                      {t("admin.articles.views_unit")}
                     </p>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
@@ -344,7 +308,11 @@ export function AdminArticlesPage() {
                       onClick={() =>
                         handleTogglePublish(article.id, article.published)
                       }
-                      title={article.published ? "Unpublish" : "Publish"}
+                      title={
+                        article.published
+                          ? t("admin.quizzes.unpublish_btn")
+                          : t("admin.quizzes.publish_btn")
+                      }
                     >
                       {article.published ? (
                         <Eye className="w-4 h-4" />

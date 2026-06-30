@@ -14,24 +14,72 @@ import {
   staggerItem,
 } from "@/lib/motion";
 import { Share2, Copy, RotateCcw, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import { useQuizTakeStore } from "@/stores/quiz-take-store";
+import type { QuizResult } from "@/lib/quiz-engine";
 
 export function QuizResultPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, resultId } = useParams<{ slug: string; resultId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const quizStore = useQuizzesAdmin();
   const quizTakeStore = useQuizTakeStore();
   const [copied, setCopied] = useState(false);
 
-  // Get the result data from location state or calculate from store
-  const result = location.state?.result;
-  const timeSpent = location.state?.timeSpent;
-
   // Find the quiz
   const quiz = quizStore.quizzes.find((q) => q.slug === slug);
+
+  // Resolve the result with graceful fallbacks so refreshed or shared
+  // /quiz/:slug/result/:resultId links don't break:
+  //   1. router state (fresh completion in this tab)
+  //   2. localStorage snapshot of the last completion in this browser
+  //   3. reconstruct a generic view of the result type from the :resultId param
+  const { result, timeSpent } = useMemo<{
+    result: QuizResult | null;
+    timeSpent: number | undefined;
+  }>(() => {
+    if (location.state?.result) {
+      return {
+        result: location.state.result as QuizResult,
+        timeSpent: location.state.timeSpent as number | undefined,
+      };
+    }
+
+    try {
+      const raw = localStorage.getItem(`qiyas-last-result:${slug}`);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          result: QuizResult;
+          timeSpent?: number;
+        };
+        if (!resultId || saved.result?.primaryResult?.id === resultId) {
+          return { result: saved.result, timeSpent: saved.timeSpent };
+        }
+      }
+    } catch {
+      // ignore malformed/unavailable storage
+    }
+
+    if (quiz && resultId) {
+      const matched = quiz.results.find((r) => r.id === resultId);
+      if (matched) {
+        return {
+          result: {
+            primaryResult: matched,
+            allResults: quiz.results,
+            scores: {},
+            percentages: {},
+            quizId: quiz.id,
+            completedAt: new Date(),
+          },
+          timeSpent: undefined,
+        };
+      }
+    }
+
+    return { result: null, timeSpent: undefined };
+  }, [location.state, slug, resultId, quiz]);
 
   // Get suggested quizzes (same category)
   const suggestedQuizzes = quizStore.quizzes
@@ -106,12 +154,19 @@ export function QuizResultPage() {
 
   const handleDownloadResult = async () => {
     const element = document.getElementById("result-card");
-    if (element) {
-      try {
-        console.log("Download feature would be implemented here");
-      } catch (error) {
-        console.error("Download failed:", error);
-      }
+    if (!element) return;
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const canvas = await html2canvas(element, {
+        backgroundColor: "#0f172a", // slate-900 to match the page background
+        scale: 2,
+      });
+      const link = document.createElement("a");
+      link.download = `${slug || "quiz"}-result.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Download failed:", error);
     }
   };
 

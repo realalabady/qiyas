@@ -20,6 +20,7 @@ import { AdminSettingsPage } from "@/pages/admin-settings-page";
 import { AdminArticlesPage } from "@/pages/admin-articles-page";
 import { AdminQuizzesPage } from "@/pages/admin-quizzes-page";
 import { AdminCategoriesPage } from "@/pages/admin-categories-page";
+import { AdminAnalyticsPage } from "@/pages/admin-analytics-page";
 import { AdminMediaPage } from "@/pages/admin-media-page";
 import { ArticlesPage } from "@/pages/articles-page";
 import { ArticleDetailPage } from "@/pages/article-detail-page";
@@ -82,6 +83,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <ProtectedAdminRoute>
             <AdminCategoriesPage />
+          </ProtectedAdminRoute>
+        ),
+      },
+      {
+        path: "analytics",
+        element: (
+          <ProtectedAdminRoute>
+            <AdminAnalyticsPage />
           </ProtectedAdminRoute>
         ),
       },

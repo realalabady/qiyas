@@ -1,17 +1,54 @@
 import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Share2, Check } from "lucide-react";
 import { useArticles } from "@/stores/articles-store";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { useLanguage } from "@/lib/i18n";
+import { setSEOMetadata } from "@/lib/seo";
 
 export function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { getArticleBySlug } = useArticles();
   const { t } = useLanguage();
+  const [shared, setShared] = useState(false);
 
   const article = getArticleBySlug(slug || "");
+
+  useEffect(() => {
+    if (!article) return;
+    const origin = window.location.origin;
+    setSEOMetadata({
+      title: `${article.title} \xB7 Al-Maarefah`,
+      description: article.excerpt,
+      ogUrl: `${origin}/articles/${article.slug}`,
+      ogImage: article.image
+        ? article.image.startsWith("http")
+          ? article.image
+          : `${origin}${article.image}`
+        : undefined,
+    });
+  }, [article]);
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/articles/${article!.slug}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: article!.title, text: article!.excerpt, url });
+        return;
+      }
+    } catch {
+      // user cancelled — fall back to clipboard copy
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch {
+      // clipboard unavailable — ignore
+    }
+  };
 
   if (!article || !article.published) {
     return (
@@ -38,7 +75,7 @@ export function ArticleDetailPage() {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="mb-6"
+          className="mb-6 flex items-center justify-between"
         >
           <Link
             to="/articles"
@@ -47,6 +84,24 @@ export function ArticleDetailPage() {
             <ArrowLeft className="size-4" />
             {t("quizDetail.back")}
           </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="gap-2"
+          >
+            {shared ? (
+              <>
+                <Check className="size-4" />
+                {t("quizDetail.shareCopied")}
+              </>
+            ) : (
+              <>
+                <Share2 className="size-4" />
+                {t("btn.share")}
+              </>
+            )}
+          </Button>
         </motion.div>
 
         <motion.article

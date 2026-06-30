@@ -1,15 +1,17 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
-import { Home } from "lucide-react";
+import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
+import { Home, LogOut } from "lucide-react";
 
 import AppFrame from "@/components/layout/app-frame";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { useLanguage } from "@/lib/i18n";
+import { useAdmin } from "@/contexts/admin-context";
 import { cn } from "@/lib/utils";
 
 const adminLinks = [
   { to: "/admin", labelKey: "admin.overview", end: true },
   { to: "/admin/quizzes", labelKey: "admin.quizzes" },
   { to: "/admin/categories", labelKey: "admin.categories" },
+  { to: "/admin/analytics", labelKey: "admin.analytics" },
   { to: "/admin/articles", labelKey: "admin.articles" },
   { to: "/admin/media", labelKey: "admin.media" },
   { to: "/admin/settings", labelKey: "admin.settings" },
@@ -17,6 +19,13 @@ const adminLinks = [
 
 function AdminLayout() {
   const { t } = useLanguage();
+  const { user, logout } = useAdmin();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/admin/login");
+  };
 
   return (
     <AppFrame
@@ -69,6 +78,15 @@ function AdminLayout() {
                   <Home className="size-3.5" />
                   {t("admin.go_home")}
                 </Link>
+                {user && (
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-white/10 transition-colors"
+                  >
+                    <LogOut className="size-3.5" />
+                    {t("admin.logout")}
+                  </button>
+                )}
                 <LanguageSwitcher />
               </div>
             </div>

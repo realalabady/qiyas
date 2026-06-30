@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export function AnswerEditor({
   quizType,
   resultOptions = [],
 }: AnswerEditorProps) {
+  const { t } = useLanguage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Answer>({
     id: "",
@@ -87,9 +89,9 @@ export function AnswerEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">Answers</h3>
+        <h3 className="text-lg font-bold">{t("admin.quiz.answers.heading")}</h3>
         <span className="text-sm text-muted-foreground">
-          {answers.length} answers
+          {answers.length} {t("admin.quiz.answers.count")}
         </span>
       </div>
 
@@ -107,7 +109,7 @@ export function AnswerEditor({
                 <p className="font-medium text-sm">{answer.text}</p>
                 {quizType === "weighted_personality" && answer.weights && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Weights:{" "}
+                    {t("admin.quiz.answers.weights_display")}{" "}
                     {Object.entries(answer.weights)
                       .filter(([, v]) => v > 0)
                       .map(([k, v]) => `${k}:${v}`)
@@ -116,12 +118,12 @@ export function AnswerEditor({
                 )}
                 {quizType === "score_based" && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Score: {answer.score}
+                    {t("admin.quiz.answers.score_display")} {answer.score}
                   </p>
                 )}
                 {quizType === "personality_based" && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Result: {answer.resultId}
+                    {t("admin.quiz.answers.result_display")} {answer.resultId}
                   </p>
                 )}
               </div>
@@ -153,14 +155,14 @@ export function AnswerEditor({
           {/* Answer Text */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Answer Text
+              {t("admin.quiz.answers.text_label")}
             </label>
             <Input
               value={formData.text}
               onChange={(e) =>
                 setFormData({ ...formData, text: e.target.value })
               }
-              placeholder="Enter answer option"
+              placeholder={t("admin.quiz.answers.text_placeholder")}
             />
           </div>
 
@@ -170,7 +172,7 @@ export function AnswerEditor({
             resultOptions.length > 0 && (
               <div>
                 <label className="block text-xs font-medium mb-2">
-                  Result Weights
+                  {t("admin.quiz.answers.weights_label")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {resultOptions.map((option) => (
@@ -200,7 +202,7 @@ export function AnswerEditor({
           {quizType === "score_based" && (
             <div>
               <label className="block text-xs font-medium mb-1">
-                Score Points
+                {t("admin.quiz.answers.score_label")}
               </label>
               <Input
                 type="number"
@@ -220,7 +222,7 @@ export function AnswerEditor({
           {quizType === "personality_based" && resultOptions.length > 0 && (
             <div>
               <label className="block text-xs font-medium mb-1">
-                Maps to Result
+                {t("admin.quiz.answers.maps_to")}
               </label>
               <select
                 value={formData.resultId || ""}
@@ -229,7 +231,7 @@ export function AnswerEditor({
                 }
                 className="w-full p-2 rounded-lg bg-white/5 border border-border/40 text-foreground focus:outline-none focus:border-primary/50 text-sm [&>option]:bg-slate-900 [&>option]:text-slate-100"
               >
-                <option value="">Select a result type</option>
+                <option value="">{t("admin.quiz.answers.select_result")}</option>
                 {resultOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -245,7 +247,7 @@ export function AnswerEditor({
               quizType === "percentage_matching" ||
               quizType === "personality_based") && (
               <p className="text-xs text-amber-300">
-                Add quiz results first, then map answers to those results.
+                {t("admin.quiz.answers.add_results_first")}
               </p>
             )}
 
@@ -259,7 +261,7 @@ export function AnswerEditor({
                   setEditingId(null);
                 }}
               >
-                Cancel
+                {t("admin.common.cancel")}
               </Button>
             )}
             <Button
@@ -281,7 +283,7 @@ export function AnswerEditor({
               className="gap-1"
             >
               <Plus className="w-3 h-3" />
-              {editingId ? "Update Answer" : "Add Answer"}
+              {editingId ? t("admin.quiz.answers.update") : t("admin.quiz.answers.add")}
             </Button>
           </div>
         </div>

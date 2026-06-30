@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ImageUploadProps {
   value: string;
@@ -11,11 +12,14 @@ interface ImageUploadProps {
 export function ImageUpload({
   value,
   onChange,
-  placeholder = "Upload an image",
-  label = "Image",
+  placeholder,
+  label,
 }: ImageUploadProps) {
+  const { t } = useLanguage();
   const [preview, setPreview] = useState<string>(value);
   const [isLoading, setIsLoading] = useState(false);
+  const resolvedLabel = label ?? t("admin.quiz.upload.label");
+  const resolvedPlaceholder = placeholder ?? t("admin.quiz.upload.placeholder");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,7 +47,7 @@ export function ImageUpload({
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-2">{label}</label>
+      <label className="block text-sm font-medium mb-2">{resolvedLabel}</label>
 
       <div className="space-y-3">
         {/* Preview */}
@@ -69,10 +73,10 @@ export function ImageUpload({
             <Upload className="w-6 h-6 text-muted-foreground" />
             <div className="text-center">
               <p className="text-sm font-medium text-foreground">
-                {isLoading ? "Uploading..." : placeholder}
+                {isLoading ? t("admin.quiz.upload.uploading") : resolvedPlaceholder}
               </p>
               <p className="text-xs text-muted-foreground">
-                PNG, JPG, GIF (max 5MB)
+                {t("admin.quiz.upload.format_hint")}
               </p>
             </div>
           </div>
@@ -94,7 +98,7 @@ export function ImageUpload({
               setPreview(e.target.value);
               onChange(e.target.value);
             }}
-            placeholder="Or paste image URL"
+            placeholder={t("admin.quiz.upload.or_paste")}
             className="w-full p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 text-sm"
           />
           {preview && (

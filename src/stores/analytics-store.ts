@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface QuizCompletion {
   id: string;
@@ -32,162 +33,170 @@ export interface QuizAnalytics {
 }
 
 interface AnalyticsStore {
-  // Completion tracking
+  // Raw events
   completions: QuizCompletion[];
+  views: Record<string, number>; // quizId -> count
+  starts: Record<string, number>; // quizId -> count
+
+  // Recording
+  recordView: (quizId: string) => void;
+  recordStart: (quizId: string) => void;
   recordCompletion: (completion: Omit<QuizCompletion, "id">) => void;
 
-  // Quiz analytics
-  quizAnalytics: Map<string, QuizAnalytics>;
-  calculateAnalytics: (quizId: string) => QuizAnalytics | null;
+  // Per-quiz analytics (computed from real events)
+  getQuizAnalytics: (quizId: string, quizTitle?: string) => QuizAnalytics | null;
 
   // Global stats
   getTotalCompletions: () => number;
+  getTotalViews: () => number;
+  getTotalStarts: () => number;
   getTotalUniqueUsers: () => number;
-  getMostPopularQuiz: () => QuizAnalytics | null;
   getTopResults: () => Array<{ resultTitle: string; count: number }>;
 
   // Export
   exportAnalytics: () => string;
 }
 
-export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
-  completions: [],
-  quizAnalytics: new Map(),
+export const useAnalyticsStore = create<AnalyticsStore>()(
+  persist(
+    (set, get) => ({
+      completions: [],
+      views: {},
+      starts: {},
 
-  recordCompletion: (completion) => {
-    const newCompletion: QuizCompletion = {
-      ...completion,
-      id: `completion_${Date.now()}_${Math.random()}`,
-    };
+      recordView: (quizId) => {
+        if (!quizId) return;
+        set((state) => ({
+          views: { ...state.views, [quizId]: (state.views[quizId] || 0) + 1 },
+        }));
+      },
 
-    set((state) => ({
-      completions: [...state.completions, newCompletion],
-    }));
+      recordStart: (quizId) => {
+        if (!quizId) return;
+        set((state) => ({
+          starts: { ...state.starts, [quizId]: (state.starts[quizId] || 0) + 1 },
+        }));
+      },
 
-    // Update analytics
-    get().calculateAnalytics(completion.quizId);
-
-    // Log to localStorage for persistence
-    const stored = localStorage.getItem("quiz_completions");
-    const completions = stored ? JSON.parse(stored) : [];
-    completions.push(newCompletion);
-    localStorage.setItem("quiz_completions", JSON.stringify(completions));
-
-    // Log to console for debugging
-    console.log(
-      `[Analytics] Quiz completed: ${completion.quizSlug} → ${completion.resultTitle} (${Math.round(completion.timeSpent / 60)}m)`,
-    );
-  },
-
-  calculateAnalytics: (quizId) => {
-    const completions = get().completions.filter((c) => c.quizId === quizId);
-    if (completions.length === 0) return null;
-
-    const firstCompletion = completions[0];
-    const quizSlug = firstCompletion.quizSlug;
-    const quizTitle = "Quiz Title"; // TODO: Get from quiz store
-
-    // Calculate metrics
-    const totalTimeSpent = completions.reduce((sum, c) => sum + c.timeSpent, 0);
-    const averageTimeSpent = Math.round(totalTimeSpent / completions.length);
-
-    // Group by result
-    const resultMap = new Map<string, number>();
-    completions.forEach((c) => {
-      const count = resultMap.get(c.resultId) || 0;
-      resultMap.set(c.resultId, count + 1);
-    });
-
-    const topResults = Array.from(resultMap.entries())
-      .map(([resultId, count]) => {
-        const completion = completions.find((c) => c.resultId === resultId);
-        return {
-          resultId,
-          resultTitle: completion?.resultTitle || resultId,
-          count,
-          percentage: Math.round((count / completions.length) * 100),
+      recordCompletion: (completion) => {
+        const newCompletion: QuizCompletion = {
+          ...completion,
+          id: `completion_${Date.now()}_${Math.round(Math.random() * 1e6)}`,
         };
-      })
-      .sort((a, b) => b.count - a.count);
+        set((state) => ({
+          completions: [...state.completions, newCompletion],
+        }));
+      },
 
-    // Group by source
-    const sourceMap = new Map<string, number>();
-    completions.forEach((c) => {
-      const count = sourceMap.get(c.source) || 0;
-      sourceMap.set(c.source, count + 1);
-    });
+      getQuizAnalytics: (quizId, quizTitle) => {
+        const completions = get().completions.filter((c) => c.quizId === quizId);
+        const views = get().views[quizId] || 0;
+        const starts = get().starts[quizId] || 0;
 
-    const completionsBySource = Object.fromEntries(sourceMap);
+        if (completions.length === 0 && views === 0 && starts === 0) {
+          return null;
+        }
 
-    const analytics: QuizAnalytics = {
-      quizId,
-      quizSlug,
-      quizTitle,
-      views: completions.length * 3, // Rough estimate: 3 views per completion
-      starts: completions.length * 2, // Rough estimate: 2 starts per completion
-      completions: completions.length,
-      abandonRate: 0.35, // 35% abandon rate (typical)
-      averageTimeSpent,
-      topResults,
-      completionsBySource,
-      lastUpdated: new Date(),
-    };
+        const quizSlug = completions[0]?.quizSlug || "";
 
-    set((state) => {
-      const updated = new Map(state.quizAnalytics);
-      updated.set(quizId, analytics);
-      return { quizAnalytics: updated };
-    });
+        const totalTimeSpent = completions.reduce(
+          (sum, c) => sum + c.timeSpent,
+          0,
+        );
+        const averageTimeSpent = completions.length
+          ? Math.round(totalTimeSpent / completions.length)
+          : 0;
 
-    return analytics;
-  },
+        // Group completions by result
+        const resultMap = new Map<string, number>();
+        completions.forEach((c) => {
+          resultMap.set(c.resultId, (resultMap.get(c.resultId) || 0) + 1);
+        });
+        const topResults = Array.from(resultMap.entries())
+          .map(([resultId, count]) => ({
+            resultId,
+            resultTitle:
+              completions.find((c) => c.resultId === resultId)?.resultTitle ||
+              resultId,
+            count,
+            percentage: completions.length
+              ? Math.round((count / completions.length) * 100)
+              : 0,
+          }))
+          .sort((a, b) => b.count - a.count);
 
-  getTotalCompletions: () => get().completions.length,
+        // Group by source
+        const sourceMap = new Map<string, number>();
+        completions.forEach((c) => {
+          sourceMap.set(c.source, (sourceMap.get(c.source) || 0) + 1);
+        });
 
-  getTotalUniqueUsers: () => {
-    const userAgents = new Set(get().completions.map((c) => c.userAgent));
-    return userAgents.size;
-  },
+        // Real abandon rate: started but never completed.
+        const abandonRate =
+          starts > 0
+            ? Math.max(0, (starts - completions.length) / starts)
+            : 0;
 
-  getMostPopularQuiz: () => {
-    let mostPopular: QuizAnalytics | null = null;
-    let maxCompletions = 0;
+        return {
+          quizId,
+          quizSlug,
+          quizTitle: quizTitle || quizSlug || quizId,
+          views,
+          starts,
+          completions: completions.length,
+          abandonRate,
+          averageTimeSpent,
+          topResults,
+          completionsBySource: Object.fromEntries(sourceMap),
+          lastUpdated: new Date(),
+        };
+      },
 
-    get().quizAnalytics.forEach((analytics) => {
-      if (analytics.completions > maxCompletions) {
-        maxCompletions = analytics.completions;
-        mostPopular = analytics;
-      }
-    });
+      getTotalCompletions: () => get().completions.length,
 
-    return mostPopular;
-  },
+      getTotalViews: () =>
+        Object.values(get().views).reduce((sum, n) => sum + n, 0),
 
-  getTopResults: () => {
-    const resultMap = new Map<string, number>();
+      getTotalStarts: () =>
+        Object.values(get().starts).reduce((sum, n) => sum + n, 0),
 
-    get().completions.forEach((c) => {
-      const count = resultMap.get(c.resultTitle) || 0;
-      resultMap.set(c.resultTitle, count + 1);
-    });
+      getTotalUniqueUsers: () => {
+        const userAgents = new Set(get().completions.map((c) => c.userAgent));
+        return userAgents.size;
+      },
 
-    return Array.from(resultMap.entries())
-      .map(([resultTitle, count]) => ({ resultTitle, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  },
+      getTopResults: () => {
+        const resultMap = new Map<string, number>();
+        get().completions.forEach((c) => {
+          resultMap.set(c.resultTitle, (resultMap.get(c.resultTitle) || 0) + 1);
+        });
+        return Array.from(resultMap.entries())
+          .map(([resultTitle, count]) => ({ resultTitle, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+      },
 
-  exportAnalytics: () => {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      totalCompletions: get().getTotalCompletions(),
-      totalUniqueUsers: get().getTotalUniqueUsers(),
-      topResults: get().getTopResults(),
-      quizAnalytics: Array.from(get().quizAnalytics.entries()).map(
-        ([_, analytics]) => analytics,
-      ),
-    };
-
-    return JSON.stringify(data, null, 2);
-  },
-}));
+      exportAnalytics: () => {
+        const data = {
+          exportedAt: new Date().toISOString(),
+          totalViews: get().getTotalViews(),
+          totalStarts: get().getTotalStarts(),
+          totalCompletions: get().getTotalCompletions(),
+          totalUniqueUsers: get().getTotalUniqueUsers(),
+          topResults: get().getTopResults(),
+          completions: get().completions,
+        };
+        return JSON.stringify(data, null, 2);
+      },
+    }),
+    {
+      name: "qiyas-analytics-v1",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        completions: state.completions,
+        views: state.views,
+        starts: state.starts,
+      }),
+    },
+  ),
+);

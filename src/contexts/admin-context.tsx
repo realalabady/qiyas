@@ -17,6 +17,19 @@ import {
 } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/services";
 import { isAdminUid } from "@/lib/firebase/admins";
+import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useArticles } from "@/stores/articles-store";
+import { useCategories } from "@/stores/categories-store";
+
+/**
+ * Once an admin is confirmed, pull all content (including drafts) from
+ * Firestore — and on the very first run, migrate existing local content up.
+ */
+const syncContentForAdmin = () => {
+  void useQuizzesAdmin.getState().syncOnAdmin();
+  void useArticles.getState().syncOnAdmin();
+  void useCategories.getState().syncOnAdmin();
+};
 
 interface AdminContextType {
   user: User | null;
@@ -40,6 +53,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         const adminStatus = await isAdminUid(firebaseUser.uid);
         setUser(firebaseUser);
         setIsAdmin(adminStatus);
+        if (adminStatus) syncContentForAdmin();
       } else {
         setUser(null);
         setIsAdmin(false);

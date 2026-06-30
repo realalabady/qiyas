@@ -27,7 +27,6 @@ export function QuizTakePage() {
   const quizTakeStore = useQuizTakeStore();
   const analyticsStore = useAnalyticsStore();
 
-  const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
   const [startTime] = useState(Date.now());
 
   // Find the quiz by slug
@@ -70,8 +69,10 @@ export function QuizTakePage() {
         results: quiz.results,
       } as any;
       quizTakeStore.loadQuiz(quizConfig);
+      // Count this as a quiz start (real analytics).
+      analyticsStore.recordStart(quiz.id);
     }
-  }, [quiz, navigate, quizTakeStore, validation?.isValid]);
+  }, [quiz, navigate, quizTakeStore, analyticsStore, validation?.isValid]);
 
   if (!quiz) return null;
 
@@ -130,10 +131,26 @@ export function QuizTakePage() {
     );
   }
 
+  // Derive the current selection from the store so navigating Previous/Next
+  // keeps the previously chosen answer(s) highlighted.
+  const isMultiSelect = currentQuestion.type === "multiple-select";
+  const storedAnswer = quizTakeStore.userAnswers[currentQuestion.id];
+  const selectedIds = Array.isArray(storedAnswer)
+    ? storedAnswer
+    : storedAnswer
+      ? [storedAnswer]
+      : [];
+
   const handleSelectAnswer = (answerId: string) => {
-    setSelectedAnswerId(answerId);
     const currentQ = questions[currentQuestionIndex];
-    quizTakeStore.answerQuestion(currentQ.id, answerId);
+    if (isMultiSelect) {
+      const next = selectedIds.includes(answerId)
+        ? selectedIds.filter((id) => id !== answerId)
+        : [...selectedIds, answerId];
+      quizTakeStore.answerQuestion(currentQ.id, next);
+    } else {
+      quizTakeStore.answerQuestion(currentQ.id, answerId);
+    }
   };
 
   const handleNext = () => {
@@ -154,18 +171,26 @@ export function QuizTakePage() {
         source: "direct",
       });
 
+      // Persist so the result page survives a refresh of the same browser.
+      try {
+        localStorage.setItem(
+          `qiyas-last-result:${quiz.slug}`,
+          JSON.stringify({ result, timeSpent }),
+        );
+      } catch {
+        // localStorage unavailable — fall back to router state only.
+      }
+
       navigate(`/quiz/${slug}/result/${result.primaryResult.id}`, {
         state: { result, timeSpent },
       });
     } else {
       quizTakeStore.nextQuestion();
-      setSelectedAnswerId(null);
     }
   };
 
   const handlePrevious = () => {
     quizTakeStore.previousQuestion();
-    setSelectedAnswerId(null);
   };
 
   const handleBack = () => {
@@ -180,7 +205,7 @@ export function QuizTakePage() {
   };
 
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const isAnswered = selectedAnswerId !== null;
+  const isAnswered = selectedIds.length > 0;
 
   return (
     <motion.div
@@ -222,9 +247,14 @@ export function QuizTakePage() {
                 className="w-full h-64 object-cover rounded-2xl mb-8"
               />
             )}
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 leading-tight">
               {currentQuestion.text}
             </h2>
+            {isMultiSelect && (
+              <p className="text-sm text-slate-400 mb-8">
+                Select all that apply.
+              </p>
+            )}
 
             <motion.div
               className="space-y-3"
@@ -232,21 +262,25 @@ export function QuizTakePage() {
               initial="hidden"
               animate="visible"
             >
-              {currentQuestion.answers.map((answer) => (
+              {currentQuestion.answers.map((answer) => {
+                const isSelected = selectedIds.includes(answer.id);
+                return (
                 <motion.button
                   key={answer.id}
                   onClick={() => handleSelectAnswer(answer.id)}
                   variants={staggerItem}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${
-                    selectedAnswerId === answer.id
+                    isSelected
                       ? "border-blue-500 bg-blue-500/10"
                       : "border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-5 h-5 rounded-full border-2 transition-all ${
-                        selectedAnswerId === answer.id
+                      className={`w-5 h-5 border-2 transition-all ${
+                        isMultiSelect ? "rounded-md" : "rounded-full"
+                      } ${
+                        isSelected
                           ? "border-blue-500 bg-blue-500"
                           : "border-slate-600"
                       }`}
@@ -256,7 +290,8 @@ export function QuizTakePage() {
                     </span>
                   </div>
                 </motion.button>
-              ))}
+                );
+              })}
             </motion.div>
           </motion.div>
         </AnimatePresence>

@@ -2,6 +2,7 @@
  * Admin Dashboard — Overview with key metrics and action links.
  */
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -11,9 +12,13 @@ import {
   Users,
   Brain,
   Settings,
+  UploadCloud,
+  Loader,
 } from "lucide-react";
 import { pageTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useArticles } from "@/stores/articles-store";
+import { useCategories } from "@/stores/categories-store";
 import { useAnalyticsStore } from "@/stores/analytics-store";
 import { useLanguage } from "@/lib/i18n";
 
@@ -29,6 +34,31 @@ export function AdminDashboardPage() {
   const quizStore = useQuizzesAdmin();
   const analyticsStore = useAnalyticsStore();
   const { t } = useLanguage();
+
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  // Push this admin's local content up to Firestore so it shows on every device.
+  const handleSyncToCloud = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const [quizzes, articles, categories] = await Promise.all([
+        useQuizzesAdmin.getState().pushAllToCloud(),
+        useArticles.getState().pushAllToCloud(),
+        useCategories.getState().pushAllToCloud(),
+      ]);
+      setSyncMessage(
+        `${t("admin.dashboard.sync_success_prefix")} ${quizzes} ${t("admin.dashboard.sync_quizzes")}, ${articles} ${t("admin.dashboard.sync_articles")}, ${categories} ${t("admin.dashboard.sync_categories")}.`,
+      );
+    } catch (error) {
+      console.error("sync to cloud failed", error);
+      setSyncMessage(t("admin.dashboard.sync_failed"));
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMessage(null), 6000);
+    }
+  };
 
   // Get real stats
   const totalQuizzes = quizStore.quizzes.length;
@@ -72,13 +102,38 @@ export function AdminDashboardPage() {
       className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-8 px-4"
     >
       <div className="max-w-7xl mx-auto">
-        <motion.div variants={staggerItem} className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            {t("admin.dashboard")}
-          </h1>
-          <p className="text-slate-400">
-            {t("admin.welcome")}
-          </p>
+        <motion.div
+          variants={staggerItem}
+          className="mb-12 flex flex-wrap items-start justify-between gap-4"
+        >
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {t("admin.dashboard")}
+            </h1>
+            <p className="text-slate-400">{t("admin.welcome")}</p>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={handleSyncToCloud}
+              disabled={syncing}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:opacity-90 disabled:opacity-60 transition"
+            >
+              {syncing ? (
+                <Loader size={16} className="animate-spin" />
+              ) : (
+                <UploadCloud size={16} />
+              )}
+              {syncing
+                ? t("admin.dashboard.syncing")
+                : t("admin.dashboard.sync_to_cloud")}
+            </button>
+            {syncMessage && (
+              <span className="text-xs text-slate-300 max-w-xs text-right">
+                {syncMessage}
+              </span>
+            )}
+          </div>
         </motion.div>
 
         <motion.div
@@ -121,7 +176,7 @@ export function AdminDashboardPage() {
             {QUICK_ACTIONS.map((action) => {
               const Icon = action.icon;
               return (
-                <Link key={action.to} to={action.to}>
+                <Link key={action.labelKey} to={action.to}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
