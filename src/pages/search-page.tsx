@@ -9,6 +9,8 @@ import { QuizCard } from "@/components/quiz/quiz-card";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
 import { useLanguage } from "@/lib/i18n";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { localizedQuiz } from "@/lib/localized-content";
+import { categoryLabel } from "@/lib/category-i18n";
 
 const POPULAR_SEARCHES = [
   "personality test",
@@ -20,20 +22,23 @@ const POPULAR_SEARCHES = [
 ];
 
 export default function SearchPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState("");
   const quizStore = useQuizzesAdmin();
-  const quizzes = quizStore.getPublishedQuizzes().map((quiz) => ({
-    id: quiz.id,
-    slug: quiz.slug,
-    title: quiz.title,
-    description: quiz.description,
-    category: quiz.category,
-    thumbnail: quiz.thumbnail,
-    questionCount: quiz.questions.length,
-    estimatedMinutes: Math.ceil(quiz.questions.length / 2) || 5,
-    completions: 0,
-  }));
+  const quizzes = quizStore.getPublishedQuizzes().map((raw) => {
+    const quiz = localizedQuiz(raw, language);
+    return {
+      id: quiz.id,
+      slug: quiz.slug,
+      title: quiz.title,
+      description: quiz.description,
+      category: categoryLabel(raw.category, t),
+      thumbnail: quiz.thumbnail,
+      questionCount: quiz.questions.length,
+      estimatedMinutes: Math.ceil(quiz.questions.length / 2) || 5,
+      completions: 0,
+    };
+  });
   const categoryFilters = [...new Set(quizzes.map((quiz) => quiz.category))].slice(0, 6);
 
   const results = useMemo(() => {

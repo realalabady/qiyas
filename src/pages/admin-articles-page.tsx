@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { buildArticleI18n } from "@/lib/localized-content";
 
 export function AdminArticlesPage() {
   const { articles, addArticle, updateArticle, deleteArticle } = useArticles();
@@ -14,6 +15,7 @@ export function AdminArticlesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
 
   const emptyForm: Omit<Article, "id" | "createdAt" | "updatedAt" | "views"> =
     {
@@ -38,7 +40,7 @@ export function AdminArticlesPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleAddArticle = () => {
+  const handleAddArticle = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       showNotification(t("admin.articles.title_content_required"));
       return;
@@ -46,7 +48,13 @@ export function AdminArticlesPage() {
 
     const slug =
       formData.slug || formData.title.toLowerCase().replace(/\s+/g, "-");
-    addArticle({ ...formData, slug });
+
+    setTranslating(true);
+    showNotification(t("admin.articles.translating"));
+    const i18n = await buildArticleI18n(formData);
+    setTranslating(false);
+
+    addArticle({ ...formData, slug, i18n });
 
     setFormData(emptyForm);
     setShowForm(false);
@@ -70,9 +78,15 @@ export function AdminArticlesPage() {
     setShowForm(true);
   };
 
-  const handleUpdateArticle = () => {
+  const handleUpdateArticle = async () => {
     if (!editingId) return;
-    updateArticle(editingId, formData);
+
+    setTranslating(true);
+    showNotification(t("admin.articles.translating"));
+    const i18n = await buildArticleI18n(formData);
+    setTranslating(false);
+
+    updateArticle(editingId, { ...formData, i18n });
     setFormData(emptyForm);
     setShowForm(false);
     setEditingId(null);
@@ -256,11 +270,14 @@ export function AdminArticlesPage() {
                   {t("admin.common.cancel")}
                 </Button>
                 <Button
+                  disabled={translating}
                   onClick={editingId ? handleUpdateArticle : handleAddArticle}
                 >
-                  {editingId
-                    ? t("admin.articles.update")
-                    : t("admin.articles.create")}
+                  {translating
+                    ? t("admin.articles.translating")
+                    : editingId
+                      ? t("admin.articles.update")
+                      : t("admin.articles.create")}
                 </Button>
               </div>
             </div>

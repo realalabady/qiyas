@@ -19,6 +19,8 @@ import {
 } from "@/lib/motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { validateQuizConfig } from "@/lib/quiz-validation";
+import { useLanguage } from "@/lib/i18n";
+import { localizedQuiz } from "@/lib/localized-content";
 
 export function QuizTakePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -26,11 +28,15 @@ export function QuizTakePage() {
   const quizStore = useQuizzesAdmin();
   const quizTakeStore = useQuizTakeStore();
   const analyticsStore = useAnalyticsStore();
+  const { language } = useLanguage();
 
   const [startTime] = useState(Date.now());
 
-  // Find the quiz by slug
-  const quiz = quizStore.getQuizBySlug(slug || "");
+  // Find the quiz by slug, then localize its display text (questions, answers
+  // and result copy) to the active language. Answer ids/weights are preserved
+  // so scoring is unaffected.
+  const rawQuiz = quizStore.getQuizBySlug(slug || "");
+  const quiz = rawQuiz ? localizedQuiz(rawQuiz, language) : undefined;
   const validation = quiz ? validateQuizConfig(quiz) : null;
 
   useEffect(() => {

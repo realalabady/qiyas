@@ -10,11 +10,14 @@ import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { localizedQuiz } from "@/lib/localized-content";
+import { categoryLabel } from "@/lib/category-i18n";
+import { useAutoTranslateQuizzes } from "@/hooks/use-auto-translate";
 import type { QuizCardData } from "@/components/quiz/quiz-card";
 import { useLanguage } from "@/lib/i18n";
 
 export default function ExplorePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const SORT_OPTIONS = [
     { value: "trending", label: t("explore.sort.trending") },
     { value: "popular", label: t("explore.sort.popular") },
@@ -31,12 +34,19 @@ export default function ExplorePage() {
   const quizStore = useQuizzesAdmin();
   const allQuizzes = quizStore.getPublishedQuizzes();
 
-  // Dynamic categories from quizzes
+  // Translate any quiz that predates the bilingual feature, once, in the
+  // background — cached locally so it renders in the active language next time.
+  useAutoTranslateQuizzes(allQuizzes);
+
+  // Dynamic categories from quizzes. `label` is the English category name used
+  // for filtering (quizzes store their category in English); `displayLabel` is
+  // the translated name shown in the chip.
   const CATEGORIES = [
     ...new Set(allQuizzes.map((q) => q.category)),
   ].map((cat) => ({
     slug: cat.toLowerCase().replace(/\s+/g, "-"),
     label: cat,
+    displayLabel: categoryLabel(cat, t),
   }));
 
   const filtered = useMemo(() => {
@@ -165,7 +175,7 @@ export default function ExplorePage() {
                   : "bg-white/5 text-muted-foreground hover:bg-white/10"
               }`}
             >
-              {cat.label}
+              {cat.displayLabel}
             </button>
           ))}
         </div>
@@ -198,7 +208,7 @@ export default function ExplorePage() {
           {query && <Badge variant="secondary">"{query}"</Badge>}
           {selectedCat && (
             <Badge variant="secondary">
-              {CATEGORIES.find((c) => c.slug === selectedCat)?.label}
+              {CATEGORIES.find((c) => c.slug === selectedCat)?.displayLabel}
             </Badge>
           )}
         </div>
@@ -241,23 +251,27 @@ export default function ExplorePage() {
             animate="visible"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
           >
-            {filtered.map((quiz) => (
-              <motion.div key={quiz.id} variants={staggerItem}>
-                <QuizCard 
-                  quiz={{
-                    id: quiz.id,
-                    slug: quiz.slug,
-                    title: quiz.title,
-                    description: quiz.description,
-                    category: quiz.category,
-                    thumbnail: quiz.thumbnail,
-                    questionCount: quiz.questions.length,
-                    estimatedMinutes: Math.ceil(quiz.questions.length / 2) || 5,
-                    completions: 0,
-                  } as QuizCardData}
-                />
-              </motion.div>
-            ))}
+            {filtered.map((rawQuiz) => {
+              const quiz = localizedQuiz(rawQuiz, language);
+              return (
+                <motion.div key={quiz.id} variants={staggerItem}>
+                  <QuizCard
+                    quiz={{
+                      id: quiz.id,
+                      slug: quiz.slug,
+                      title: quiz.title,
+                      description: quiz.description,
+                      category: categoryLabel(rawQuiz.category, t),
+                      thumbnail: quiz.thumbnail,
+                      questionCount: quiz.questions.length,
+                      estimatedMinutes:
+                        Math.ceil(quiz.questions.length / 2) || 5,
+                      completions: 0,
+                    } as QuizCardData}
+                  />
+                </motion.div>
+              );
+            })}
           </motion.div>
         </>
       )}

@@ -1,3 +1,12 @@
+export type ArticleLang = "en" | "ar";
+
+/** Per-language snapshot of an article's display text. */
+export interface ArticleI18n {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -9,6 +18,8 @@ export interface Article {
   category: string;
   tags: string[];
   published: boolean;
+  /** Auto-generated translations keyed by language. Optional for legacy data. */
+  i18n?: Partial<Record<ArticleLang, ArticleI18n>>;
   createdAt: Date;
   updatedAt: Date;
   views: number;

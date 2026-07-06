@@ -52,6 +52,31 @@ export interface Result {
   personality?: string; // Category name for weighted types
 }
 
+/**
+ * Per-language snapshot of a quiz's *display text*. Questions/answers/results
+ * are keyed by their stable id so translations survive reordering. Ids, slugs,
+ * weights, scores and category linkage are never stored here.
+ */
+export interface QuizI18n {
+  title?: string;
+  description?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  questions?: Record<string, { text?: string; answers?: Record<string, string> }>;
+  results?: Record<
+    string,
+    {
+      title?: string;
+      description?: string;
+      strengths?: string[];
+      weaknesses?: string[];
+      careers?: string[];
+    }
+  >;
+}
+
+export type QuizLang = "en" | "ar";
+
 export interface Quiz {
   id: string;
   title: string;
@@ -65,6 +90,8 @@ export interface Quiz {
   questions: Question[];
   results: Result[];
   published: boolean;
+  /** Auto-generated translations keyed by language. Optional for legacy data. */
+  i18n?: Partial<Record<QuizLang, QuizI18n>>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,6 +108,8 @@ interface QuizzesStore {
   // Actions
   setQuizzes: (quizzes: Quiz[]) => void;
   setEditingId: (id: string | null) => void;
+  /** Local-only: attach generated translations without writing to the cloud. */
+  setQuizI18n: (id: string, i18n: Quiz["i18n"]) => void;
 
   // Firestore sync
   hydrate: () => Promise<void>;
@@ -140,6 +169,7 @@ const normalizeQuiz = (raw: Partial<Quiz>): Quiz => ({
   questions: raw.questions || [],
   results: raw.results || [],
   published: Boolean(raw.published),
+  i18n: raw.i18n,
   createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
   updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
 });
@@ -152,6 +182,10 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
 
   setQuizzes: (quizzes) => set({ quizzes }),
   setEditingId: (id) => set({ editingId: id }),
+  setQuizI18n: (id, i18n) =>
+    set((state) => ({
+      quizzes: state.quizzes.map((q) => (q.id === id ? { ...q, i18n } : q)),
+    })),
 
   // Public load: pull published quizzes from Firestore. Keep seed/cache
   // content if the collection hasn't been populated yet.

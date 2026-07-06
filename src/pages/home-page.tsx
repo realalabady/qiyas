@@ -12,7 +12,13 @@ import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
 import type { QuizCardData } from "@/components/quiz/quiz-card";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
-import { useCategories } from "@/stores/categories-store";
+import {
+  useCategories,
+  localizedCategoryName,
+} from "@/stores/categories-store";
+import { localizedQuiz } from "@/lib/localized-content";
+import { categoryLabel } from "@/lib/category-i18n";
+import { useAutoTranslateQuizzes } from "@/hooks/use-auto-translate";
 import { useLanguage } from "@/lib/i18n";
 
 /* ── Component ────────────────────────────────────────────────────────────── */
@@ -20,22 +26,27 @@ function HomePage() {
   const quizStore = useQuizzesAdmin();
   const { categories } = useCategories();
   const quizCategories = categories.filter((c) => c.type === "quiz");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  // Get published quizzes and convert to QuizCardData
+  // Get published quizzes, localize their text, and convert to QuizCardData
   const publishedQuizzes = quizStore.getPublishedQuizzes();
+  // Backfill translations for pre-existing quizzes in the background.
+  useAutoTranslateQuizzes(publishedQuizzes);
   const SAMPLE_QUIZZES: QuizCardData[] = publishedQuizzes
-    .map((q) => ({
-      id: q.id,
-      slug: q.slug,
-      title: q.title,
-      description: q.description,
-      category: q.category,
-      questionCount: q.questions.length,
-      estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
-      completions: 0,
-      thumbnail: q.thumbnail,
-    }))
+    .map((raw) => {
+      const q = localizedQuiz(raw, language);
+      return {
+        id: q.id,
+        slug: q.slug,
+        title: q.title,
+        description: q.description,
+        category: categoryLabel(raw.category, t),
+        questionCount: q.questions.length,
+        estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
+        completions: 0,
+        thumbnail: q.thumbnail,
+      };
+    })
     .slice(0, 6);
   return (
     <div className="relative">
@@ -137,7 +148,7 @@ function HomePage() {
                   >
                     <span className="text-3xl">{category.icon}</span>
                     <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                      {category.name}
+                      {localizedCategoryName(category, language)}
                     </span>
                   </Link>
                 </motion.div>

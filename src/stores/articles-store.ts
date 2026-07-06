@@ -20,6 +20,8 @@ interface ArticlesStore {
   setArticles: (articles: Article[]) => void;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (category: string | null) => void;
+  /** Local-only: attach generated translations without writing to the cloud. */
+  setArticleI18n: (id: string, i18n: Article["i18n"]) => void;
 
   // Firestore sync
   hydrate: () => Promise<void>;
@@ -59,6 +61,7 @@ const normalizeArticle = (raw: Partial<Article>): Article => ({
   tags: raw.tags || [],
   image: raw.image ?? null,
   published: Boolean(raw.published),
+  i18n: raw.i18n,
   views: Number.isFinite(raw.views) ? Number(raw.views) : 0,
   createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
   updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
@@ -74,6 +77,12 @@ export const useArticles = create<ArticlesStore>()(
       setArticles: (articles) => set({ articles }),
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSelectedCategory: (category) => set({ selectedCategory: category }),
+      setArticleI18n: (id, i18n) =>
+        set((state) => ({
+          articles: state.articles.map((a) =>
+            a.id === id ? { ...a, i18n } : a,
+          ),
+        })),
 
       // Public load: pull published articles from Firestore. Keep seed/cache
       // content if the collection hasn't been populated yet.

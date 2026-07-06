@@ -20,6 +20,8 @@ import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import type { Quiz } from "@/stores/quizzes-admin-store";
 import { useAnalyticsStore } from "@/stores/analytics-store";
 import { useLanguage } from "@/lib/i18n";
+import { localizedQuiz } from "@/lib/localized-content";
+import { useAutoTranslateQuizzes } from "@/hooks/use-auto-translate";
 import { setSEOMetadata } from "@/lib/seo";
 
 export default function QuizDetailPage() {
@@ -30,8 +32,14 @@ export default function QuizDetailPage() {
   const { t, language } = useLanguage();
   const [shared, setShared] = useState(false);
 
-  // Find quiz by slug (includes all quizzes: published and unpublished)
-  const quiz = quizStore.getQuizBySlug(slug || "");
+  // Find quiz by slug (includes all quizzes: published and unpublished),
+  // then swap its display text to the active language (category kept in English
+  // so category lookups keep working).
+  const rawQuiz = quizStore.getQuizBySlug(slug || "");
+  const quiz = rawQuiz ? localizedQuiz(rawQuiz, language) : undefined;
+
+  // Backfill a translation for this quiz if it was created before the feature.
+  useAutoTranslateQuizzes(rawQuiz ? [rawQuiz] : []);
 
   // Record a view once per quiz visit (real analytics).
   useEffect(() => {
@@ -265,23 +273,27 @@ export default function QuizDetailPage() {
                 viewport={{ once: true }}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-5"
               >
-                {related.map((q) => (
-                  <motion.div key={q.id} variants={staggerItem}>
-                    <QuizCard
-                      quiz={{
-                        id: q.id,
-                        slug: q.slug,
-                        title: q.title,
-                        description: q.description,
-                        category: q.category,
-                        thumbnail: q.thumbnail,
-                        questionCount: q.questions.length,
-                        estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
-                        completions: 0,
-                      }}
-                    />
-                  </motion.div>
-                ))}
+                {related.map((rawRelated) => {
+                  const q = localizedQuiz(rawRelated, language);
+                  return (
+                    <motion.div key={q.id} variants={staggerItem}>
+                      <QuizCard
+                        quiz={{
+                          id: q.id,
+                          slug: q.slug,
+                          title: q.title,
+                          description: q.description,
+                          category: q.category,
+                          thumbnail: q.thumbnail,
+                          questionCount: q.questions.length,
+                          estimatedMinutes:
+                            Math.ceil(q.questions.length / 2) || 5,
+                          completions: 0,
+                        }}
+                      />
+                    </motion.div>
+                  );
+                })}
               </motion.div>
             </motion.section>
           )}

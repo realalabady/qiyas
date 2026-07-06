@@ -15,6 +15,7 @@ import {
   validateQuizConfig,
 } from "@/lib/quiz-validation";
 import { useLanguage } from "@/lib/i18n";
+import { buildQuizI18n } from "@/lib/localized-content";
 
 const CATEGORIES = [
   "Personality Tests",
@@ -48,6 +49,7 @@ export function AdminQuizzesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
 
   const [formData, setFormData] = useState<QuizFormData>({
     title: "",
@@ -68,7 +70,7 @@ export function AdminQuizzesPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleAddQuiz = () => {
+  const handleAddQuiz = async () => {
     if (!formData.title.trim() || !formData.description.trim()) {
       showNotification(t("admin.quizzes.title_desc_required"));
       return;
@@ -91,7 +93,12 @@ export function AdminQuizzesPage() {
       return;
     }
 
-    addQuiz({ ...formData, slug });
+    setTranslating(true);
+    showNotification(t("admin.quizzes.translating"));
+    const i18n = await buildQuizI18n({ ...formData, slug } as Quiz);
+    setTranslating(false);
+
+    addQuiz({ ...formData, slug, i18n });
     resetForm();
     showNotification(t("admin.quizzes.created"));
   };
@@ -114,7 +121,7 @@ export function AdminQuizzesPage() {
     setShowForm(true);
   };
 
-  const handleUpdateQuiz = () => {
+  const handleUpdateQuiz = async () => {
     if (!editingId) return;
     if (!formData.title.trim() || !formData.description.trim()) {
       showNotification(t("admin.quizzes.title_desc_required"));
@@ -140,7 +147,12 @@ export function AdminQuizzesPage() {
       return;
     }
 
-    updateQuiz(editingId, { ...formData, slug });
+    setTranslating(true);
+    showNotification(t("admin.quizzes.translating"));
+    const i18n = await buildQuizI18n({ ...formData, id: editingId, slug } as Quiz);
+    setTranslating(false);
+
+    updateQuiz(editingId, { ...formData, slug, i18n });
     resetForm();
     showNotification(t("admin.quizzes.updated"));
   };
@@ -450,10 +462,15 @@ export function AdminQuizzesPage() {
                 <Button variant="outline" onClick={resetForm}>
                   {t("admin.common.cancel")}
                 </Button>
-                <Button onClick={editingId ? handleUpdateQuiz : handleAddQuiz}>
-                  {editingId
-                    ? t("admin.quizzes.update")
-                    : t("admin.quizzes.create")}
+                <Button
+                  disabled={translating}
+                  onClick={editingId ? handleUpdateQuiz : handleAddQuiz}
+                >
+                  {translating
+                    ? t("admin.quizzes.translating")
+                    : editingId
+                      ? t("admin.quizzes.update")
+                      : t("admin.quizzes.create")}
                 </Button>
               </div>
             </div>

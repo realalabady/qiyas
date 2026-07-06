@@ -6,15 +6,21 @@ import { useArticles } from "@/stores/articles-store";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { useLanguage } from "@/lib/i18n";
+import { localizedArticle } from "@/lib/localized-content";
+import { useAutoTranslateArticles } from "@/hooks/use-auto-translate";
 import { setSEOMetadata } from "@/lib/seo";
 
 export function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { getArticleBySlug } = useArticles();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [shared, setShared] = useState(false);
 
-  const article = getArticleBySlug(slug || "");
+  const rawArticle = getArticleBySlug(slug || "");
+  const article = rawArticle ? localizedArticle(rawArticle, language) : undefined;
+
+  // Backfill a translation for this article if it predates the feature.
+  useAutoTranslateArticles(rawArticle ? [rawArticle] : []);
 
   useEffect(() => {
     if (!article) return;
@@ -29,7 +35,7 @@ export function ArticleDetailPage() {
           : `${origin}${article.image}`
         : undefined,
     });
-  }, [article]);
+  }, [rawArticle, language]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/articles/${article!.slug}`;

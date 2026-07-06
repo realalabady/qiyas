@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Search, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { localizedArticle } from "@/lib/localized-content";
+import { useAutoTranslateArticles } from "@/hooks/use-auto-translate";
 
 export function ArticlesPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     articles,
     searchQuery,
@@ -25,6 +27,8 @@ export function ArticlesPage() {
   }, [articles]);
 
   const filteredArticles = getFilteredArticles();
+  // Backfill translations for pre-existing articles in the background.
+  useAutoTranslateArticles(articles);
 
   return (
     <div className="min-h-screen pt-20 pb-12 px-4 sm:px-6 lg:px-8">
@@ -82,7 +86,9 @@ export function ArticlesPage() {
         {/* Articles Grid */}
         {filteredArticles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredArticles.map((article, index) => (
+            {filteredArticles.map((rawArticle, index) => {
+              const article = localizedArticle(rawArticle, language);
+              return (
               <motion.div
                 key={article.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -136,7 +142,8 @@ export function ArticlesPage() {
                   </Card>
                 </Link>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <Card className="glass-card p-12 text-center">

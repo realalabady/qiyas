@@ -18,6 +18,8 @@ import { useMemo, useState } from "react";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import { useQuizTakeStore } from "@/stores/quiz-take-store";
 import type { QuizResult } from "@/lib/quiz-engine";
+import { useLanguage } from "@/lib/i18n";
+import { localizedQuiz } from "@/lib/localized-content";
 
 export function QuizResultPage() {
   const { slug, resultId } = useParams<{ slug: string; resultId: string }>();
@@ -25,17 +27,19 @@ export function QuizResultPage() {
   const location = useLocation();
   const quizStore = useQuizzesAdmin();
   const quizTakeStore = useQuizTakeStore();
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
-  // Find the quiz
-  const quiz = quizStore.quizzes.find((q) => q.slug === slug);
+  // Find the quiz and localize its display text to the active language.
+  const rawQuiz = quizStore.quizzes.find((q) => q.slug === slug);
+  const quiz = rawQuiz ? localizedQuiz(rawQuiz, language) : undefined;
 
   // Resolve the result with graceful fallbacks so refreshed or shared
   // /quiz/:slug/result/:resultId links don't break:
   //   1. router state (fresh completion in this tab)
   //   2. localStorage snapshot of the last completion in this browser
   //   3. reconstruct a generic view of the result type from the :resultId param
-  const { result, timeSpent } = useMemo<{
+  const { result: baseResult, timeSpent } = useMemo<{
     result: QuizResult | null;
     timeSpent: number | undefined;
   }>(() => {
@@ -80,6 +84,22 @@ export function QuizResultPage() {
 
     return { result: null, timeSpent: undefined };
   }, [location.state, slug, resultId, quiz]);
+
+  // Re-map the resolved result's copy onto the localized quiz results so the
+  // page always renders in the active language (the stored result may have been
+  // computed in a different language, or reconstructed before localizing).
+  const result = useMemo<QuizResult | null>(() => {
+    if (!baseResult) return null;
+    if (!quiz) return baseResult;
+    const primaryResult =
+      quiz.results.find((r) => r.id === baseResult.primaryResult.id) ??
+      baseResult.primaryResult;
+    return {
+      ...baseResult,
+      primaryResult,
+      allResults: quiz.results.length ? quiz.results : baseResult.allResults,
+    };
+  }, [baseResult, quiz]);
 
   // Get suggested quizzes (same category)
   const suggestedQuizzes = quizStore.quizzes
@@ -301,26 +321,29 @@ export function QuizResultPage() {
               Similar Quizzes
             </h2>
             <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {suggestedQuizzes.map((suggestedQuiz) => (
-                <motion.div key={suggestedQuiz.id} variants={staggerItem}>
-                  <Link to={`/quiz/${suggestedQuiz.slug}`}>
-                    <QuizCard
-                      quiz={{
-                        id: suggestedQuiz.id,
-                        slug: suggestedQuiz.slug,
-                        title: suggestedQuiz.title,
-                        description: suggestedQuiz.description,
-                        category: suggestedQuiz.category,
-                        questionCount: suggestedQuiz.questions.length,
-                        estimatedMinutes:
-                          Math.ceil(suggestedQuiz.questions.length / 2) || 5,
-                        thumbnail: suggestedQuiz.thumbnail,
-                        completions: 0,
-                      }}
-                    />
-                  </Link>
-                </motion.div>
-              ))}
+              {suggestedQuizzes.map((rawSuggested) => {
+                const suggestedQuiz = localizedQuiz(rawSuggested, language);
+                return (
+                  <motion.div key={suggestedQuiz.id} variants={staggerItem}>
+                    <Link to={`/quiz/${suggestedQuiz.slug}`}>
+                      <QuizCard
+                        quiz={{
+                          id: suggestedQuiz.id,
+                          slug: suggestedQuiz.slug,
+                          title: suggestedQuiz.title,
+                          description: suggestedQuiz.description,
+                          category: suggestedQuiz.category,
+                          questionCount: suggestedQuiz.questions.length,
+                          estimatedMinutes:
+                            Math.ceil(suggestedQuiz.questions.length / 2) || 5,
+                          thumbnail: suggestedQuiz.thumbnail,
+                          completions: 0,
+                        }}
+                      />
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </motion.div>
         )}
