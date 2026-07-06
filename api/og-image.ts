@@ -20,14 +20,30 @@ async function fetchImageValue(
   slug: string,
 ): Promise<string> {
   const endpoint = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
+  // Firestore rules only permit reads filtered by `published == true`, so the
+  // query must include that filter (a slug-only query returns 403).
   const body = {
     structuredQuery: {
       from: [{ collectionId }],
       where: {
-        fieldFilter: {
-          field: { fieldPath: "slug" },
-          op: "EQUAL",
-          value: { stringValue: slug },
+        compositeFilter: {
+          op: "AND",
+          filters: [
+            {
+              fieldFilter: {
+                field: { fieldPath: "slug" },
+                op: "EQUAL",
+                value: { stringValue: slug },
+              },
+            },
+            {
+              fieldFilter: {
+                field: { fieldPath: "published" },
+                op: "EQUAL",
+                value: { booleanValue: true },
+              },
+            },
+          ],
         },
       },
       limit: 1,
