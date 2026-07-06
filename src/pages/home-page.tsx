@@ -18,7 +18,10 @@ import {
 } from "@/stores/categories-store";
 import { localizedQuiz } from "@/lib/localized-content";
 import { categoryLabel } from "@/lib/category-i18n";
-import { useAutoTranslateQuizzes } from "@/hooks/use-auto-translate";
+import {
+  useAutoTranslateQuizzes,
+  useAutoTranslateCategories,
+} from "@/hooks/use-auto-translate";
 import { useLanguage } from "@/lib/i18n";
 
 /* ── Component ────────────────────────────────────────────────────────────── */
@@ -26,6 +29,7 @@ function HomePage() {
   const quizStore = useQuizzesAdmin();
   const { categories } = useCategories();
   const quizCategories = categories.filter((c) => c.type === "quiz");
+  useAutoTranslateCategories(categories);
   const { t, language } = useLanguage();
 
   // Get published quizzes, localize their text, and convert to QuizCardData

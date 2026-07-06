@@ -32,6 +32,10 @@ const CATEGORY_KEY: Record<string, string> = {
   "Color Personality Tests": "categories.color",
   "General Knowledge": "categories.knowledge",
   Knowledge: "categories.knowledge",
+  // Article categories
+  Intelligence: "categories.intelligence",
+  Psychology: "categories.psychology",
+  Lifestyle: "categories.lifestyle",
 };
 
 /**

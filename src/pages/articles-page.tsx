@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Search, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { localizedArticle } from "@/lib/localized-content";
+import { categoryLabel } from "@/lib/category-i18n";
 import { useAutoTranslateArticles } from "@/hooks/use-auto-translate";
 
 export function ArticlesPage() {
@@ -77,7 +78,7 @@ export function ArticlesPage() {
                 onClick={() => setSelectedCategory(category)}
                 size="sm"
               >
-                {category}
+                {categoryLabel(category, t)}
               </Button>
             ))}
           </div>
@@ -113,7 +114,7 @@ export function ArticlesPage() {
                     {/* Category */}
                     <div className="mb-3">
                       <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary">
-                        {article.category}
+                        {categoryLabel(article.category, t)}
                       </span>
                     </div>
 

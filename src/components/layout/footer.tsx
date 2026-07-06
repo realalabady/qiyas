@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/lib/i18n";
-import { useCategories } from "@/stores/categories-store";
+import {
+  useCategories,
+  localizedCategoryName,
+} from "@/stores/categories-store";
 
 const COMPANY_LINKS = [
   { to: "/about", labelKey: "footer.about_us" },
@@ -46,7 +49,7 @@ function FooterCol({
 }
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { categories } = useCategories();
 
   return (
@@ -104,7 +107,7 @@ export function Footer() {
                 to={`/explore?category=${category.slug}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {category.name}
+                {localizedCategoryName(category, language)}
               </Link>
             ))}
           </div>

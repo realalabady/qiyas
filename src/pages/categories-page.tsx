@@ -11,10 +11,13 @@ import {
   localizedCategoryDescription,
 } from "@/stores/categories-store";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useAutoTranslateCategories } from "@/hooks/use-auto-translate";
 
 export default function CategoriesPage() {
   const { t, language } = useLanguage();
   const { categories } = useCategories();
+  // Backfill translations for custom categories created in a single language.
+  useAutoTranslateCategories(categories);
   const quizCategories = categories.filter((cat) => cat.type === "quiz");
   const { getPublishedQuizzes } = useQuizzesAdmin();
   const publishedQuizzes = getPublishedQuizzes();

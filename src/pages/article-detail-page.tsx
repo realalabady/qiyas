@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { useLanguage } from "@/lib/i18n";
 import { localizedArticle } from "@/lib/localized-content";
+import { categoryLabel } from "@/lib/category-i18n";
 import { useAutoTranslateArticles } from "@/hooks/use-auto-translate";
 import { setSEOMetadata } from "@/lib/seo";
 
@@ -127,7 +128,7 @@ export function ArticleDetailPage() {
           <div className="p-6 sm:p-8 space-y-5">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="px-2.5 py-1 rounded-full bg-primary/20 text-primary">
-                {article.category}
+                {categoryLabel(article.category, t)}
               </span>
               <span>•</span>
               <span>{article.author}</span>

@@ -354,6 +354,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "categories.anime": "Anime",
     "categories.color": "Color Personality",
     "categories.knowledge": "General Knowledge",
+    "categories.intelligence": "Intelligence",
+    "categories.psychology": "Psychology",
+    "categories.lifestyle": "Lifestyle",
     "categories.desc.personality":
       "Uncover your unique traits, strengths and tendencies.",
     "categories.desc.iq": "Challenge your reasoning and problem-solving skills.",
@@ -916,6 +919,9 @@ export const translations: Record<Language, Record<string, string>> = {
     "categories.anime": "الأنمي",
     "categories.color": "شخصية الألوان",
     "categories.knowledge": "المعرفة العامة",
+    "categories.intelligence": "الذكاء",
+    "categories.psychology": "علم النفس",
+    "categories.lifestyle": "نمط الحياة",
     "categories.desc.personality":
       "اكتشف سماتك ونقاط قوتك وطريقة تفكيرك.",
     "categories.desc.iq": "تحدَّ قدراتك في التحليل وحل المشكلات.",

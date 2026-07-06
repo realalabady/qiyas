@@ -16,6 +16,7 @@
 import { translateText, translateMany, detectLang, type Lang } from "./translate";
 import type { Quiz, QuizI18n, QuizLang } from "@/stores/quizzes-admin-store";
 import type { Article, ArticleI18n, ArticleLang } from "@/data/seed-articles";
+import type { Category, CategoryLang } from "@/stores/categories-store";
 
 const OTHER: Record<Lang, Lang> = { en: "ar", ar: "en" };
 
@@ -176,6 +177,39 @@ export async function buildArticleI18n(
   return { [source]: sourceSnap, [other]: otherSnap } as Partial<
     Record<ArticleLang, ArticleI18n>
   >;
+}
+
+/* ─────────────────────────── Categories ─────────────────────────── */
+
+/**
+ * Build the `i18n` map for a custom category. Uses the manual name/description
+ * plus their Arabic counterparts when present, and auto-translates whatever is
+ * missing so both languages are always available.
+ */
+export async function buildCategoryI18n(
+  category: Pick<Category, "name" | "nameAr" | "description" | "descriptionAr">,
+): Promise<Partial<Record<CategoryLang, { name: string; description: string }>>> {
+  const source = detectLang(category.name || category.description || "");
+  const other = OTHER[source];
+
+  // Known values per language (manual fields take precedence).
+  const known: Record<Lang, { name: string; description: string }> = {
+    en: { name: "", description: "" },
+    ar: { name: "", description: "" },
+  };
+  known[source] = { name: category.name, description: category.description };
+  if (category.nameAr.trim()) known.ar.name = category.nameAr;
+  if (category.descriptionAr.trim())
+    known.ar.description = category.descriptionAr;
+  if (!known[other].name)
+    known[other].name = await translateText(category.name, other);
+  if (!known[other].description)
+    known[other].description = await translateText(
+      category.description,
+      other,
+    );
+
+  return { en: known.en, ar: known.ar };
 }
 
 /** Return a copy of the article with title/excerpt/content in `language`. */

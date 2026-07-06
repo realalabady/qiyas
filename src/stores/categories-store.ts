@@ -10,6 +10,8 @@ const COLLECTION = "categories";
 
 export type CategoryType = "quiz" | "article";
 
+export type CategoryLang = "en" | "ar";
+
 export interface Category {
   id: string;
   name: string; // English name — also the linkage key used by quizzes' `category`
@@ -20,6 +22,8 @@ export interface Category {
   descriptionAr: string; // Arabic description
   color: string;
   type: CategoryType;
+  /** Auto-generated translations keyed by language (custom admin categories). */
+  i18n?: Partial<Record<CategoryLang, { name?: string; description?: string }>>;
   createdAt: Date;
 }
 
@@ -34,24 +38,35 @@ const normalizeCategory = (raw: Partial<Category>): Category => ({
   color: raw.color || "#ec4899",
   // Default legacy categories (created before the quiz/article split) to "quiz".
   type: raw.type === "article" ? "article" : "quiz",
+  i18n: raw.i18n,
   createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
 });
 
-/** Pick the category name for the given UI language, falling back to English. */
+/**
+ * Pick the category name for the given UI language. Prefers the auto-generated
+ * `i18n` translation, then the manual Arabic field, then the base name.
+ */
 export const localizedCategoryName = (
-  category: Pick<Category, "name" | "nameAr">,
+  category: Pick<Category, "name" | "nameAr" | "i18n">,
   language: string,
-): string =>
-  language === "ar" && category.nameAr.trim() ? category.nameAr : category.name;
+): string => {
+  const loc = category.i18n?.[language as CategoryLang]?.name;
+  if (loc && loc.trim()) return loc;
+  if (language === "ar" && category.nameAr.trim()) return category.nameAr;
+  return category.name;
+};
 
-/** Pick the category description for the given UI language, falling back to English. */
+/** Pick the category description for the given UI language, with the same fallback order. */
 export const localizedCategoryDescription = (
-  category: Pick<Category, "description" | "descriptionAr">,
+  category: Pick<Category, "description" | "descriptionAr" | "i18n">,
   language: string,
-): string =>
-  language === "ar" && category.descriptionAr.trim()
-    ? category.descriptionAr
-    : category.description;
+): string => {
+  const loc = category.i18n?.[language as CategoryLang]?.description;
+  if (loc && loc.trim()) return loc;
+  if (language === "ar" && category.descriptionAr.trim())
+    return category.descriptionAr;
+  return category.description;
+};
 
 interface CategoriesStore {
   categories: Category[];
@@ -61,6 +76,8 @@ interface CategoriesStore {
   addCategory: (category: Omit<Category, "id" | "createdAt">) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  /** Local-only: attach generated translations without writing to the cloud. */
+  setCategoryI18n: (id: string, i18n: Category["i18n"]) => void;
   getCategories: () => Category[];
   getCategoriesByType: (type: CategoryType) => Category[];
 }
@@ -137,6 +154,13 @@ export const useCategories = create<CategoriesStore>()(
           console.error("deleteCategory failed", error),
         );
       },
+
+      setCategoryI18n: (id, i18n) =>
+        set((state) => ({
+          categories: state.categories.map((cat) =>
+            cat.id === id ? { ...cat, i18n } : cat,
+          ),
+        })),
 
       getCategories: () => get().categories,
 

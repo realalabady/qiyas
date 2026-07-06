@@ -15,11 +15,18 @@ import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import type { Quiz } from "@/stores/quizzes-admin-store";
 import { useArticles } from "@/stores/articles-store";
 import type { Article } from "@/data/seed-articles";
-import { buildQuizI18n, buildArticleI18n } from "@/lib/localized-content";
+import { useCategories } from "@/stores/categories-store";
+import type { Category } from "@/stores/categories-store";
+import {
+  buildQuizI18n,
+  buildArticleI18n,
+  buildCategoryI18n,
+} from "@/lib/localized-content";
 
 // Ids already processed (or in-flight) this session — survives re-renders.
 const doneQuizIds = new Set<string>();
 const doneArticleIds = new Set<string>();
+const doneCategoryIds = new Set<string>();
 
 async function runLimited<T>(
   items: T[],
@@ -86,4 +93,29 @@ export function useAutoTranslateArticles(articles: Article[]): void {
       busy.current = false;
     });
   }, [articles]);
+}
+
+/** Ensure every custom category has an `i18n` map (translating if missing). */
+export function useAutoTranslateCategories(categories: Category[]): void {
+  const busy = useRef(false);
+
+  useEffect(() => {
+    const pending = categories.filter(
+      (c) => !c.i18n && !doneCategoryIds.has(c.id) && (c.name || c.description),
+    );
+    if (pending.length === 0 || busy.current) return;
+    busy.current = true;
+    pending.forEach((c) => doneCategoryIds.add(c.id));
+
+    runLimited(pending, 3, async (category) => {
+      try {
+        const i18n = await buildCategoryI18n(category);
+        useCategories.getState().setCategoryI18n(category.id, i18n);
+      } catch {
+        doneCategoryIds.delete(category.id);
+      }
+    }).finally(() => {
+      busy.current = false;
+    });
+  }, [categories]);
 }
