@@ -211,18 +211,32 @@ export default async function middleware(
   const quizMatch = pathname.match(/^\/quiz\/([^/?#]+)/);
 
   let data: OgData | null = null;
+  let type: "article" | "quiz" | null = null;
+  let matchedSlug = "";
 
   if (articleMatch) {
-    const slug = articleMatch[1];
-    data = SEED_ARTICLES[slug] ?? null;
-    if (!data) data = await fetchFromFirestore("articles", slug);
+    type = "article";
+    matchedSlug = articleMatch[1];
+    data = SEED_ARTICLES[matchedSlug] ?? null;
+    if (!data) data = await fetchFromFirestore("articles", matchedSlug);
   } else if (quizMatch) {
-    const slug = quizMatch[1];
-    data = SEED_QUIZZES[slug] ?? null;
-    if (!data) data = await fetchFromFirestore("quizzes", slug);
+    type = "quiz";
+    matchedSlug = quizMatch[1];
+    data = SEED_QUIZZES[matchedSlug] ?? null;
+    if (!data) data = await fetchFromFirestore("quizzes", matchedSlug);
   }
 
   if (!data?.title) return undefined;
+
+  // Uploaded images are stored as base64 `data:` URLs, which crawlers can't use.
+  // Route those through the image endpoint so they resolve to real image bytes.
+  if (data.image && data.image.startsWith("data:") && type) {
+    const origin = new URL(href).origin;
+    data = {
+      ...data,
+      image: `${origin}/api/og-image?type=${type}&slug=${encodeURIComponent(matchedSlug)}`,
+    };
+  }
 
   return new Response(buildHtml(data, href), {
     headers: {
