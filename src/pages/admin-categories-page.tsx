@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useCategories } from "@/stores/categories-store";
+import {
+  useCategories,
+  localizedCategoryName,
+  localizedCategoryDescription,
+} from "@/stores/categories-store";
 import type { CategoryType } from "@/stores/categories-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +34,7 @@ const ICON_OPTIONS = [
 export function AdminCategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } =
     useCategories();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [kind, setKind] = useState<CategoryType>("quiz");
   const [showForm, setShowForm] = useState(false);
@@ -42,9 +46,11 @@ export function AdminCategoriesPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    nameAr: "",
     slug: "",
     icon: "🧠",
     description: "",
+    descriptionAr: "",
     color: "#ec4899",
   });
 
@@ -54,7 +60,12 @@ export function AdminCategoriesPage() {
   };
 
   const handleAddCategory = () => {
-    if (!formData.name.trim() || !formData.description.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.nameAr.trim() ||
+      !formData.description.trim() ||
+      !formData.descriptionAr.trim()
+    ) {
       showNotification(t("admin.categories.name_desc_required"));
       return;
     }
@@ -64,9 +75,11 @@ export function AdminCategoriesPage() {
 
     addCategory({
       name: formData.name,
+      nameAr: formData.nameAr,
       slug,
       icon: formData.icon,
       description: formData.description,
+      descriptionAr: formData.descriptionAr,
       color: formData.color,
       type: kind,
     });
@@ -82,9 +95,11 @@ export function AdminCategoriesPage() {
     setKind(category.type);
     setFormData({
       name: category.name,
+      nameAr: category.nameAr,
       slug: category.slug,
       icon: category.icon,
       description: category.description,
+      descriptionAr: category.descriptionAr,
       color: category.color,
     });
     setEditingId(id);
@@ -93,16 +108,23 @@ export function AdminCategoriesPage() {
 
   const handleUpdateCategory = () => {
     if (!editingId) return;
-    if (!formData.name.trim() || !formData.description.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.nameAr.trim() ||
+      !formData.description.trim() ||
+      !formData.descriptionAr.trim()
+    ) {
       showNotification(t("admin.categories.name_desc_required"));
       return;
     }
 
     updateCategory(editingId, {
       name: formData.name,
+      nameAr: formData.nameAr,
       slug: formData.slug,
       icon: formData.icon,
       description: formData.description,
+      descriptionAr: formData.descriptionAr,
       color: formData.color,
       type: kind,
     });
@@ -121,9 +143,11 @@ export function AdminCategoriesPage() {
   const resetForm = () => {
     setFormData({
       name: "",
+      nameAr: "",
       slug: "",
       icon: "🧠",
       description: "",
+      descriptionAr: "",
       color: "#ec4899",
     });
     setShowForm(false);
@@ -199,7 +223,7 @@ export function AdminCategoriesPage() {
             </h2>
 
             <div className="space-y-4">
-              {/* Name */}
+              {/* Name (English) */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   {t("admin.categories.name_label")}
@@ -210,6 +234,21 @@ export function AdminCategoriesPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder={t("admin.categories.name_placeholder")}
+                />
+              </div>
+
+              {/* Name (Arabic) */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.name_ar_label")}
+                </label>
+                <Input
+                  dir="rtl"
+                  value={formData.nameAr}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nameAr: e.target.value })
+                  }
+                  placeholder={t("admin.categories.name_ar_placeholder")}
                 />
               </div>
 
@@ -274,7 +313,7 @@ export function AdminCategoriesPage() {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description (English) */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   {t("admin.categories.description_label")}
@@ -285,6 +324,22 @@ export function AdminCategoriesPage() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   placeholder={t("admin.categories.description_placeholder")}
+                  className="w-full h-20 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
+                />
+              </div>
+
+              {/* Description (Arabic) */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.categories.description_ar_label")}
+                </label>
+                <textarea
+                  dir="rtl"
+                  value={formData.descriptionAr}
+                  onChange={(e) =>
+                    setFormData({ ...formData, descriptionAr: e.target.value })
+                  }
+                  placeholder={t("admin.categories.description_ar_placeholder")}
                   className="w-full h-20 p-3 rounded-lg bg-white/5 border border-border/40 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50"
                 />
               </div>
@@ -350,9 +405,11 @@ export function AdminCategoriesPage() {
                   </div>
                 </div>
 
-                <h3 className="font-bold text-lg mb-2">{category.name}</h3>
+                <h3 className="font-bold text-lg mb-2">
+                  {localizedCategoryName(category, language)}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  {category.description}
+                  {localizedCategoryDescription(category, language)}
                 </p>
                 <p className="text-xs text-muted-foreground/60 mt-3">
                   {category.slug}

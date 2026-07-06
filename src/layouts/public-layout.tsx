@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { useLanguage } from "@/lib/i18n";
 
 function PublicLayout() {
@@ -9,6 +10,7 @@ function PublicLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <ScrollToTop />
       {/* Skip to main content for a11y */}
       <a
         href="#main-content"

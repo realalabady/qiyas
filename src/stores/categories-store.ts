@@ -12,10 +12,12 @@ export type CategoryType = "quiz" | "article";
 
 export interface Category {
   id: string;
-  name: string;
+  name: string; // English name — also the linkage key used by quizzes' `category`
+  nameAr: string; // Arabic name shown when the UI language is Arabic
   slug: string;
   icon: string;
-  description: string;
+  description: string; // English description
+  descriptionAr: string; // Arabic description
   color: string;
   type: CategoryType;
   createdAt: Date;
@@ -24,14 +26,32 @@ export interface Category {
 const normalizeCategory = (raw: Partial<Category>): Category => ({
   id: raw.id || `cat-${Date.now()}`,
   name: raw.name || "",
+  nameAr: raw.nameAr || "",
   slug: raw.slug || "",
   icon: raw.icon || "🧠",
   description: raw.description || "",
+  descriptionAr: raw.descriptionAr || "",
   color: raw.color || "#ec4899",
   // Default legacy categories (created before the quiz/article split) to "quiz".
   type: raw.type === "article" ? "article" : "quiz",
   createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
 });
+
+/** Pick the category name for the given UI language, falling back to English. */
+export const localizedCategoryName = (
+  category: Pick<Category, "name" | "nameAr">,
+  language: string,
+): string =>
+  language === "ar" && category.nameAr.trim() ? category.nameAr : category.name;
+
+/** Pick the category description for the given UI language, falling back to English. */
+export const localizedCategoryDescription = (
+  category: Pick<Category, "description" | "descriptionAr">,
+  language: string,
+): string =>
+  language === "ar" && category.descriptionAr.trim()
+    ? category.descriptionAr
+    : category.description;
 
 interface CategoriesStore {
   categories: Category[];

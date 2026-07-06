@@ -5,11 +5,15 @@ import { ChevronRight } from "lucide-react";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { useLanguage } from "@/lib/i18n";
-import { useCategories } from "@/stores/categories-store";
+import {
+  useCategories,
+  localizedCategoryName,
+  localizedCategoryDescription,
+} from "@/stores/categories-store";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 
 export default function CategoriesPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { categories } = useCategories();
   const quizCategories = categories.filter((cat) => cat.type === "quiz");
   const { getPublishedQuizzes } = useQuizzesAdmin();
@@ -53,12 +57,12 @@ export default function CategoriesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {cat.name}
+                    {localizedCategoryName(cat, language)}
                   </h2>
                   <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
                 </div>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                  {cat.description}
+                  {localizedCategoryDescription(cat, language)}
                 </p>
                 <p className="text-xs text-primary mt-2 font-medium">
                   {publishedQuizzes.filter((quiz) => quiz.category === cat.name).length}{" "}
