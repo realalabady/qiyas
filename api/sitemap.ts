@@ -46,19 +46,6 @@ const firebaseConfig = () => ({
   appId: process.env.VITE_FIREBASE_APP_ID,
 });
 
-const escapeXml = (value: string) =>
-  value.replace(/[<>&'"]/g, (c) =>
-    c === "<"
-      ? "&lt;"
-      : c === ">"
-        ? "&gt;"
-        : c === "&"
-          ? "&amp;"
-          : c === "'"
-            ? "&apos;"
-            : "&quot;",
-  );
-
 const toLastmod = (value: unknown): string | undefined =>
   typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : undefined;
 
@@ -90,9 +77,22 @@ export default async function handler(req: any, res: any) {
   const proto = (req?.headers?.["x-forwarded-proto"] as string) || "https";
   const BASE_URL = `${proto}://${host}`;
 
-  const urls: string[] = STATIC_ROUTES.map((r) =>
-    urlEntry(`${BASE_URL}${r.path}`, r.changefreq, r.priority),
-  );
+  const urls: string[] = [];
+  const seenLocs = new Set<string>();
+  const addEntry = (
+    loc: string,
+    changefreq: string,
+    priority: string,
+    lastmod?: string,
+  ) => {
+    if (seenLocs.has(loc)) return; // skip duplicate URLs
+    seenLocs.add(loc);
+    urls.push(urlEntry(loc, changefreq, priority, lastmod));
+  };
+
+  for (const r of STATIC_ROUTES) {
+    addEntry(`${BASE_URL}${r.path}`, r.changefreq, r.priority);
+  }
 
   try {
     const config = firebaseConfig();
@@ -106,28 +106,24 @@ export default async function handler(req: any, res: any) {
 
       for (const quiz of quizzes) {
         const slug = quiz.slug;
-        if (typeof slug === "string" && slug) {
-          urls.push(
-            urlEntry(
-              `${BASE_URL}/quiz/${escapeXml(slug)}`,
-              "weekly",
-              "0.7",
-              toLastmod(quiz.updatedAt),
-            ),
+        if (typeof slug === "string" && slug.trim()) {
+          addEntry(
+            `${BASE_URL}/quiz/${encodeURIComponent(slug.trim())}`,
+            "weekly",
+            "0.7",
+            toLastmod(quiz.updatedAt),
           );
         }
       }
 
       for (const article of articles) {
         const slug = article.slug;
-        if (typeof slug === "string" && slug) {
-          urls.push(
-            urlEntry(
-              `${BASE_URL}/articles/${escapeXml(slug)}`,
-              "weekly",
-              "0.6",
-              toLastmod(article.updatedAt),
-            ),
+        if (typeof slug === "string" && slug.trim()) {
+          addEntry(
+            `${BASE_URL}/articles/${encodeURIComponent(slug.trim())}`,
+            "weekly",
+            "0.6",
+            toLastmod(article.updatedAt),
           );
         }
       }
