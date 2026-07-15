@@ -54,8 +54,17 @@ const escapeHtml = (value: string) =>
             : "&#39;",
   );
 
-const absoluteImage = (origin: string, image?: unknown): string | undefined => {
+const absoluteImage = (
+  origin: string,
+  image: unknown,
+  type: string,
+  slug: string,
+): string | undefined => {
   if (typeof image !== "string" || !image) return undefined;
+  // Admin-uploaded thumbnails are base64 data: URLs — crawlers can't use those
+  // as og:image, so route them through the image endpoint that decodes them.
+  if (image.startsWith("data:"))
+    return `${origin}/api/og-image?type=${type}&slug=${encodeURIComponent(slug)}`;
   return image.startsWith("http") ? image : `${origin}${image}`;
 };
 
@@ -157,7 +166,7 @@ export default async function handler(req: any, res: any) {
             title,
             description,
             url: `${origin}/quiz/${encodeURIComponent(slug)}`,
-            image: absoluteImage(origin, quiz.thumbnail),
+            image: absoluteImage(origin, quiz.thumbnail, "quiz", slug),
             contentHtml,
           }),
         );
@@ -186,7 +195,7 @@ export default async function handler(req: any, res: any) {
             title,
             description,
             url: `${origin}/articles/${encodeURIComponent(slug)}`,
-            image: absoluteImage(origin, article.image),
+            image: absoluteImage(origin, article.image, "article", slug),
             contentHtml,
           }),
         );
