@@ -104,6 +104,13 @@ function render(shell: string, meta: Meta): string {
   let html = shell;
   // Drop the shell's existing <title> so ours wins.
   html = html.replace(/<title>[\s\S]*?<\/title>/i, "");
+  // Drop the shell's static SEO tags too — crawlers take the FIRST og:* tag,
+  // and the static ones (generic icon/title) appear before our injected head.
+  html = html.replace(
+    /<meta[^>]*(?:property="og:(?:title|description|image|url)"|name="(?:description|twitter:title|twitter:description|twitter:image)")[^>]*>/gi,
+    "",
+  );
+  html = html.replace(/<link[^>]*rel="canonical"[^>]*>/gi, "");
   // Inject our head tags right before </head>.
   html = html.replace(/<\/head>/i, `${head}</head>`);
   // Put crawler-visible content inside #root (React replaces it on mount).
