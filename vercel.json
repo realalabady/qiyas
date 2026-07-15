@@ -5,6 +5,14 @@
         "destination": "/api/sitemap"
       },
       {
+        "source": "/quiz/:slug",
+        "destination": "/api/render?type=quiz&slug=:slug"
+      },
+      {
+        "source": "/articles/:slug",
+        "destination": "/api/render?type=article&slug=:slug"
+      },
+      {
         "source": "/(.*)",
         "destination": "/index.html"
       }
