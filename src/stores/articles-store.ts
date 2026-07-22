@@ -61,6 +61,7 @@ const normalizeArticle = (raw: Partial<Article>): Article => ({
   tags: raw.tags || [],
   image: raw.image ?? null,
   published: Boolean(raw.published),
+  faq: Array.isArray(raw.faq) ? raw.faq : undefined,
   i18n: raw.i18n,
   views: Number.isFinite(raw.views) ? Number(raw.views) : 0,
   createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),

@@ -13,24 +13,43 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
+import { SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp, scaleIn } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
-import type { Quiz } from "@/stores/quizzes-admin-store";
+import { useArticles } from "@/stores/articles-store";
 import { useAnalyticsStore } from "@/stores/analytics-store";
 import { useLanguage } from "@/lib/i18n";
 import { localizedQuiz } from "@/lib/localized-content";
-import { useAutoTranslateQuizzes } from "@/hooks/use-auto-translate";
+import {
+  useAutoTranslateQuizzes,
+  useAutoTranslateArticles,
+} from "@/hooks/use-auto-translate";
 import { setSEOMetadata } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/content/breadcrumbs";
+import { ContentRail } from "@/components/content/content-rail";
+import { QuizRailCard } from "@/components/content/quiz-rail-card";
+import { ArticleCard } from "@/components/content/article-card";
+import { categoryLabel } from "@/lib/category-i18n";
+import {
+  relatedQuizzes as pickRelatedQuizzes,
+  recommendedArticlesForQuiz,
+  latestArticles,
+  categorySlug,
+} from "@/lib/content-selectors";
 
 export default function QuizDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const quizStore = useQuizzesAdmin();
+  const { quizzes } = quizStore;
+  const { articles } = useArticles();
   const recordView = useAnalyticsStore((s) => s.recordView);
   const { t, language } = useLanguage();
   const [shared, setShared] = useState(false);
+
+  // Backfill translations for the content we cross-link to.
+  useAutoTranslateArticles(articles);
 
   // Find quiz by slug (includes all quizzes: published and unpublished),
   // then swap its display text to the active language (category kept in English
@@ -76,13 +95,12 @@ export default function QuizDetailPage() {
     };
   }, [quiz, language, t]);
 
-  // Get related quizzes from same category (published only)
-  const related: Quiz[] = quiz
-    ? quizStore
-        .getQuizzesByCategory(quiz.category)
-        .filter((q) => q.published && q.id !== quiz.id)
-        .slice(0, 3)
+  // Relevance-ranked related content (category + keyword overlap — never random).
+  const related = rawQuiz ? pickRelatedQuizzes(rawQuiz, quizzes, 6) : [];
+  const recommendedArticles = rawQuiz
+    ? recommendedArticlesForQuiz(rawQuiz, articles, 6)
     : [];
+  const newestArticles = latestArticles(articles, 6);
 
   if (!quiz) {
     return (
@@ -187,13 +205,26 @@ export default function QuizDetailPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t("nav.home"), to: "/" },
+          { label: t("nav.explore"), to: "/explore" },
+          {
+            label: categoryLabel(quiz.category, t),
+            to: `/explore?category=${categorySlug(quiz.category)}`,
+          },
+          { label: localizedTitle },
+        ]}
+      />
+
       {/* Back link */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-4 rtl:rotate-180" />
           {t("quizDetail.back")}
         </button>
       </motion.div>
@@ -254,7 +285,7 @@ export default function QuizDetailPage() {
           {/* Ad between detail and related */}
           <AdBanner />
 
-          {/* Related quizzes */}
+          {/* Related quizzes (relevance-ranked) */}
           {related.length > 0 && (
             <motion.section
               variants={fadeUp}
@@ -264,7 +295,7 @@ export default function QuizDetailPage() {
             >
               <SectionHeader
                 title={t("quizDetail.related")}
-                viewAllTo={`/explore?category=${quiz.category}`}
+                viewAllTo={`/explore?category=${categorySlug(quiz.category)}`}
               />
               <motion.div
                 variants={staggerContainer}
@@ -273,29 +304,39 @@ export default function QuizDetailPage() {
                 viewport={{ once: true }}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-5"
               >
-                {related.map((rawRelated) => {
-                  const q = localizedQuiz(rawRelated, language);
-                  return (
-                    <motion.div key={q.id} variants={staggerItem}>
-                      <QuizCard
-                        quiz={{
-                          id: q.id,
-                          slug: q.slug,
-                          title: q.title,
-                          description: q.description,
-                          category: q.category,
-                          thumbnail: q.thumbnail,
-                          questionCount: q.questions.length,
-                          estimatedMinutes:
-                            Math.ceil(q.questions.length / 2) || 5,
-                          completions: 0,
-                        }}
-                      />
-                    </motion.div>
-                  );
-                })}
+                {related.map((rawRelated) => (
+                  <motion.div key={rawRelated.id} variants={staggerItem}>
+                    <QuizRailCard quiz={rawRelated} />
+                  </motion.div>
+                ))}
               </motion.div>
             </motion.section>
+          )}
+
+          {/* Recommended articles for this quiz */}
+          {recommendedArticles.length > 0 && (
+            <ContentRail
+              title={t("quizDetail.recommended_articles")}
+              viewAllTo="/articles"
+              cols={2}
+            >
+              {recommendedArticles.slice(0, 4).map((a) => (
+                <ArticleCard key={a.id} article={a} />
+              ))}
+            </ContentRail>
+          )}
+
+          {/* Newest articles */}
+          {newestArticles.length > 0 && (
+            <ContentRail
+              title={t("quizDetail.newest_articles")}
+              viewAllTo="/articles"
+              cols={2}
+            >
+              {newestArticles.slice(0, 4).map((a) => (
+                <ArticleCard key={a.id} article={a} />
+              ))}
+            </ContentRail>
           )}
         </div>
 

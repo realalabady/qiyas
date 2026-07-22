@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useArticles } from "@/stores/articles-store";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,12 @@ import { Search, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { localizedArticle } from "@/lib/localized-content";
 import { categoryLabel } from "@/lib/category-i18n";
+import { categorySlug } from "@/lib/content-selectors";
 import { useAutoTranslateArticles } from "@/hooks/use-auto-translate";
 
 export function ArticlesPage() {
   const { t, language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     articles,
     searchQuery,
@@ -26,6 +28,27 @@ export function ArticlesPage() {
     const cats = new Set(articles.map((a) => a.category));
     return Array.from(cats);
   }, [articles]);
+
+  // Sync the ?category= URL param → store filter so category links are crawlable
+  // deep-links (e.g. /articles?category=psychology).
+  useEffect(() => {
+    const slug = searchParams.get("category");
+    if (!slug) {
+      if (selectedCategory !== null) setSelectedCategory(null);
+      return;
+    }
+    const match = categories.find((c) => categorySlug(c) === slug);
+    setSelectedCategory(match ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, categories.length]);
+
+  const selectCategory = (category: string | null) => {
+    setSelectedCategory(category);
+    const next = new URLSearchParams(searchParams);
+    if (category) next.set("category", categorySlug(category));
+    else next.delete("category");
+    setSearchParams(next, { replace: true });
+  };
 
   const filteredArticles = getFilteredArticles();
   // Backfill translations for pre-existing articles in the background.
@@ -66,7 +89,7 @@ export function ArticlesPage() {
           <div className="flex gap-2 flex-wrap">
             <Button
               variant={selectedCategory === null ? "default" : "outline"}
-              onClick={() => setSelectedCategory(null)}
+              onClick={() => selectCategory(null)}
               size="sm"
             >
               {t("articles.filter_all")}
@@ -75,7 +98,7 @@ export function ArticlesPage() {
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => selectCategory(category)}
                 size="sm"
               >
                 {categoryLabel(category, t)}

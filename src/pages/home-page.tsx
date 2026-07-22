@@ -1,57 +1,61 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowRight, TrendingUp, Sparkles, Flame, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QuizCard, SectionHeader } from "@/components/quiz/quiz-card";
+import { SectionHeader } from "@/components/quiz/quiz-card";
+import { ContentRail } from "@/components/content/content-rail";
+import { QuizRailCard } from "@/components/content/quiz-rail-card";
+import { ArticleCard } from "@/components/content/article-card";
 import { AdBanner } from "@/components/ads/ad-banner";
 import { staggerContainer, staggerItem, fadeUp } from "@/lib/motion";
-import type { QuizCardData } from "@/components/quiz/quiz-card";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
+import { useArticles } from "@/stores/articles-store";
+import { useAnalyticsStore } from "@/stores/analytics-store";
 import {
   useCategories,
   localizedCategoryName,
 } from "@/stores/categories-store";
-import { localizedQuiz } from "@/lib/localized-content";
-import { categoryLabel } from "@/lib/category-i18n";
 import {
   useAutoTranslateQuizzes,
+  useAutoTranslateArticles,
   useAutoTranslateCategories,
 } from "@/hooks/use-auto-translate";
+import {
+  latestArticles,
+  trendingArticles,
+  popularArticles,
+  latestQuizzes,
+  trendingQuizzes,
+  popularQuizzes,
+  categorySlug,
+} from "@/lib/content-selectors";
 import { useLanguage } from "@/lib/i18n";
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 function HomePage() {
-  const quizStore = useQuizzesAdmin();
+  const { quizzes } = useQuizzesAdmin();
+  const { articles } = useArticles();
   const { categories } = useCategories();
+  const views = useAnalyticsStore((s) => s.views);
   const quizCategories = categories.filter((c) => c.type === "quiz");
-  useAutoTranslateCategories(categories);
   const { t, language } = useLanguage();
 
-  // Get published quizzes, localize their text, and convert to QuizCardData
-  const publishedQuizzes = quizStore.getPublishedQuizzes();
-  // Backfill translations for pre-existing quizzes in the background.
+  // Backfill translations for pre-existing content in the background.
+  const publishedQuizzes = quizzes.filter((q) => q.published);
   useAutoTranslateQuizzes(publishedQuizzes);
-  const SAMPLE_QUIZZES: QuizCardData[] = publishedQuizzes
-    .map((raw) => {
-      const q = localizedQuiz(raw, language);
-      return {
-        id: q.id,
-        slug: q.slug,
-        title: q.title,
-        description: q.description,
-        category: categoryLabel(raw.category, t),
-        questionCount: q.questions.length,
-        estimatedMinutes: Math.ceil(q.questions.length / 2) || 5,
-        completions: 0,
-        thumbnail: q.thumbnail,
-      };
-    })
-    .slice(0, 6);
+  useAutoTranslateArticles(articles);
+  useAutoTranslateCategories(categories);
+
+  // Deterministic, crawlable rails.
+  const trendingQ = trendingQuizzes(quizzes, views, 6);
+  const popularQ = popularQuizzes(quizzes, views, 6);
+  const latestQ = latestQuizzes(quizzes, 6);
+  const latestA = latestArticles(articles, 6);
+  const trendingA = trendingArticles(articles, 6);
+  const popularA = popularArticles(articles, 6);
+
   return (
     <div className="relative">
       {/* Ambient gradients */}
@@ -88,7 +92,7 @@ function HomePage() {
           >
             <Button size="lg" asChild>
               <Link to="/explore">
-                {t("hero.cta_explore")} <ArrowRight className="size-4" />
+                {t("hero.cta_explore")} <ArrowRight className="size-4 rtl:rotate-180" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
@@ -99,28 +103,39 @@ function HomePage() {
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-20 pb-20">
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          <SectionHeader
-            title={t("home.trending")}
+        {/* ── Trending Quizzes ──────────────────────────────────────────── */}
+        {trendingQ.length > 0 && (
+          <ContentRail
+            title={
+              <>
+                <Flame className="inline size-5 mr-2 text-primary" />
+                {t("home.trending")}
+              </>
+            }
             viewAllTo="/explore?sort=trending"
-          />
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
-            {SAMPLE_QUIZZES.slice(0, 3).map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} />
+            {trendingQ.map((quiz) => (
+              <QuizRailCard key={quiz.id} quiz={quiz} />
             ))}
-          </motion.div>
-        </motion.section>
+          </ContentRail>
+        )}
+
+        {/* ── Latest Quizzes ────────────────────────────────────────────── */}
+        {latestQ.length > 0 && (
+          <ContentRail
+            title={
+              <>
+                <Sparkles className="inline size-5 mr-2 text-primary" />
+                {t("home.latest_quizzes")}
+              </>
+            }
+            viewAllTo="/explore?sort=newest"
+          >
+            {latestQ.map((quiz) => (
+              <QuizRailCard key={quiz.id} quiz={quiz} />
+            ))}
+          </ContentRail>
+        )}
 
         {/* ── Ad Banner ─────────────────────────────────────────────────── */}
         <AdBanner />
@@ -144,10 +159,10 @@ function HomePage() {
               viewport={{ once: true }}
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
-              {quizCategories.slice(0, 8).map((category) => (
+              {quizCategories.slice(0, 12).map((category) => (
                 <motion.div key={category.id} variants={staggerItem}>
                   <Link
-                    to={`/explore?category=${category.slug}`}
+                    to={`/explore?category=${categorySlug(category.name)}`}
                     className="glass-card rounded-2xl p-4 flex flex-col items-center gap-2 text-center hover:-translate-y-1 hover:border-white/20 transition-all duration-200 block group"
                   >
                     <span className="text-3xl">{category.icon}</span>
@@ -162,13 +177,8 @@ function HomePage() {
         )}
 
         {/* ── Popular Quizzes ───────────────────────────────────────────── */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          <SectionHeader
+        {popularQ.length > 0 && (
+          <ContentRail
             title={
               <>
                 <TrendingUp className="inline size-5 mr-2 text-primary" />
@@ -176,19 +186,63 @@ function HomePage() {
               </>
             }
             viewAllTo="/explore?sort=popular"
-          />
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
-            {SAMPLE_QUIZZES.slice(3).map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} />
+            {popularQ.map((quiz) => (
+              <QuizRailCard key={quiz.id} quiz={quiz} />
             ))}
-          </motion.div>
-        </motion.section>
+          </ContentRail>
+        )}
+
+        {/* ── Latest Articles ───────────────────────────────────────────── */}
+        {latestA.length > 0 && (
+          <ContentRail
+            title={
+              <>
+                <Clock className="inline size-5 mr-2 text-primary" />
+                {t("home.latest_articles")}
+              </>
+            }
+            viewAllTo="/articles"
+          >
+            {latestA.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </ContentRail>
+        )}
+
+        {/* ── Trending Articles ─────────────────────────────────────────── */}
+        {trendingA.length > 0 && (
+          <ContentRail
+            title={
+              <>
+                <Flame className="inline size-5 mr-2 text-primary" />
+                {t("home.trending_articles")}
+              </>
+            }
+            viewAllTo="/articles"
+          >
+            {trendingA.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </ContentRail>
+        )}
+
+        {/* ── Popular Articles ──────────────────────────────────────────── */}
+        {popularA.length > 0 && (
+          <ContentRail
+            title={
+              <>
+                <TrendingUp className="inline size-5 mr-2 text-primary" />
+                {t("home.popular_articles")}
+              </>
+            }
+            viewAllTo="/articles"
+          >
+            {popularA.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </ContentRail>
+        )}
 
         {/* ── CTA ───────────────────────────────────────────────────────── */}
         <motion.section
@@ -208,7 +262,7 @@ function HomePage() {
           </p>
           <Button size="xl" asChild>
             <Link to="/explore">
-              {t("home.cta.explore_all")} <ArrowRight className="size-5" />
+              {t("home.cta.explore_all")} <ArrowRight className="size-5 rtl:rotate-180" />
             </Link>
           </Button>
         </motion.section>

@@ -7,6 +7,12 @@ export interface ArticleI18n {
   content?: string;
 }
 
+/** A single frequently-asked-question entry rendered on the article page. */
+export interface ArticleFAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -18,6 +24,8 @@ export interface Article {
   category: string;
   tags: string[];
   published: boolean;
+  /** Optional FAQ entries — when present, emit visible Q&A + FAQPage schema. */
+  faq?: ArticleFAQ[];
   /** Auto-generated translations keyed by language. Optional for legacy data. */
   i18n?: Partial<Record<ArticleLang, ArticleI18n>>;
   createdAt: Date;
