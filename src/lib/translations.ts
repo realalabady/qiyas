@@ -594,10 +594,6 @@ export const translations: Record<Language, Record<string, string>> = {
     "privacy.s4.title": "4. Google AdSense",
     "privacy.s4.p1":
       "Al-Maarefah displays advertisements served by Google AdSense. Google uses cookies, including the DoubleClick cookie, to serve ads based on your visits to this and other sites. You can opt out of personalised advertising at any time via Google Ad Settings (google.com/settings/ads), and manage third-party cookies at youradchoices.com.",
-    "privacy.s4.p2":
-      "Google and its advertising partners may also use web beacons (also called pixel tags or clear GIFs) and may collect your IP address, device identifiers, browser type, approximate location derived from your IP address, and the pages you view on this site, in order to serve and measure ads. Third-party vendors, including Google, use these identifiers to serve ads based on your prior visits to Al-Maarefah or other websites.",
-    "privacy.s4.p3":
-      "You can review how Google uses data from sites that use its services at policies.google.com/technologies/partner-sites. We do not pass any personally identifiable information to Google or to advertisers.",
     "privacy.s5.title": "5. Third-Party Services",
     "privacy.s5.p1":
       "We use Firebase (Google) for our backend infrastructure. Firebase may process anonymized usage data in accordance with Google's Privacy Policy.",
@@ -1221,10 +1217,6 @@ export const translations: Record<Language, Record<string, string>> = {
     "privacy.s4.title": "4. إعلانات Google AdSense",
     "privacy.s4.p1":
       "يعرض المعرفة إعلانات عبر Google AdSense. تستخدم Google ملفات تعريف ارتباط، منها ملف DoubleClick، لعرض إعلانات بناءً على زياراتك لهذا الموقع ولمواقع أخرى. يمكنك إيقاف الإعلانات المخصّصة في أي وقت من إعدادات الإعلانات لدى Google (google.com/settings/ads)، وإدارة ملفات الطرف الثالث عبر youradchoices.com.",
-    "privacy.s4.p2":
-      "كما قد تستخدم Google وشركاؤها الإعلانيون منارات الويب (web beacons، وتُسمى أيضًا وسوم البكسل)، وقد يجمعون عنوان IP الخاص بك، ومعرّفات جهازك، ونوع المتصفح، وموقعًا تقريبيًا مستنتجًا من عنوان IP، والصفحات التي تتصفّحها في الموقع، وذلك لعرض الإعلانات وقياس أدائها. ويستخدم موردو الطرف الثالث، ومنهم Google، هذه المعرّفات لعرض إعلانات بناءً على زياراتك السابقة للمعرفة أو لمواقع أخرى.",
-    "privacy.s4.p3":
-      "يمكنك الاطلاع على كيفية استخدام Google للبيانات من المواقع التي تستعمل خدماتها عبر policies.google.com/technologies/partner-sites. ونحن لا نمرّر أي بيانات تعريف شخصية إلى Google أو إلى المعلنين.",
     "privacy.s5.title": "5. خدمات الطرف الثالث",
     "privacy.s5.p1":
       "نستخدم Firebase (من Google) للبنية الخلفية، وقد تتم معالجة بيانات استخدام مجهولة حسب سياسة خصوصية Google.",

@@ -264,7 +264,7 @@ const STATIC_PAGES: Record<string, StaticPageSpec> = {
       ["privacy.s1.title", "privacy.s1.p1", "privacy.s1.p2"],
       ["privacy.s2.title", "privacy.s2.p1", "privacy.s2.p2"],
       ["privacy.s3.title", "privacy.s3.p1"],
-      ["privacy.s4.title", "privacy.s4.p1", "privacy.s4.p2", "privacy.s4.p3"],
+      ["privacy.s4.title", "privacy.s4.p1"],
       ["privacy.s5.title", "privacy.s5.p1"],
       ["privacy.s6.title", "privacy.s6.p1"],
       ["privacy.s7.title", "privacy.s7.p1"],
