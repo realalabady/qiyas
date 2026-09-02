@@ -76,10 +76,10 @@ export default function PrivacyPage() {
           <p>
             {t("privacy.s8.p1")}{" "}
             <a
-              href="mailto:privacy@al-maarefah.app"
+              href="mailto:info@al-maarefah.com"
               className="text-primary hover:underline"
             >
-              privacy@al-maarefah.app
+              info@al-maarefah.com
             </a>
             .
           </p>

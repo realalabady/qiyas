@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "migrate-content": "node --experimental-strip-types scripts/migrate-content.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -46,3 +47,4 @@
     "vite": "^8.0.12"
   }
 }
+
