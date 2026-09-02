@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
+  Users,
   BarChart2,
   ArrowRight,
   ChevronLeft,
@@ -14,8 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/quiz/quiz-card";
 import { AdBanner } from "@/components/ads/ad-banner";
-import { ArticleBody } from "@/components/content/article-body";
-import { getQuizIntro } from "@/data/quiz-intros";
 import { staggerContainer, staggerItem, fadeUp, scaleIn } from "@/lib/motion";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import { useArticles } from "@/stores/articles-store";
@@ -28,7 +27,6 @@ import {
 } from "@/hooks/use-auto-translate";
 import { setSEOMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/content/breadcrumbs";
-import { ContentDisclaimer } from "@/components/content/content-disclaimer";
 import { ContentRail } from "@/components/content/content-rail";
 import { QuizRailCard } from "@/components/content/quiz-rail-card";
 import { ArticleCard } from "@/components/content/article-card";
@@ -175,9 +173,6 @@ export default function QuizDetailPage() {
     language === "ar" && quiz.slug === "dark-personality-test"
       ? t("quiz.seed.dark.description")
       : quiz.description;
-  // Long-form intro: what an editor wrote in the admin panel, else the
-  // repo-side fallback in @/data/quiz-intros.
-  const quizIntro = getQuizIntro(quiz.slug, quiz.longDescription);
   const difficultyColor = {
     Easy: "success",
     Medium: "warning",
@@ -268,8 +263,6 @@ export default function QuizDetailPage() {
                 <p className="text-muted-foreground leading-relaxed">
                   {localizedDescription}
                 </p>
-                {quizIntro ? <ArticleBody content={quizIntro} /> : null}
-                <ContentDisclaimer />
 
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-5 text-sm text-muted-foreground border-t border-border/50 pt-4">
@@ -281,10 +274,16 @@ export default function QuizDetailPage() {
                     <Clock className="size-4 text-primary" />
                     ~{Math.ceil(quiz.questions.length / 2) || 5} {t("quizDetail.minutes")}
                   </span>
+                  <span className="flex items-center gap-1.5">
+                    <Users className="size-4 text-primary" />0 {t("quizDetail.taken")}
+                  </span>
                 </div>
               </div>
             </div>
           </motion.div>
+
+          {/* Ad between detail and related */}
+          <AdBanner />
 
           {/* Related quizzes (relevance-ranked) */}
           {related.length > 0 && (

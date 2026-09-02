@@ -1,70 +1,20 @@
 {
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/ads.txt",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600" }
-      ]
-    },
-    {
-      "source": "/robots.txt",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
-      ]
-    },
-    {
-      "source": "/((?!assets/|api/|quiz/|articles/|sitemap|ads.txt|robots.txt).*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-
-    { "source": "/", "destination": "/api/render?type=home" },
-    { "source": "/explore", "destination": "/api/render?type=explore" },
-    { "source": "/categories", "destination": "/api/render?type=categories" },
-    { "source": "/articles", "destination": "/api/render?type=articles-index" },
-
-    { "source": "/about", "destination": "/api/render?type=page&name=about" },
-    {
-      "source": "/contact",
-      "destination": "/api/render?type=page&name=contact"
-    },
-    { "source": "/faq", "destination": "/api/render?type=page&name=faq" },
-    {
-      "source": "/privacy-policy",
-      "destination": "/api/render?type=page&name=privacy-policy"
-    },
-    { "source": "/terms", "destination": "/api/render?type=page&name=terms" },
-    {
-      "source": "/editorial-policy",
-      "destination": "/api/render?type=page&name=editorial-policy"
-    },
-
-    {
-      "source": "/quiz/:slug",
-      "destination": "/api/render?type=quiz&slug=:slug"
-    },
-    {
-      "source": "/articles/:slug",
-      "destination": "/api/render?type=article&slug=:slug"
-    },
-
-    { "source": "/(.*)", "destination": "/app.html" }
-  ]
-}
+    "rewrites": [
+      {
+        "source": "/sitemap.xml",
+        "destination": "/api/sitemap"
+      },
+      {
+        "source": "/quiz/:slug",
+        "destination": "/api/render?type=quiz&slug=:slug"
+      },
+      {
+        "source": "/articles/:slug",
+        "destination": "/api/render?type=article&slug=:slug"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ]
+  }

@@ -8,38 +8,12 @@ import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/motion";
 import { useLanguage } from "@/lib/i18n";
 
-const CONTACT_EMAIL = "info@al-maarefah.com";
-
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
   const { t } = useLanguage();
 
-  const update =
-    (field: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  /**
-   * Hand the message to the visitor's mail client.
-   *
-   * This form used to just flip a boolean and announce "Message sent!" while
-   * discarding everything typed into it. There is no backend to post to, so it
-   * composes a real mailto: instead — the message actually reaches us, and the
-   * confirmation says what genuinely happened.
-   */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const body = `${form.message}\n\n---\n${form.name} <${form.email}>`;
-    window.location.href =
-      `mailto:${CONTACT_EMAIL}` +
-      `?subject=${encodeURIComponent(form.subject)}` +
-      `&body=${encodeURIComponent(body)}`;
     setSent(true);
   }
 
@@ -61,16 +35,6 @@ export default function ContactPage() {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="space-y-4 text-muted-foreground leading-relaxed"
-      >
-        <p>{t("contact.body.p1")}</p>
-        <p>{t("contact.body.p2")}</p>
-      </motion.div>
-
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
         className="glass-card rounded-2xl p-8"
       >
         <div className="flex items-center gap-3 mb-6">
@@ -80,10 +44,10 @@ export default function ContactPage() {
           <div>
             <p className="font-medium">{t("contact.email_title")}</p>
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="mailto:hello@al-maarefah.app"
               className="text-sm text-primary hover:underline"
             >
-              {CONTACT_EMAIL}
+              hello@al-maarefah.app
             </a>
           </div>
         </div>
@@ -102,20 +66,12 @@ export default function ContactPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">{t("contact.form.name")}</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={update("name")}
-                  placeholder={t("contact.form.name_placeholder")}
-                  required
-                />
+                <Input id="name" placeholder={t("contact.form.name_placeholder")} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">{t("contact.form.email")}</Label>
                 <Input
                   id="email"
-                  value={form.email}
-                  onChange={update("email")}
                   type="email"
                   placeholder={t("contact.form.email_placeholder")}
                   required
@@ -124,20 +80,12 @@ export default function ContactPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="subject">{t("contact.form.subject")}</Label>
-              <Input
-                  id="subject"
-                  value={form.subject}
-                  onChange={update("subject")}
-                  placeholder={t("contact.form.subject_placeholder")}
-                  required
-                />
+              <Input id="subject" placeholder={t("contact.form.subject_placeholder")} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="message">{t("contact.form.message")}</Label>
               <Textarea
                 id="message"
-                  value={form.message}
-                  onChange={update("message")}
                 placeholder={t("contact.form.message_placeholder")}
                 required
               />

@@ -82,12 +82,6 @@ export interface Quiz {
   title: string;
   slug: string;
   description: string;
-  /**
-   * Optional long-form intro rendered on the quiz landing page (Markdown).
-   * Quiz pages otherwise carry only a one-sentence description, which reads as
-   * thin content next to an ad unit.
-   */
-  longDescription?: string;
   category: string;
   thumbnail: string;
   seoTitle: string;
@@ -149,7 +143,6 @@ const seedQuizzes = (): Quiz[] =>
       title: quiz.title,
       slug: quiz.slug,
       description: quiz.description,
-      longDescription: quiz.longDescription,
       category: quiz.category,
       thumbnail: quiz.thumbnail,
       seoTitle: quiz.seoTitle,
@@ -168,7 +161,6 @@ const normalizeQuiz = (raw: Partial<Quiz>): Quiz => ({
   title: raw.title || "",
   slug: raw.slug || "",
   description: raw.description || "",
-  longDescription: raw.longDescription || "",
   category: raw.category || "General Knowledge",
   thumbnail: raw.thumbnail || "",
   seoTitle: raw.seoTitle || raw.title || "",

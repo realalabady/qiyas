@@ -11,11 +11,14 @@
  * so no admin credentials are needed.
  */
 
+import { getApp, getApps, initializeApp } from "firebase/app";
 import {
-  CANONICAL_HOST,
-  fetchPublished,
-  isIndexableArticle,
-} from "./_shared";
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+} from "firebase/firestore";
 
 const STATIC_ROUTES: Array<{
   path: string;
@@ -26,13 +29,22 @@ const STATIC_ROUTES: Array<{
   { path: "/explore", changefreq: "daily", priority: "0.9" },
   { path: "/categories", changefreq: "weekly", priority: "0.8" },
   { path: "/articles", changefreq: "daily", priority: "0.8" },
+  { path: "/search", changefreq: "weekly", priority: "0.5" },
   { path: "/about", changefreq: "monthly", priority: "0.4" },
   { path: "/contact", changefreq: "monthly", priority: "0.4" },
   { path: "/faq", changefreq: "monthly", priority: "0.4" },
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
-  { path: "/editorial-policy", changefreq: "yearly", priority: "0.4" },
 ];
+
+const firebaseConfig = () => ({
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
+});
 
 const toLastmod = (value: unknown): string | undefined =>
   typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : undefined;
@@ -47,11 +59,21 @@ const urlEntry = (
     lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""
   }    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
 
+const fetchPublished = async (
+  db: ReturnType<typeof getFirestore>,
+  name: string,
+) => {
+  const snap = await getDocs(
+    query(collection(db, name), where("published", "==", true)),
+  );
+  return snap.docs.map((d) => d.data() as Record<string, unknown>);
+};
+
 export default async function handler(req: any, res: any) {
   // Build absolute URLs from the host that requested the sitemap so they always
   // match (www vs non-www) — Google rejects sitemaps whose URLs are on a
   // different host than the sitemap itself.
-  const host = (req?.headers?.host as string) || CANONICAL_HOST;
+  const host = (req?.headers?.host as string) || "al-maarefah.com";
   const proto = (req?.headers?.["x-forwarded-proto"] as string) || "https";
   const BASE_URL = `${proto}://${host}`;
 
@@ -73,35 +95,37 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const [quizzes, articles] = await Promise.all([
-      fetchPublished("quizzes"),
-      fetchPublished("articles"),
-    ]);
+    const config = firebaseConfig();
+    if (config.projectId) {
+      const app = getApps().length ? getApp() : initializeApp(config as any);
+      const db = getFirestore(app);
+      const [quizzes, articles] = await Promise.all([
+        fetchPublished(db, "quizzes"),
+        fetchPublished(db, "articles"),
+      ]);
 
-    for (const quiz of quizzes) {
-      const slug = quiz.slug;
-      if (typeof slug === "string" && slug.trim()) {
-        addEntry(
-          `${BASE_URL}/quiz/${encodeURIComponent(slug.trim())}`,
-          "weekly",
-          "0.7",
-          toLastmod(quiz.updatedAt),
-        );
+      for (const quiz of quizzes) {
+        const slug = quiz.slug;
+        if (typeof slug === "string" && slug.trim()) {
+          addEntry(
+            `${BASE_URL}/quiz/${encodeURIComponent(slug.trim())}`,
+            "weekly",
+            "0.7",
+            toLastmod(quiz.updatedAt),
+          );
+        }
       }
-    }
 
-    for (const article of articles) {
-      const slug = article.slug;
-      // Thin articles are served noindex, so keep them out of the sitemap too
-      // rather than inviting Google to crawl and rate them.
-      if (!isIndexableArticle(article)) continue;
-      if (typeof slug === "string" && slug.trim()) {
-        addEntry(
-          `${BASE_URL}/articles/${encodeURIComponent(slug.trim())}`,
-          "weekly",
-          "0.6",
-          toLastmod(article.updatedAt),
-        );
+      for (const article of articles) {
+        const slug = article.slug;
+        if (typeof slug === "string" && slug.trim()) {
+          addEntry(
+            `${BASE_URL}/articles/${encodeURIComponent(slug.trim())}`,
+            "weekly",
+            "0.6",
+            toLastmod(article.updatedAt),
+          );
+        }
       }
     }
   } catch (error) {

@@ -73,10 +73,10 @@ export default function TermsPage() {
           <p>
             {t("terms.s7.p1")}{" "}
             <a
-              href="mailto:info@al-maarefah.com"
+              href="mailto:legal@al-maarefah.app"
               className="text-primary hover:underline"
             >
-              info@al-maarefah.com
+              legal@al-maarefah.app
             </a>
             .
           </p>

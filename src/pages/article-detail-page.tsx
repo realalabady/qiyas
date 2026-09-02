@@ -26,8 +26,6 @@ import {
 import { setSEOMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/content/breadcrumbs";
 import { ArticleBody, extractHeadings } from "@/components/content/article-body";
-import { ContentDisclaimer } from "@/components/content/content-disclaimer";
-import { displayAuthor, isTeamByline } from "@/lib/authors";
 import { ContentRail } from "@/components/content/content-rail";
 import { ArticleCard } from "@/components/content/article-card";
 import { QuizRailCard } from "@/components/content/quiz-rail-card";
@@ -106,9 +104,6 @@ export function ArticleDetailPage() {
   }
 
   const locale = language === "ar" ? "ar-EG" : "en-US";
-  // "Admin" is not a byline. Attribute to the editorial team and let
-  // /editorial-policy say who that is. See @/lib/authors.
-  const byline = displayAuthor(article.author, language);
   const publishedDate = new Date(article.createdAt).toLocaleDateString(locale, {
     year: "numeric",
     month: "long",
@@ -209,7 +204,7 @@ export function ArticleDetailPage() {
                   </Link>
                   <span className="inline-flex items-center gap-1.5">
                     <User className="size-3.5" />
-                    {byline}
+                    {article.author}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays className="size-3.5" />
@@ -255,7 +250,6 @@ export function ArticleDetailPage() {
                 )}
 
                 <ArticleBody content={article.content} />
-                <ContentDisclaimer />
 
                 {/* Tags — extra crawlable context */}
                 {article.tags.length > 0 && (
@@ -272,46 +266,6 @@ export function ArticleDetailPage() {
                 )}
               </div>
             </motion.article>
-
-            {/* Article schema — the byline, publish date and publisher a
-                crawler needs to attribute the piece. Only BreadcrumbList was
-                emitted before, so articles carried no authorship signal. */}
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{
-                __html: JSON.stringify({
-                  "@context": "https://schema.org",
-                  "@type": "Article",
-                  headline: article.title,
-                  description: article.excerpt,
-                  inLanguage: language,
-                  mainEntityOfPage: {
-                    "@type": "WebPage",
-                    "@id": window.location.href,
-                  },
-                  author: isTeamByline(article.author)
-                    ? {
-                        "@type": "Organization",
-                        name: byline,
-                        url: `${window.location.origin}/editorial-policy`,
-                      }
-                    : { "@type": "Person", name: byline },
-                  publisher: {
-                    "@type": "Organization",
-                    name: "Al-Maarefah",
-                    logo: {
-                      "@type": "ImageObject",
-                      url: `${window.location.origin}/al-maarefah-icon.png`,
-                    },
-                  },
-                  datePublished: new Date(article.createdAt).toISOString(),
-                  dateModified: new Date(
-                    article.updatedAt || article.createdAt,
-                  ).toISOString(),
-                  ...(article.image ? { image: article.image } : {}),
-                }),
-              }}
-            />
 
             {/* FAQ (renders + emits FAQPage schema only when the article has FAQs) */}
             {faq.length > 0 && (

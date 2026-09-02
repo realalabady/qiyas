@@ -42,23 +42,12 @@ interface ArticlesStore {
   getTrendingArticles: (limit?: number) => Article[];
 }
 
-/**
- * Fixed seed timestamps.
- *
- * These dates were previously generated with `Math.random()` at store-creation
- * time, so every visitor — and every reload — saw a different publish date for
- * the same article, and `updatedAt` was always "now". A publish date that moves
- * is worse than none: it makes the byline unverifiable and breaks the
- * `datePublished` we now emit in the Article structured data.
- */
-const SEED_PUBLISHED_AT = "2026-01-15T00:00:00.000Z";
-
 const seedArticles = (): Article[] =>
   SAMPLE_ARTICLES.map((article, index) => ({
     ...article,
     id: `article-${index + 1}`,
-    createdAt: new Date(SEED_PUBLISHED_AT),
-    updatedAt: new Date(SEED_PUBLISHED_AT),
+    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(),
   }));
 
 const normalizeArticle = (raw: Partial<Article>): Article => ({
