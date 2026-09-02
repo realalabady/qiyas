@@ -14,6 +14,7 @@ import ContactPage from "@/pages/contact-page";
 import FAQPage from "@/pages/faq-page";
 import PrivacyPage from "@/pages/privacy-page";
 import TermsPage from "@/pages/terms-page";
+import EditorialPolicyPage from "@/pages/editorial-policy-page";
 import { AdminLoginPage } from "@/pages/admin-login-page";
 import { AdminDashboardPage } from "@/pages/admin-dashboard-page";
 import { AdminSettingsPage } from "@/pages/admin-settings-page";
@@ -52,6 +53,7 @@ export const appRouter = createBrowserRouter([
       { path: "faq", element: <FAQPage /> },
       { path: "privacy-policy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
+      { path: "editorial-policy", element: <EditorialPolicyPage /> },
     ],
   },
   {
