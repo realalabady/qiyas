@@ -58,6 +58,8 @@ export default function PrivacyPage() {
 
         <Section title={t("privacy.s4.title")}>
           <p>{t("privacy.s4.p1")}</p>
+          <p>{t("privacy.s4.p2")}</p>
+          <p>{t("privacy.s4.p3")}</p>
         </Section>
 
         <Section title={t("privacy.s5.title")}>
