@@ -15,7 +15,7 @@ import {
   CANONICAL_HOST,
   fetchPublished,
   isIndexableArticle,
-} from "./_shared";
+} from "./_shared.js";
 
 const STATIC_ROUTES: Array<{
   path: string;

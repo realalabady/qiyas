@@ -1,6 +1,13 @@
 /**
  * Shared helpers for the SSR-lite serverless functions (`render.ts`, `sitemap.ts`).
  *
+ * NOTE: every relative import in `api/` MUST carry an explicit `.js` extension.
+ * package.json sets `"type": "module"`, so Vercel runs these functions as ESM,
+ * and Node's ESM resolver does not do extensionless lookup. Dropping the
+ * extension makes every function here fail at runtime with
+ * FUNCTION_INVOCATION_FAILED (ERR_MODULE_NOT_FOUND) while still building and
+ * bundling fine locally.
+ *
  * Arabic is the canonical language of the site: the content is authored in
  * Arabic, so every server-rendered page is Arabic and carries lang="ar"
  * dir="rtl". The English UI strings remain available client-side via the
@@ -16,7 +23,7 @@ import {
   where,
 } from "firebase/firestore";
 
-import { parseArticleBlocks, parseInline } from "../src/lib/article-blocks";
+import { parseArticleBlocks, parseInline } from "../src/lib/article-blocks.js";
 
 export const CANONICAL_HOST = "www.al-maarefah.com";
 

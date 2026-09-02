@@ -17,10 +17,10 @@
  * same strings the React app renders.
  */
 
-import { getQuizIntro } from "../src/data/quiz-intros";
-import { migratedSlug } from "../src/data/slug-migrations";
-import { displayAuthor, isTeamByline } from "../src/lib/authors";
-import { translations } from "../src/lib/translations";
+import { getQuizIntro } from "../src/data/quiz-intros.js";
+import { migratedSlug } from "../src/data/slug-migrations.js";
+import { displayAuthor, isTeamByline } from "../src/lib/authors.js";
+import { translations } from "../src/lib/translations.js";
 import {
   CANONICAL_HOST,
   escapeHtml,
@@ -28,7 +28,7 @@ import {
   isIndexableArticle,
   markdownToHtml,
   paragraphs,
-} from "./_shared";
+} from "./_shared.js";
 
 /** Arabic is the canonical, indexed language — see api/_shared.ts. */
 const t = (key: string): string =>
