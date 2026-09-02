@@ -3,4 +3,9 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
+# The SPA shell. Any unmatched path falls through to it, so these serve a
+# blank page with no canonical — keep them out of the index.
+Disallow: /app.html
+Disallow: /index.html
+
 Sitemap: https://www.al-maarefah.com/sitemap.xml
