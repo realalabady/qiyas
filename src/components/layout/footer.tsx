@@ -24,6 +24,7 @@ const COMPANY_LINKS = [
   { to: "/faq", labelKey: "footer.faq" },
   { to: "/privacy-policy", labelKey: "footer.privacy_policy" },
   { to: "/terms", labelKey: "footer.terms" },
+  { to: "/editorial-policy", labelKey: "footer.editorial" },
 ];
 
 const SOCIAL = [

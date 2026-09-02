@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://al-maarefah.com/sitemap.xml
+Sitemap: https://www.al-maarefah.com/sitemap.xml
