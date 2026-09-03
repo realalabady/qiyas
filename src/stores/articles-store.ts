@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { Article } from "@/data/seed-articles";
 import { SAMPLE_ARTICLES } from "@/data/seed-articles";
+import { mergeWithSsr, ssrArticles } from "@/lib/ssr-data";
 import {
   deleteDocById,
   fetchAllDocs,
@@ -82,7 +83,10 @@ const normalizeArticle = (raw: Partial<Article>): Article => ({
 export const useArticles = create<ArticlesStore>()(
   persist(
     (set, get) => ({
-      articles: seedArticles(),
+      // Prefer the server-injected payload so the first render already shows
+      // real content — see @/lib/ssr-data. Seed data is only a last resort for
+      // local development, where nothing server-rendered the page.
+      articles: (ssrArticles<Article>() ?? seedArticles()).map(normalizeArticle),
       searchQuery: "",
       selectedCategory: null,
 
@@ -207,12 +211,20 @@ export const useArticles = create<ArticlesStore>()(
       partialize: (state) => ({ articles: state.articles }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ArticlesStore> | undefined;
-        const articles = persisted?.articles?.length
-          ? persisted.articles.map((article) => normalizeArticle(article))
-          : currentState.articles;
+        const cached = persisted?.articles?.map((a) => normalizeArticle(a));
+        // The server payload decides which articles exist; localStorage only
+        // fills in bodies the payload omitted. Without this, a returning
+        // visitor would keep seeing whatever was cached on an earlier visit,
+        // including the retired seed articles.
+        const merged = mergeWithSsr<Article>(
+          ssrArticles<Article>()?.map(normalizeArticle),
+          cached,
+          (a) => a.slug || a.id,
+          ["content", "faq", "i18n"],
+        );
         return {
           ...currentState,
-          articles,
+          articles: merged ?? cached ?? currentState.articles,
         };
       },
     },

@@ -88,6 +88,13 @@ interface Meta {
   jsonLd?: Record<string, unknown>[];
   /** Serve `noindex,follow` — used for pages too thin to be worth indexing. */
   noindex?: boolean;
+  /**
+   * Published content injected as `window.__SSR_DATA__` so the client stores
+   * start from real data. See the note in src/lib/ssr-data.ts: Google indexes
+   * the RENDERED DOM, and React was replacing this page's server-rendered
+   * content with the stale seed data before the async Firestore load finished.
+   */
+  ssrData?: { articles?: unknown[]; quizzes?: unknown[] };
 }
 
 function render(shell: string, meta: Meta): string {
@@ -117,6 +124,15 @@ function render(shell: string, meta: Meta): string {
       )
       .join("");
 
+  // `</script>` inside JSON would close the tag early; escaping `<` is enough
+  // and keeps the payload valid JSON.
+  const ssrScript = meta.ssrData
+    ? `<script>window.__SSR_DATA__=${JSON.stringify(meta.ssrData).replace(
+        /</g,
+        "\u003c",
+      )}</script>`
+    : "";
+
   let html = shell;
   // Every server-rendered page is the canonical Arabic version.
   html = html.replace(/<html[^>]*>/i, `<html lang="ar" dir="rtl" class="dark">`);
@@ -130,8 +146,9 @@ function render(shell: string, meta: Meta): string {
   );
   html = html.replace(/<link[^>]*rel="canonical"[^>]*>/gi, "");
   html = html.replace(/<meta[^>]*name="robots"[^>]*>/gi, "");
-  // Inject our head tags right before </head>.
-  html = html.replace(/<\/head>/i, `${head}</head>`);
+  // Inject our head tags right before </head>. The data payload goes last so
+  // it is defined before the app bundle executes.
+  html = html.replace(/<\/head>/i, `${head}${ssrScript}</head>`);
   // Put crawler-visible content inside #root (React replaces it on mount).
   html = html.replace(
     /<div id="root">\s*<\/div>/i,
@@ -361,6 +378,75 @@ function redirectIfMigrated(
   return true;
 }
 
+
+// --- Client payload -------------------------------------------------------
+// Shapes the published content for `window.__SSR_DATA__`. Bodies and question
+// banks are the bulk of the bytes, so only the item actually being viewed
+// carries them; the stores fill in the rest from Firestore afterwards.
+
+const articleForClient = (
+  a: Record<string, unknown>,
+  full: boolean,
+): Record<string, unknown> => ({
+  id: a.id ?? a.slug,
+  slug: clean(a.slug),
+  title: clean(a.title),
+  excerpt: clean(a.excerpt),
+  content: full ? String(a.content ?? "") : "",
+  category: clean(a.category),
+  author: displayAuthor(a.author, "ar"),
+  tags: Array.isArray(a.tags) ? a.tags : [],
+  image: a.image ?? null,
+  published: true,
+  views: typeof a.views === "number" ? a.views : 0,
+  createdAt: a.createdAt ?? null,
+  updatedAt: a.updatedAt ?? null,
+  ...(full && Array.isArray(a.faq) ? { faq: a.faq } : {}),
+});
+
+const quizForClient = (
+  q: Record<string, unknown>,
+  full: boolean,
+): Record<string, unknown> => ({
+  id: q.id ?? q.slug,
+  slug: clean(q.slug),
+  title: clean(q.title),
+  description: clean(q.description),
+  longDescription: full ? getQuizIntro(q.slug, q.longDescription) : "",
+  category: clean(q.category),
+  thumbnail: q.thumbnail ?? "",
+  seoTitle: clean(q.seoTitle),
+  seoDescription: clean(q.seoDescription),
+  quizType: q.quizType ?? "weighted_personality",
+  questions: full && Array.isArray(q.questions) ? q.questions : [],
+  results: full && Array.isArray(q.results) ? q.results : [],
+  published: true,
+  createdAt: q.createdAt ?? null,
+  updatedAt: q.updatedAt ?? null,
+});
+
+/** Build the payload, marking one item as "full" when it is the page subject. */
+const buildSsrData = (
+  articles: Record<string, unknown>[],
+  quizzes: Record<string, unknown>[],
+  fullSlug?: string,
+) => ({
+  ...(articles.length
+    ? {
+        articles: articles.map((a) =>
+          articleForClient(a, clean(a.slug) === fullSlug),
+        ),
+      }
+    : {}),
+  ...(quizzes.length
+    ? {
+        quizzes: quizzes.map((q) =>
+          quizForClient(q, clean(q.slug) === fullSlug),
+        ),
+      }
+    : {}),
+});
+
 // --- Handler --------------------------------------------------------------
 
 export default async function handler(req: any, res: any) {
@@ -389,7 +475,23 @@ export default async function handler(req: any, res: any) {
     // ---- Static / legal pages ------------------------------------------
     if (type === "page") {
       const spec = STATIC_PAGES[name];
-      if (spec) return send(renderStaticPage(origin, spec), shell, 3600);
+      if (spec) {
+        // The layout's header and footer list articles and quizzes on every
+        // page, so even a static page needs the payload — otherwise the client
+        // falls back to the retired seed data for those rails.
+        const [articles, quizzes] = await Promise.all([
+          fetchPublished("articles"),
+          fetchPublished("quizzes"),
+        ]);
+        return send(
+          {
+            ...renderStaticPage(origin, spec),
+            ssrData: buildSsrData(articles, quizzes),
+          },
+          shell,
+          3600,
+        );
+      }
     }
 
     // ---- Homepage and hub pages ----------------------------------------
@@ -487,6 +589,7 @@ export default async function handler(req: any, res: any) {
         {
           ...meta,
           contentHtml,
+          ssrData: buildSsrData(articles, quizzes),
           jsonLd: [
             {
               "@context": "https://schema.org",
@@ -503,7 +606,10 @@ export default async function handler(req: any, res: any) {
 
     // ---- Quiz detail ----------------------------------------------------
     if (type === "quiz" && slug) {
-      const quizzes = await fetchPublished("quizzes");
+      const [quizzes, articles] = await Promise.all([
+        fetchPublished("quizzes"),
+        fetchPublished("articles"),
+      ]);
       const quiz = quizzes.find((q) => String(q.slug ?? "").trim() === slug);
       if (!quiz && redirectIfMigrated(res, origin, "quiz", "quiz", slug, quizzes))
         return;
@@ -538,6 +644,7 @@ export default async function handler(req: any, res: any) {
             url: `${origin}/quiz/${encodeURIComponent(slug)}`,
             image: absoluteImage(origin, quiz.thumbnail, "quiz", slug),
             contentHtml,
+            ssrData: buildSsrData(articles, quizzes, slug),
           },
           shell,
         );
@@ -546,7 +653,10 @@ export default async function handler(req: any, res: any) {
 
     // ---- Article detail -------------------------------------------------
     if (type === "article" && slug) {
-      const articles = await fetchPublished("articles");
+      const [articles, quizzes] = await Promise.all([
+        fetchPublished("articles"),
+        fetchPublished("quizzes"),
+      ]);
       const article = articles.find((a) => String(a.slug ?? "").trim() === slug);
       if (
         !article &&
@@ -585,6 +695,7 @@ export default async function handler(req: any, res: any) {
             image,
             contentHtml,
             noindex: !isIndexableArticle(article),
+            ssrData: buildSsrData(articles, quizzes, slug),
             jsonLd: [
               {
                 "@context": "https://schema.org",

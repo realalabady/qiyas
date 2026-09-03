@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { mergeWithSsr, ssrQuizzes } from "@/lib/ssr-data";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { QUIZZES } from "@/data/seed-quizzes";
 import {
@@ -185,7 +186,10 @@ const normalizeQuiz = (raw: Partial<Quiz>): Quiz => ({
 export const useQuizzesAdmin = create<QuizzesStore>()(
   persist(
     (set, get) => ({
-      quizzes: seedQuizzes(),
+      // Prefer the server-injected payload so the first render already shows the
+      // real published quizzes — see @/lib/ssr-data. Seed data is a local-dev
+      // fallback only.
+      quizzes: (ssrQuizzes<Quiz>() ?? seedQuizzes()).map(normalizeQuiz),
       editingId: null,
 
   setQuizzes: (quizzes) => set({ quizzes }),
@@ -316,12 +320,18 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
       partialize: (state) => ({ quizzes: state.quizzes }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<QuizzesStore> | undefined;
-        const quizzes = persisted?.quizzes?.length
-          ? persisted.quizzes.map((quiz) => normalizeQuiz(quiz))
-          : currentState.quizzes;
+        const cached = persisted?.quizzes?.map((q) => normalizeQuiz(q));
+        // The server payload decides which quizzes exist; localStorage only
+        // fills in the question and result banks it omits for size.
+        const merged = mergeWithSsr<Quiz>(
+          ssrQuizzes<Quiz>()?.map(normalizeQuiz),
+          cached,
+          (q) => q.slug || q.id,
+          ["questions", "results", "longDescription"],
+        );
         return {
           ...currentState,
-          quizzes,
+          quizzes: merged ?? cached ?? currentState.quizzes,
         };
       },
     },
