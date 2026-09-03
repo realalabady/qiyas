@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { displayAuthor } from "@/lib/authors";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 
@@ -46,7 +47,7 @@ export function ArticleCard({ article: raw }: { article: Article }) {
               {article.excerpt}
             </p>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{article.author}</span>
+              <span>{displayAuthor(article.author, language)}</span>
               <span className="flex items-center gap-1">
                 <Clock className="size-3" />
                 {minutes} {t("article.min_read")}
