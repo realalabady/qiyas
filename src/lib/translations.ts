@@ -488,9 +488,19 @@ export const translations: Record<Language, Record<string, string>> = {
       "How Al-Maarefah writes, reviews and corrects its quizzes and articles.",
     "editorial.s1.title": "Who writes this content",
     "editorial.s1.p1":
-      "Al-Maarefah is produced by a small editorial team. Articles and quizzes are written in Arabic and reviewed by a second member of the team before publication. Pieces attributed to the Al-Maarefah Editorial Team are collective work rather than the opinion of a single named author.",
+      "Al-Maarefah is edited and overseen by Mohammed Al-Harbi, who founded the site. Article drafts are prepared with the help of AI tools, then reviewed, corrected and approved by him before publication. He is responsible for what appears here.",
     "editorial.s1.p2":
-      "We are writers and editors with an interest in psychology, not licensed psychologists, psychiatrists or physicians. We do not present ourselves as clinicians and we do not offer diagnosis or treatment.",
+      "We are not licensed psychologists, psychiatrists or physicians, and we do not offer diagnosis or treatment. What we publish is general educational content based on published sources, which we cite at the end of each article.",
+    "editorial.ai.title": "How we use AI",
+    "editorial.ai.p1":
+      "We use AI tools to prepare first drafts and to help with structure and language editing. No text is published without human review: the editor checks claims against the sources cited, and removes anything that cannot be supported by evidence.",
+    "editorial.ai.p2":
+      "We state this openly because readers deserve to know how what they are reading was produced. If you find a claim that is wrong or unsupported, email info@al-maarefah.com and we will correct or remove it.",
+    "editorial.editor.title": "About the editor",
+    "editorial.editor.p1":
+      "Mohammed Al-Harbi — founder and editor of Al-Maarefah. He is interested in applied psychology and in making published research readable for Arabic-speaking readers.",
+    "editorial.editor.p2":
+      "He is not a licensed psychologist. His role is to choose the topics, review the content, verify it against its sources, and decide what gets published. Contact: info@al-maarefah.com",
     "editorial.s2.title": "How our quizzes are built",
     "editorial.s2.p1":
       "Our quizzes draw on widely known personality and cognitive-testing frameworks, simplified for a general audience. They are not standardised instruments: they are not administered under supervision, and results are not scored against a normed sample.",
@@ -1134,9 +1144,19 @@ export const translations: Record<Language, Record<string, string>> = {
       "كيف يكتب موقع المعرفة اختباراته ومقالاته، وكيف يراجعها ويصحّحها.",
     "editorial.s1.title": "من يكتب هذا المحتوى",
     "editorial.s1.p1":
-      "يصدر موقع المعرفة عن فريق تحرير صغير. تُكتب المقالات والاختبارات بالعربية ويراجعها عضو آخر في الفريق قبل النشر. وما يُنسب إلى «فريق تحرير المعرفة» هو عمل جماعي وليس رأي كاتب واحد بعينه.",
+      "يحرّر موقع المعرفة ويشرف عليه محمد الحربي، مؤسس الموقع. تُصاغ مسودات المقالات بمساعدة أدوات الذكاء الاصطناعي، ثم يراجعها ويصحّحها ويعتمدها قبل النشر، وهو المسؤول عمّا يُنشر هنا.",
     "editorial.s1.p2":
-      "نحن كتّاب ومحررون مهتمون بعلم النفس، ولسنا أخصائيين نفسيين أو أطباء مرخّصين. لا نقدّم أنفسنا كمختصين إكلينيكيين، ولا نقدّم تشخيصًا أو علاجًا.",
+      "لسنا أخصائيين نفسيين أو أطباء مرخّصين، ولا نقدّم تشخيصًا أو علاجًا. ما ننشره محتوى تثقيفي عام يستند إلى مصادر منشورة نذكرها في نهاية كل مقال.",
+    "editorial.ai.title": "كيف نستخدم الذكاء الاصطناعي",
+    "editorial.ai.p1":
+      "نستخدم أدوات الذكاء الاصطناعي في صياغة المسودات الأولى وفي الترتيب والتحرير اللغوي. ولا يُنشر أي نص دون مراجعة بشرية: يتحقق المحرر من المعلومات مقابل المصادر المذكورة، ويحذف ما لا يمكن دعمه بدليل.",
+    "editorial.ai.p2":
+      "نذكر هذا صراحةً لأن القارئ يستحق أن يعرف كيف أُنتج ما يقرؤه. وإذا وجدت معلومة خاطئة أو غير مدعومة، راسلنا على info@al-maarefah.com وسنصحّحها أو نحذفها.",
+    "editorial.editor.title": "عن المحرر",
+    "editorial.editor.p1":
+      "محمد الحربي — مؤسس موقع المعرفة ومحرره. مهتم بعلم النفس التطبيقي وبتبسيط البحث المنشور للقارئ العربي.",
+    "editorial.editor.p2":
+      "ليس أخصائيًا نفسيًا مرخّصًا. يقتصر دوره على اختيار الموضوعات ومراجعة المحتوى والتحقق من مصادره وتقرير ما يُنشر. للتواصل: info@al-maarefah.com",
     "editorial.s2.title": "كيف تُبنى اختباراتنا",
     "editorial.s2.p1":
       "تستند اختباراتنا إلى أطر معروفة في قياس الشخصية والقدرات الذهنية، مبسّطة لجمهور عام. وهي ليست أدوات قياس معيارية: لا تُدار تحت إشراف مختص، ولا تُصحَّح مقارنةً بعيّنة معيارية.",

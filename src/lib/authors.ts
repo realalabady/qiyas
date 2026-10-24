@@ -4,17 +4,21 @@
  * Shared by the React pages and the SSR renderer in `api/`.
  *
  * Every article in Firestore is bylined "Admin", which is not a name and gives
- * a reader no way to judge who stands behind psychology and IQ content. Rather
- * than invent a person with credentials nobody holds, articles are attributed
- * to the editorial team, and `/editorial-policy` explains publicly how the
- * content is written, reviewed and corrected. Replace the display name below
- * with a real author once individual bylines are assigned in the admin panel.
+ * a reader no way to judge who stands behind psychology and IQ content.
+ * Articles are attributed to the site's editor, Mohammed Al-Harbi, who reviews
+ * and approves every piece before publication. `/editorial-policy` carries his
+ * bio, states that drafts are AI-assisted, and says plainly that he is not a
+ * licensed clinician — Google treats fabricated credentials as deception, so
+ * nothing here claims expertise that is not held.
  */
 
 export const EDITORIAL_TEAM = {
-  ar: "فريق تحرير المعرفة",
-  en: "Al-Maarefah Editorial Team",
+  ar: "محمد الحربي",
+  en: "Mohammed Al-Harbi",
 } as const;
+
+/** Where a byline links, so readers can find out who stands behind a piece. */
+export const EDITOR_PROFILE_PATH = "/editorial-policy";
 
 /** Placeholder bylines that carry no information about who wrote the piece. */
 const PLACEHOLDER_AUTHORS = new Set([

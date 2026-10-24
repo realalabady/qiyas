@@ -295,6 +295,8 @@ const STATIC_PAGES: Record<string, StaticPageSpec> = {
     subtitleKey: "editorial.subtitle",
     blocks: [
       ["editorial.s1.title", "editorial.s1.p1", "editorial.s1.p2"],
+      ["editorial.editor.title", "editorial.editor.p1", "editorial.editor.p2"],
+      ["editorial.ai.title", "editorial.ai.p1", "editorial.ai.p2"],
       ["editorial.s2.title", "editorial.s2.p1", "editorial.s2.p2"],
       ["editorial.s3.title", "editorial.s3.p1"],
       ["editorial.s4.title", "editorial.s4.p1"],

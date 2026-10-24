@@ -33,6 +33,8 @@ export default function EditorialPolicyPage() {
 
   const sections = [
     { key: "s1", paragraphs: ["p1", "p2"] },
+    { key: "editor", paragraphs: ["p1", "p2"] },
+    { key: "ai", paragraphs: ["p1", "p2"] },
     { key: "s2", paragraphs: ["p1", "p2"] },
     { key: "s3", paragraphs: ["p1"] },
     { key: "s4", paragraphs: ["p1"] },
