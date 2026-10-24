@@ -68,15 +68,22 @@ export function ResultsDisplay({
                 </motion.div>
               )}
 
-              {/* Description */}
-              <motion.p
+              {/* Description — written as several paragraphs, so split on the
+                  blank lines rather than collapsing it all into one block. */}
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-lg text-foreground/90 mb-8 leading-relaxed"
+                className="text-lg text-foreground/90 mb-8 leading-relaxed space-y-4 text-start"
               >
-                {primaryResult.description}
-              </motion.p>
+                {String(primaryResult.description ?? "")
+                  .split(/\n\s*\n/)
+                  .map((para) => para.trim())
+                  .filter(Boolean)
+                  .map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+              </motion.div>
 
               {/* Strengths */}
               {primaryResult.strengths &&
