@@ -126,12 +126,27 @@ export const ARTICLE_MERGES: Record<string, string> = {
     "-لماذا-نخاف-من-الفشل؟-وما-الذي-يمنعنا-من-المحاولة؟",
 };
 
+/**
+ * Quizzes merged away, October 2026. The site carried two near-identical
+ * colour-personality quizzes competing on one topic — the same problem the
+ * article consolidation fixed.
+ */
+export const QUIZ_MERGES: Record<string, string> = {
+  "اي-لون-يعكس-شخصيتك": "اللون-الذي-يكشف-اسرار-شخصيتك",
+};
+
 /** The destination slug for a legacy one, or undefined if it is not legacy. */
 export function migratedSlug(
   type: "quiz" | "article",
   slug: string,
 ): string | undefined {
-  if (type === "quiz") return QUIZ_SLUG_MIGRATIONS[slug];
+  if (type === "quiz") {
+    const renamedQuiz = QUIZ_SLUG_MIGRATIONS[slug];
+    return (
+      QUIZ_MERGES[slug] ??
+      (renamedQuiz ? QUIZ_MERGES[renamedQuiz] ?? renamedQuiz : undefined)
+    );
+  }
   // A renamed article may also have been merged away afterwards, so follow the
   // rename first and then the merge.
   const renamed = ARTICLE_SLUG_MIGRATIONS[slug];
