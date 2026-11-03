@@ -27,6 +27,7 @@ function snapshotQuiz(quiz: Quiz): QuizI18n {
   return {
     title: quiz.title,
     description: quiz.description,
+    longDescription: quiz.longDescription,
     seoTitle: quiz.seoTitle,
     seoDescription: quiz.seoDescription,
     questions: Object.fromEntries(
@@ -58,15 +59,17 @@ async function translateQuizSnapshot(
   snap: QuizI18n,
   target: Lang,
 ): Promise<QuizI18n> {
-  const [title, description, seoTitle, seoDescription] = await translateMany(
-    [
-      snap.title ?? "",
-      snap.description ?? "",
-      snap.seoTitle ?? "",
-      snap.seoDescription ?? "",
-    ],
-    target,
-  );
+  const [title, description, longDescription, seoTitle, seoDescription] =
+    await translateMany(
+      [
+        snap.title ?? "",
+        snap.description ?? "",
+        snap.longDescription ?? "",
+        snap.seoTitle ?? "",
+        snap.seoDescription ?? "",
+      ],
+      target,
+    );
 
   const questions: NonNullable<QuizI18n["questions"]> = {};
   for (const [qid, q] of Object.entries(snap.questions ?? {})) {
@@ -102,7 +105,15 @@ async function translateQuizSnapshot(
     };
   }
 
-  return { title, description, seoTitle, seoDescription, questions, results };
+  return {
+    title,
+    description,
+    longDescription,
+    seoTitle,
+    seoDescription,
+    questions,
+    results,
+  };
 }
 
 /**
@@ -130,6 +141,7 @@ export function localizedQuiz(quiz: Quiz, language: string): Quiz {
     ...quiz,
     title: loc.title || quiz.title,
     description: loc.description || quiz.description,
+    longDescription: loc.longDescription || quiz.longDescription,
     seoTitle: loc.seoTitle || quiz.seoTitle,
     seoDescription: loc.seoDescription || quiz.seoDescription,
     questions: quiz.questions.map((q) => {
@@ -160,20 +172,42 @@ export function localizedQuiz(quiz: Quiz, language: string): Quiz {
 /* ─────────────────────────── Articles ─────────────────────────── */
 
 export async function buildArticleI18n(
-  article: Pick<Article, "title" | "excerpt" | "content">,
+  article: Pick<Article, "title" | "excerpt" | "content" | "faq">,
 ): Promise<Partial<Record<ArticleLang, ArticleI18n>>> {
   const source = detectLang(article.title || article.excerpt || "");
   const other = OTHER[source];
+  const faq = article.faq?.filter((f) => f.question && f.answer) ?? [];
   const sourceSnap: ArticleI18n = {
     title: article.title,
     excerpt: article.excerpt,
     content: article.content,
+    ...(faq.length ? { faq } : {}),
   };
   const [title, excerpt, content] = await translateMany(
     [article.title ?? "", article.excerpt ?? "", article.content ?? ""],
     other,
   );
-  const otherSnap: ArticleI18n = { title, excerpt, content };
+  // Questions and answers are translated as one flat list, then re-paired, so
+  // the FAQ keeps the same order as the article's own `faq`.
+  const flat = faq.length
+    ? await translateMany(
+        faq.flatMap((f) => [f.question, f.answer]),
+        other,
+      )
+    : [];
+  const otherSnap: ArticleI18n = {
+    title,
+    excerpt,
+    content,
+    ...(faq.length
+      ? {
+          faq: faq.map((_, i) => ({
+            question: flat[i * 2],
+            answer: flat[i * 2 + 1],
+          })),
+        }
+      : {}),
+  };
   return { [source]: sourceSnap, [other]: otherSnap } as Partial<
     Record<ArticleLang, ArticleI18n>
   >;
@@ -221,5 +255,11 @@ export function localizedArticle(article: Article, language: string): Article {
     title: loc.title || article.title,
     excerpt: loc.excerpt || article.excerpt,
     content: loc.content || article.content,
+    // Only swap the FAQ when the translation has an entry for every item, so a
+    // partial snapshot can never drop questions off the page.
+    faq:
+      loc.faq?.length && loc.faq.length === article.faq?.length
+        ? loc.faq
+        : article.faq,
   };
 }

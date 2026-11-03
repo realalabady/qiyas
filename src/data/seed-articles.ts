@@ -5,6 +5,12 @@ export interface ArticleI18n {
   title?: string;
   excerpt?: string;
   content?: string;
+  /**
+   * FAQ entries in this language. Positional: entry `n` here translates entry
+   * `n` of the article's own `faq`, so ordering must not drift. Left out for
+   * articles with no FAQ.
+   */
+  faq?: ArticleFAQ[];
 }
 
 /** A single frequently-asked-question entry rendered on the article page. */

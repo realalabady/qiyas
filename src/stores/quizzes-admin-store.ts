@@ -61,6 +61,12 @@ export interface Result {
 export interface QuizI18n {
   title?: string;
   description?: string;
+  /**
+   * The long-form intro. This is the bulk of a quiz landing page's prose, so
+   * leaving it out of the snapshot stranded every quiz intro in its source
+   * language no matter which language the reader picked.
+   */
+  longDescription?: string;
   seoTitle?: string;
   seoDescription?: string;
   questions?: Record<string, { text?: string; answers?: Record<string, string> }>;
