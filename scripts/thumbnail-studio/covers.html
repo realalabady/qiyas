@@ -208,10 +208,14 @@ const ICON = {
   },
   flame(c) {
     c.beginPath();
-    c.moveTo(50, 10); c.bezierCurveTo(74, 34, 82, 50, 82, 60);
-    c.bezierCurveTo(82, 78, 68, 90, 50, 90); c.bezierCurveTo(32, 90, 18, 78, 18, 60);
-    c.bezierCurveTo(18, 48, 28, 40, 36, 52); c.bezierCurveTo(38, 34, 44, 22, 50, 10);
+    c.moveTo(54, 8); c.bezierCurveTo(54, 30, 76, 38, 76, 58);
+    c.bezierCurveTo(76, 78, 62, 92, 46, 92); c.bezierCurveTo(30, 92, 18, 78, 18, 60);
+    c.bezierCurveTo(18, 42, 34, 36, 36, 20); c.bezierCurveTo(44, 26, 50, 20, 54, 8);
     c.closePath(); c.stroke();
+    // Inner curl, without which the outline reads as a water drop.
+    c.beginPath();
+    c.moveTo(48, 48); c.bezierCurveTo(60, 60, 58, 80, 45, 80);
+    c.bezierCurveTo(35, 80, 32, 68, 39, 60); c.stroke();
   },
   battery(c) {
     roundRect(c, 12, 32, 68, 40, 8); c.stroke();
