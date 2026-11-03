@@ -26,6 +26,12 @@ import { collection, doc, getDocs, getFirestore, updateDoc } from "firebase/fire
 
 const APPLY = process.argv.includes("--apply");
 const P = (n: string) => `/thumbnails/${n}.png`;
+/**
+ * The eleven photographic covers are JPEGs. The same frame is 1165 KB as a
+ * PNG and under 90 KB as a JPEG, and eighteen of them load on /explore at
+ * once — PNG is simply the wrong container for a photograph.
+ */
+const J = (n: string) => `/thumbnails/${n}.jpg`;
 
 const ARTICLES: Record<string, string> = {
   "شخصية-قيادية": P("article-leadership"),
@@ -43,12 +49,12 @@ const ARTICLES: Record<string, string> = {
   "-لماذا-يصعب-علينا-مسامحة-الآخرين؟-وهل-المسامحة-تعني-نسيان-ما-حدث؟": P("article-forgiveness"),
   "الفرق-بين-الحب-والتعلق-والاعجاب": P("article-love-attachment"),
   // November additions — regenerated in the same visual system.
-  "نموذج-العوامل-الخمسة-الكبرى": P("article-big-five"),
-  "انماط-التعلق-في-العلاقات": P("article-attachment"),
-  "لماذا-تبدو-نتائج-اختبارات-الشخصية-دقيقة": P("article-barnum"),
-  "الذكاء-العاطفي-ما-يثبته-البحث": P("article-emotional-intelligence"),
-  "الاحتراق-الوظيفي-اعراضه-وكيف-تتعامل-معه": P("article-burnout"),
-  "التسويف-لماذا-نؤجل-وكيف-نتوقف": P("article-procrastination"),
+  "نموذج-العوامل-الخمسة-الكبرى": J("article-big-five"),
+  "انماط-التعلق-في-العلاقات": J("article-attachment"),
+  "لماذا-تبدو-نتائج-اختبارات-الشخصية-دقيقة": J("article-barnum"),
+  "الذكاء-العاطفي-ما-يثبته-البحث": J("article-emotional-intelligence"),
+  "الاحتراق-الوظيفي-اعراضه-وكيف-تتعامل-معه": J("article-burnout"),
+  "التسويف-لماذا-نؤجل-وكيف-نتوقف": J("article-procrastination"),
 };
 
 const QUIZZES: Record<string, string> = {
@@ -65,11 +71,11 @@ const QUIZZES: Record<string, string> = {
   "هل-تصلح-لتكون-مهندسا": P("quiz-engineer"),
   "are-you-a-manager": P("quiz-manager"),
   "الحيوان-الذي-يشبه-شخصيتك": P("quiz-animal"),
-  "اختبار-العوامل-الخمسة-الكبرى": P("quiz-big-five"),
-  "اختبار-نمط-التعلق": P("quiz-attachment"),
-  "مقياس-الاحتراق-الوظيفي": P("quiz-burnout"),
-  "مستوى-التسويف-لديك": P("quiz-procrastination"),
-  "اختبار-الذكاء-العاطفي": P("quiz-emotional-intelligence"),
+  "اختبار-العوامل-الخمسة-الكبرى": J("quiz-big-five"),
+  "اختبار-نمط-التعلق": J("quiz-attachment"),
+  "مقياس-الاحتراق-الوظيفي": J("quiz-burnout"),
+  "مستوى-التسويف-لديك": J("quiz-procrastination"),
+  "اختبار-الذكاء-العاطفي": J("quiz-emotional-intelligence"),
 };
 
 function loadEnv() {

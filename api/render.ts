@@ -19,6 +19,7 @@
 
 import { getQuizIntro } from "../src/data/quiz-intros.js";
 import { migratedSlug } from "../src/data/slug-migrations.js";
+import { IMAGE_CREDITS } from "../src/data/image-credits.js";
 import { translations } from "../src/lib/translations.js";
 import {
   CANONICAL_HOST,
@@ -219,6 +220,7 @@ const siteNav = (origin: string): string =>
       ["/privacy-policy", t("privacy.title")],
       ["/terms", t("terms.title")],
       ["/editorial-policy", t("editorial.title")],
+      ["/image-credits", t("credits.title")],
     ] as Array<[string, string]>
   )
     .map(
@@ -290,6 +292,20 @@ interface StaticPageSpec {
 
 const mailtoHtml = `<p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>`;
 
+/**
+ * Unsplash's terms want the photographer credited with a link back, so the
+ * credit has to survive in the crawled HTML too, not only in the React page.
+ */
+const imageCreditsHtml =
+  "<ul>" +
+  IMAGE_CREDITS.map(
+    (c) =>
+      `<li>${escapeHtml(c.title)} — ${escapeHtml(t("credits.photo_by"))} ` +
+      `<a href="${escapeHtml(c.photographerUrl)}" rel="nofollow noopener">${escapeHtml(c.photographer)}</a> ` +
+      `(<a href="${escapeHtml(c.source)}" rel="nofollow noopener">${escapeHtml(t("credits.on_unsplash"))}</a>)</li>`,
+  ).join("") +
+  "</ul>";
+
 const STATIC_PAGES: Record<string, StaticPageSpec> = {
   about: {
     path: "/about",
@@ -335,6 +351,13 @@ const STATIC_PAGES: Record<string, StaticPageSpec> = {
       ["privacy.s8.title", "privacy.s8.p1"],
     ],
     extraHtml: mailtoHtml,
+  },
+  "image-credits": {
+    path: "/image-credits",
+    titleKey: "credits.title",
+    subtitleKey: "credits.subtitle",
+    blocks: [[null, "credits.intro"]],
+    extraHtml: imageCreditsHtml,
   },
   "editorial-policy": {
     path: "/editorial-policy",

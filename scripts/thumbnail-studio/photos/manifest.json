@@ -1,0 +1,101 @@
+{
+  "article-big-five": {
+    "provider": "unsplash",
+    "query": "thoughtful portrait silhouette window light",
+    "photographer": "Tanya Prodaan",
+    "photographer_url": "https://unsplash.com/@tannnpro",
+    "source": "https://unsplash.com/photos/a-person-wearing-glasses-looks-down-indoors-MCcrAahh970",
+    "size": "6746x4450",
+    "alt": "A person wearing glasses looks down indoors"
+  },
+  "article-attachment": {
+    "provider": "unsplash",
+    "query": "two people holding hands close warm backlight",
+    "photographer": "Erika Fletcher",
+    "photographer_url": "https://unsplash.com/@joyshotsphotography",
+    "source": "https://unsplash.com/photos/woman-in-brown-coat-holding-mans-hand-ZG_eGwT6E9Y",
+    "size": "6016x4016",
+    "alt": "woman in brown coat holding mans hand"
+  },
+  "article-barnum": {
+    "provider": "unsplash",
+    "query": "blurred crowd motion street long exposure",
+    "photographer": "Alexandros Giannakakis",
+    "photographer_url": "https://unsplash.com/@alegi__",
+    "source": "https://unsplash.com/photos/blurry-crowd-at-night-with-bright-lights-j1GCuaR_IfU",
+    "size": "8192x5464",
+    "alt": "Blurry crowd at night with bright lights"
+  },
+  "article-emotional-intelligence": {
+    "provider": "unsplash",
+    "query": "two people in conversation warm window light",
+    "photographer": "Etienne Boulanger",
+    "photographer_url": "https://unsplash.com/@etienneblg",
+    "source": "https://unsplash.com/photos/silhouette-of-man-and-woman-sitting-on-ottoman-erCPgyXNlto",
+    "size": "7925x5286",
+    "alt": "silhouette of man and woman sitting on ottoman"
+  },
+  "article-burnout": {
+    "provider": "unsplash",
+    "query": "empty desk late night office warm lamp",
+    "photographer": "okeykat",
+    "photographer_url": "https://unsplash.com/@okeykat",
+    "source": "https://unsplash.com/photos/a-dark-office-lit-with-ambient-and-desk-lighting-8MwmJIekppM",
+    "size": "7728x5152",
+    "alt": "A dark office lit with ambient and desk lighting"
+  },
+  "article-procrastination": {
+    "provider": "unsplash",
+    "query": "vintage clock on desk moody shadow",
+    "photographer": "Suhas Hanjar",
+    "photographer_url": "https://unsplash.com/@suhashanjar",
+    "source": "https://unsplash.com/photos/alarm-clock-casting-a-shadow-on-a-dark-surface-yEJKOFSEDeI",
+    "size": "6000x4000",
+    "alt": "Alarm clock casting a shadow on a dark surface"
+  },
+  "quiz-big-five": {
+    "provider": "unsplash",
+    "query": "man sitting by window back view contemplative",
+    "photographer": "Qim Manifester",
+    "photographer_url": "https://unsplash.com/@qimmanifester",
+    "source": "https://unsplash.com/photos/man-seated-near-tree-ldRKmohTo6E",
+    "size": "7500x5000",
+    "alt": "man seated near tree"
+  },
+  "quiz-attachment": {
+    "provider": "unsplash",
+    "query": "two hands reaching apart dark moody",
+    "photographer": "Moisés Fattel",
+    "photographer_url": "https://unsplash.com/@moises_fattel",
+    "source": "https://unsplash.com/photos/a-pair-of-hands-reaching-out-towards-each-other-nXPtHBURBY0",
+    "size": "7008x4672",
+    "alt": "a pair of hands reaching out towards each other"
+  },
+  "quiz-burnout": {
+    "provider": "unsplash",
+    "query": "office window dusk city tired atmosphere",
+    "photographer": "Shahabudin Ibragimov",
+    "photographer_url": "https://unsplash.com/@sb_dn",
+    "source": "https://unsplash.com/photos/modern-office-window-overlooking-a-city-skyline-with-reflections-FqXI2tZenGg",
+    "size": "9504x5346",
+    "alt": "Modern office window overlooking a city skyline with reflections"
+  },
+  "quiz-procrastination": {
+    "provider": "unsplash",
+    "query": "hourglass sand timer light",
+    "photographer": "National Cancer Institute",
+    "photographer_url": "https://unsplash.com/@nci",
+    "source": "https://unsplash.com/photos/white-candle-in-clear-glass-holder-FfROkWXnMps",
+    "size": "10800x7200",
+    "alt": "white candle in clear glass holder"
+  },
+  "quiz-emotional-intelligence": {
+    "provider": "unsplash",
+    "query": "reflection in mirror person soft light",
+    "photographer": "Ed Parker",
+    "photographer_url": "https://unsplash.com/@thisedw",
+    "source": "https://unsplash.com/photos/a-woman-standing-in-front-of-a-mirror-in-a-room-b75wHuNPee0",
+    "size": "7879x5255",
+    "alt": "A woman standing in front of a mirror in a room"
+  }
+}

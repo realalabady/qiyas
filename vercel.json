@@ -56,6 +56,10 @@
       "source": "/editorial-policy",
       "destination": "/api/render?type=page&name=editorial-policy"
     },
+    {
+      "source": "/image-credits",
+      "destination": "/api/render?type=page&name=image-credits"
+    },
 
     {
       "source": "/quiz/:slug",

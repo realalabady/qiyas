@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(process.cwd(), "public", "thumbnails");
+const PORT = Number(process.argv[2]) || 7331;
 fs.mkdirSync(OUT, { recursive: true });
 
 const TYPES = {
@@ -35,7 +36,7 @@ http
   .createServer((req, res) => {
     if (req.method === "POST" && req.url?.startsWith("/save/")) {
       const name = decodeURIComponent(req.url.slice("/save/".length));
-      if (!/^[a-z0-9-]+\.png$/.test(name)) {
+      if (!/^[a-z0-9-]+\.(png|jpg)$/.test(name)) {
         res.writeHead(400).end("bad name");
         return;
       }
@@ -57,4 +58,6 @@ http
     res.writeHead(200, { "content-type": TYPES[path.extname(file)] ?? "application/octet-stream" });
     res.end(fs.readFileSync(file));
   })
-  .listen(7331, "127.0.0.1", () => console.log("thumbnail studio on http://127.0.0.1:7331"));
+  .listen(PORT, "127.0.0.1", () =>
+    console.log(`thumbnail studio on http://127.0.0.1:${PORT}`),
+  );

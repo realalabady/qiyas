@@ -32,6 +32,7 @@ const STATIC_ROUTES: Array<{
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/editorial-policy", changefreq: "yearly", priority: "0.4" },
+  { path: "/image-credits", changefreq: "monthly", priority: "0.3" },
 ];
 
 const toLastmod = (value: unknown): string | undefined =>

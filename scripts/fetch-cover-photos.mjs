@@ -41,11 +41,11 @@ const SHOTS = {
   "article-burnout": "empty desk late night office warm lamp",
   "article-procrastination": "vintage clock on desk moody shadow",
 
-  "quiz-big-five": "person looking out of window pensive portrait",
+  "quiz-big-five": "man sitting by window back view contemplative",
   "quiz-attachment": "two hands reaching apart dark moody",
   "quiz-burnout": "office window dusk city tired atmosphere",
-  "quiz-procrastination": "alarm clock morning bedside soft light",
-  "quiz-emotional-intelligence": "close portrait expressive face studio light",
+  "quiz-procrastination": "hourglass sand timer light",
+  "quiz-emotional-intelligence": "reflection in mirror person soft light",
 };
 
 function loadEnv() {

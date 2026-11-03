@@ -473,6 +473,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "footer.privacy_policy": "Privacy Policy",
     "footer.terms": "Terms of Service",
     "footer.editorial": "Editorial Policy",
+    "footer.image_credits": "Image Credits",
     "footer.made_with": "Made with ❤️ for curious minds",
     "footer.rights_only": "All rights reserved.",
     "footer.copyright": "© 2026 Al-Maarefah. All rights reserved.",
@@ -481,6 +482,14 @@ export const translations: Record<Language, Record<string, string>> = {
     // existed only in Terms §4, a page crawlers never saw.
     "content.disclaimer":
       "Al-Maarefah quizzes and articles are for entertainment and self-reflection. They are not a psychological or medical diagnosis and are not a substitute for professional advice.",
+
+    // Image credits page
+    "credits.title": "Image Credits",
+    "credits.subtitle": "Where the photographs on this site come from.",
+    "credits.intro":
+      "Every cover image on Al-Maarefah is built here: a licensed photograph with our own headline composited over it. The photographers are credited below, each linked to their profile. Nothing on the site is hotlinked from a third party — the finished images are served from our own domain.",
+    "credits.photo_by": "Photograph by",
+    "credits.on_unsplash": "on Unsplash",
 
     // Editorial policy page
     "editorial.title": "Editorial Policy",
@@ -1112,6 +1121,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "footer.privacy_policy": "سياسة الخصوصية",
     "footer.terms": "الشروط والأحكام",
     "footer.editorial": "سياسة التحرير",
+    "footer.image_credits": "مصادر الصور",
     "footer.made_with": "صُنع بـ ❤️ للعقول الفضولية",
     "footer.rights_only": "جميع الحقوق محفوظة.",
     "footer.copyright": "© 2026 Al-Maarefah. جميع الحقوق محفوظة.",
@@ -1137,6 +1147,14 @@ export const translations: Record<Language, Record<string, string>> = {
 
     "content.disclaimer":
       "اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.",
+
+    // Image credits page
+    "credits.title": "مصادر الصور",
+    "credits.subtitle": "من أين تأتي الصور المستخدمة في الموقع.",
+    "credits.intro":
+      "كل صورة غلاف في موقع المعرفة مصنوعة هنا: صورة فوتوغرافية مرخّصة يُركّب عليها عنواننا. وفيما يلي أسماء المصوّرين مع روابط صفحاتهم. لا يعتمد الموقع على روابط صور خارجية — الصور النهائية تُقدّم من نطاقنا نفسه.",
+    "credits.photo_by": "تصوير",
+    "credits.on_unsplash": "على Unsplash",
 
     // Editorial policy page
     "editorial.title": "سياسة التحرير",

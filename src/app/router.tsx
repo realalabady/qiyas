@@ -15,6 +15,7 @@ import FAQPage from "@/pages/faq-page";
 import PrivacyPage from "@/pages/privacy-page";
 import TermsPage from "@/pages/terms-page";
 import EditorialPolicyPage from "@/pages/editorial-policy-page";
+import ImageCreditsPage from "@/pages/image-credits-page";
 import { AdminLoginPage } from "@/pages/admin-login-page";
 import { AdminDashboardPage } from "@/pages/admin-dashboard-page";
 import { AdminSettingsPage } from "@/pages/admin-settings-page";
@@ -54,6 +55,7 @@ export const appRouter = createBrowserRouter([
       { path: "privacy-policy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
       { path: "editorial-policy", element: <EditorialPolicyPage /> },
+      { path: "image-credits", element: <ImageCreditsPage /> },
     ],
   },
   {

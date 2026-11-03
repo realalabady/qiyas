@@ -181,13 +181,14 @@ function fitLines(c, text, weight, maxW, maxLines, from, to) {
 const ICON = {
   brain(c) {
     c.beginPath();
-    c.moveTo(50, 12); c.bezierCurveTo(26, 12, 14, 28, 20, 42);
-    c.bezierCurveTo(8, 54, 18, 74, 34, 74); c.bezierCurveTo(36, 88, 62, 90, 66, 76);
-    c.bezierCurveTo(86, 76, 94, 56, 82, 44); c.bezierCurveTo(90, 28, 74, 12, 50, 12);
-    c.closePath(); c.stroke();
-    c.beginPath(); c.moveTo(50, 14); c.lineTo(50, 84); c.stroke();
-    c.beginPath(); c.moveTo(50, 36); c.lineTo(32, 46); c.stroke();
-    c.beginPath(); c.moveTo(50, 58); c.lineTo(70, 66); c.stroke();
+    c.moveTo(68, 94); c.lineTo(68, 72);
+    c.bezierCurveTo(84, 62, 88, 42, 76, 28);
+    c.bezierCurveTo(62, 10, 34, 12, 24, 30);
+    c.bezierCurveTo(16, 46, 20, 62, 32, 70);
+    c.lineTo(32, 94);
+    c.stroke();
+    c.beginPath(); c.arc(50, 44, 17, 0.5, 5.6); c.stroke();
+    c.beginPath(); c.arc(50, 44, 7, 2.4, 6.9); c.stroke();
   },
   heart(c) {
     c.beginPath();
@@ -197,10 +198,11 @@ const ICON = {
     c.closePath(); c.stroke();
   },
   link(c) {
-    c.beginPath(); c.arc(34, 50, 20, Math.PI * 0.5, Math.PI * 1.5); c.stroke();
-    c.beginPath(); c.arc(66, 50, 20, Math.PI * 1.5, Math.PI * 0.5); c.stroke();
-    c.beginPath(); c.moveTo(34, 30); c.lineTo(58, 30); c.stroke();
-    c.beginPath(); c.moveTo(34, 70); c.lineTo(58, 70); c.stroke();
+    c.save();
+    c.translate(50, 50); c.rotate(-Math.PI / 4); c.translate(-50, -50);
+    roundRect(c, 14, 38, 44, 26, 13); c.stroke();
+    roundRect(c, 42, 38, 44, 26, 13); c.stroke();
+    c.restore();
   },
   clock(c) {
     c.beginPath(); c.arc(50, 52, 36, 0, 7); c.stroke();
@@ -208,14 +210,15 @@ const ICON = {
   },
   flame(c) {
     c.beginPath();
-    c.moveTo(54, 8); c.bezierCurveTo(54, 30, 76, 38, 76, 58);
-    c.bezierCurveTo(76, 78, 62, 92, 46, 92); c.bezierCurveTo(30, 92, 18, 78, 18, 60);
-    c.bezierCurveTo(18, 42, 34, 36, 36, 20); c.bezierCurveTo(44, 26, 50, 20, 54, 8);
+    c.moveTo(48, 4);
+    c.bezierCurveTo(50, 28, 72, 34, 72, 52);
+    c.bezierCurveTo(80, 46, 82, 36, 80, 28);
+    c.bezierCurveTo(92, 46, 88, 72, 70, 84);
+    c.bezierCurveTo(54, 95, 28, 90, 20, 72);
+    c.bezierCurveTo(13, 56, 20, 40, 34, 32);
+    c.bezierCurveTo(33, 42, 36, 49, 42, 53);
+    c.bezierCurveTo(38, 34, 40, 18, 48, 4);
     c.closePath(); c.stroke();
-    // Inner curl, without which the outline reads as a water drop.
-    c.beginPath();
-    c.moveTo(48, 48); c.bezierCurveTo(60, 60, 58, 80, 45, 80);
-    c.bezierCurveTo(35, 80, 32, 68, 39, 60); c.stroke();
   },
   battery(c) {
     roundRect(c, 12, 32, 68, 40, 8); c.stroke();
@@ -241,7 +244,10 @@ const ICON = {
   compass(c) {
     c.beginPath(); c.arc(50, 50, 38, 0, 7); c.stroke();
     c.beginPath();
-    c.moveTo(66, 34); c.lineTo(56, 56); c.lineTo(34, 66); c.lineTo(44, 44);
+    c.moveTo(50, 16); c.lineTo(60, 48); c.lineTo(50, 52); c.lineTo(40, 48);
+    c.closePath(); c.fillStyle = c.strokeStyle; c.fill();
+    c.beginPath();
+    c.moveTo(50, 84); c.lineTo(40, 52); c.lineTo(50, 48); c.lineTo(60, 52);
     c.closePath(); c.stroke();
   },
   chart(c) {
@@ -470,8 +476,11 @@ async function renderAll(only) {
     cv.width = W; cv.height = H;
     stage.appendChild(cv);
     draw(cv.getContext("2d"), COVERS[name], img);
-    const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
-    const res = await fetch("/save/" + name + ".png", { method: "POST", body: blob });
+    // JPEG, not PNG. These are photographs: the same frame is 1165 KB as a
+    // PNG and 65 KB as a JPEG, and eighteen of them land on /explore at once.
+    // JPEG over WebP because every social crawler reads it without question.
+    const blob = await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.88));
+    const res = await fetch("/save/" + name + ".jpg", { method: "POST", body: blob });
     if (!res.ok) missing.push(name + " (save failed)");
     n++;
     document.getElementById("log").textContent = `${n}/${names.length} ${name}`;
