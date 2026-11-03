@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Thumbnail studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  body { background:#0b0712; color:#eee; font-family:Cairo,system-ui,sans-serif; margin:0; padding:24px; }
+  #stage { display:grid; grid-template-columns:repeat(2,600px); gap:16px; }
+  canvas { width:600px; height:315px; border-radius:10px; }
+  #log { position:fixed; inset:auto 24px 24px auto; background:#1a0f2e; padding:10px 16px; border-radius:8px; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="log">idle</div>
+<div id="stage"></div>
+<script>
+/*
+ * Draws every article and quiz cover as a 1200x630 PNG and POSTs it to the
+ * local studio server, which writes it into public/thumbnails.
+ *
+ * The browser is here for one reason: correctly shaped Arabic text. There is
+ * no image library in this project, the `convert` on PATH is the Windows
+ * filesystem utility, and image models cannot spell Arabic. Canvas can.
+ *
+ * Every cover carries the same chrome — category chip, title, wordmark, brand
+ * field — and a figure that says something about the subject. The figure types
+ * are parameterised rather than bespoke so 38 covers read as one system.
+ */
+
+const W = 1200, H = 630;
+const FUCHSIA = "#ec4899", VIOLET = "#7c3aed", INK = "#0b0712";
+const PAPER = "#f4eef9", MUTED = "rgba(244,238,249,.62)";
+
+/* ───────────────────────── shared chrome ───────────────────────── */
+
+function field(c, tilt = 0) {
+  const g = c.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, INK); g.addColorStop(1, "#1a0e2e");
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+
+  for (const [x, y, r, col, a] of [
+    [170 + tilt, 110, 620, VIOLET, .40],
+    [1040 - tilt, 560, 560, FUCHSIA, .30],
+  ]) {
+    const rg = c.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0, col); rg.addColorStop(1, "transparent");
+    c.globalAlpha = a; c.fillStyle = rg; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+  }
+
+  c.fillStyle = "rgba(255,255,255,.07)";
+  for (let y = 40; y < H; y += 42)
+    for (let x = 40; x < W; x += 42) { c.beginPath(); c.arc(x, y, 1.6, 0, 7); c.fill(); }
+}
+
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+
+/** Right-aligned Arabic title, wrapped to a width, returns the bottom y. */
+function title(c, text, right, top, maxW, size = 54, lh = 1.38) {
+  c.font = `800 ${size}px Cairo, sans-serif`;
+  c.fillStyle = PAPER; c.textAlign = "right"; c.direction = "rtl";
+  const words = text.split(/\s+/);
+  const lines = []; let line = "";
+  for (const w of words) {
+    const t = line ? line + " " + w : w;
+    if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+  }
+  if (line) lines.push(line);
+  const shown = lines.slice(0, 3);
+  if (lines.length > 3) shown[2] = shown[2] + "…";
+  shown.forEach((l, i) => c.fillText(l, right, top + size + i * size * lh));
+  return top + size + (shown.length - 1) * size * lh;
+}
+
+function chip(c, text, right, y) {
+  c.font = "600 26px Cairo, sans-serif"; c.direction = "rtl"; c.textAlign = "right";
+  const w = c.measureText(text).width + 44, h = 48;
+  c.fillStyle = "rgba(236,72,153,.16)";
+  roundRect(c, right - w, y, w, h, 24); c.fill();
+  c.strokeStyle = "rgba(236,72,153,.45)"; c.lineWidth = 2; c.stroke();
+  c.fillStyle = "#f9a8d4"; c.fillText(text, right - 22, y + 33);
+}
+
+function wordmark(c) {
+  c.font = "600 24px Cairo, sans-serif"; c.direction = "rtl"; c.textAlign = "right";
+  c.fillStyle = "rgba(244,238,249,.40)";
+  c.fillText("المعرفة", W - 56, H - 44);
+}
+
+/** Small caption under a figure element. */
+function cap(c, text, x, y, size = 21, col = MUTED) {
+  c.font = `600 ${size}px Cairo, sans-serif`; c.direction = "rtl";
+  c.textAlign = "center"; c.fillStyle = col;
+  c.fillText(text, x, y);
+}
+
+const mix = (t) => {
+  const a = [236, 72, 153], b = [124, 58, 237];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+};
+
+/* ───────────────────────── figures ─────────────────────────
+ * Each draws inside a box {x, y, w, h}. Labels are Arabic and
+ * describe the thing being depicted, so the cover teaches rather
+ * than decorates.
+ * ───────────────────────────────────────────────────────────── */
+
+const FIG = {
+  /** Spokes of differing length, one per labelled trait. */
+  radar(c, b, { labels, values }) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) / 2 - 46;
+    c.strokeStyle = "rgba(255,255,255,.14)"; c.lineWidth = 2;
+    for (const f of [1, .66, .33]) { c.beginPath(); c.arc(cx, cy, R * f, 0, 7); c.stroke(); }
+    const n = labels.length, pts = [];
+    labels.forEach((_, i) => {
+      const ang = (i / n) * Math.PI * 2, r = R * values[i];
+      pts.push([cx + Math.sin(ang) * r, cy - Math.cos(ang) * r]);
+    });
+    // Order matters: hull, then spokes, then dots, so nothing is stroked over
+    // a dot and leaves it looking notched.
+    c.strokeStyle = "rgba(255,255,255,.30)"; c.lineWidth = 2.5; c.beginPath();
+    pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath(); c.stroke();
+    c.lineCap = "round";
+    pts.forEach(([x, y], i) => {
+      c.strokeStyle = mix(i / (n - 1)); c.lineWidth = 6;
+      c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.stroke();
+    });
+    pts.forEach(([x, y], i) => {
+      c.fillStyle = mix(i / (n - 1));
+      c.beginPath(); c.arc(x, y, 15, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "rgba(255,255,255,.9)";
+      c.beginPath(); c.arc(x, y, 5.5, 0, Math.PI * 2); c.fill();
+      const ang = (i / n) * Math.PI * 2;
+      cap(c, labels[i], cx + Math.sin(ang) * (R + 32), cy - Math.cos(ang) * (R + 32) + 7, 19);
+    });
+    c.fillStyle = PAPER; c.beginPath(); c.arc(cx, cy, 11, 0, Math.PI * 2); c.fill();
+  },
+
+  /** Two labelled axes, four quadrants, one lit. */
+  plane(c, b, { axisX, axisY, quads, mark }) {
+    const S = Math.min(b.w, b.h) / 2 - 44, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    c.fillStyle = "rgba(255,255,255,.05)"; roundRect(c, cx - S, cy - S, S * 2, S * 2, 22); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.30)"; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(cx - S, cy); c.lineTo(cx + S, cy);
+    c.moveTo(cx, cy - S); c.lineTo(cx, cy + S); c.stroke();
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy], i) => {
+      const on = i === mark, px = cx + sx * S * .5, py = cy + sy * S * .5;
+      c.fillStyle = on ? mix(i / 3) : "rgba(255,255,255,.14)";
+      c.beginPath(); c.arc(px, py, on ? 34 : 20, 0, 7); c.fill();
+      if (on) { c.fillStyle = PAPER; c.beginPath(); c.arc(px, py, 12, 0, 7); c.fill(); }
+      if (quads?.[i]) cap(c, quads[i], px, py + (sy < 0 ? -48 : 62), 18, on ? PAPER : MUTED);
+    });
+    // Both axis labels stay horizontal: rotated Arabic reads badly, and a
+    // short label above the axis is clearer than one turned on its side.
+    cap(c, "← " + axisX, cx + S - 58, cy + S + 36, 19);
+    cap(c, "↑ " + axisY, cx - S + 54, cy - S - 16, 19);
+  },
+
+  /** Labelled bars. */
+  bars(c, b, { labels, values }) {
+    const n = labels.length, gap = 26;
+    const bw = Math.min(118, (b.w - gap * (n - 1)) / n);
+    const span = n * bw + (n - 1) * gap, x0 = b.x + (b.w - span) / 2;
+    const base = b.y + b.h - 62, maxH = b.h - 118;
+    values.forEach((v, i) => {
+      const h = maxH * v, x = x0 + i * (bw + gap);
+      c.fillStyle = mix(i / Math.max(1, n - 1));
+      roundRect(c, x, base - h, bw, h, 18); c.fill();
+      c.fillStyle = "rgba(255,255,255,.22)"; roundRect(c, x, base - h, bw, 20, 10); c.fill();
+      cap(c, labels[i], x + bw / 2, base + 34, 19);
+    });
+    c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x0 - 24, base + 6); c.lineTo(x0 + span + 24, base + 6); c.stroke();
+  },
+
+  /** Semi-circular gauge with a percentage. */
+  gauge(c, b, { pct, label }) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2 + 46, R = Math.min(b.w / 2, b.h) - 70;
+    c.lineCap = "round"; c.lineWidth = 30;
+    c.strokeStyle = "rgba(255,255,255,.12)";
+    c.beginPath(); c.arc(cx, cy, R, Math.PI, 2 * Math.PI); c.stroke();
+    const g = c.createLinearGradient(cx - R, 0, cx + R, 0);
+    g.addColorStop(0, VIOLET); g.addColorStop(1, FUCHSIA);
+    c.strokeStyle = g;
+    c.beginPath(); c.arc(cx, cy, R, Math.PI, Math.PI + Math.PI * pct); c.stroke();
+    const a = Math.PI + Math.PI * pct;
+    c.fillStyle = PAPER; c.beginPath(); c.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, 16, 0, 7); c.fill();
+    c.font = "800 62px Cairo, sans-serif"; c.textAlign = "center"; c.direction = "ltr";
+    c.fillStyle = PAPER; c.fillText(Math.round(pct * 100) + "%", cx, cy - 26);
+    if (label) cap(c, label, cx, cy + 48, 21);
+  },
+
+  /** Normal curve with a shaded middle band. */
+  bell(c, b, { label }) {
+    const x0 = b.x + 40, x1 = b.x + b.w - 40, base = b.y + b.h - 70, amp = b.h - 150;
+    const f = (t) => Math.exp(-Math.pow((t - .5) * 5.2, 2) / 2);
+    c.beginPath(); c.moveTo(x0, base);
+    for (let i = 0; i <= 200; i++) { const t = i / 200; c.lineTo(x0 + (x1 - x0) * t, base - amp * f(t)); }
+    c.lineTo(x1, base); c.closePath();
+    const g = c.createLinearGradient(0, base - amp, 0, base);
+    g.addColorStop(0, "rgba(236,72,153,.55)"); g.addColorStop(1, "rgba(124,58,237,.08)");
+    c.fillStyle = g; c.fill();
+    c.strokeStyle = PAPER; c.lineWidth = 3.5; c.beginPath();
+    for (let i = 0; i <= 200; i++) { const t = i / 200; const X = x0 + (x1 - x0) * t, Y = base - amp * f(t); i ? c.lineTo(X, Y) : c.moveTo(X, Y); }
+    c.stroke();
+    c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x0 - 10, base); c.lineTo(x1 + 10, base); c.stroke();
+    [.5].forEach((t) => {
+      const X = x0 + (x1 - x0) * t;
+      c.setLineDash([8, 8]); c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(X, base); c.lineTo(X, base - amp); c.stroke(); c.setLineDash([]);
+    });
+    if (label) cap(c, label, (x0 + x1) / 2, base + 38, 21);
+  },
+
+  /** Concentric labelled rings. */
+  rings(c, b, { labels }) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) / 2 - 28;
+    labels.forEach((lab, i) => {
+      const r = R - i * (R / (labels.length + .4));
+      c.strokeStyle = mix(i / Math.max(1, labels.length - 1)); c.lineWidth = 17;
+      c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke();
+      cap(c, lab, cx, cy - r + 7, 17, PAPER);
+    });
+  },
+
+  /** A population of identical tiles, one highlighted. */
+  grid(c, b, { rows, cols, highlight, note }) {
+    const gx = 16, gy = 14;
+    const tw = (b.w - gx * (cols - 1)) / cols, th = (b.h - 46 - gy * (rows - 1)) / rows;
+    for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+      const on = r * cols + k === highlight;
+      const x = b.x + k * (tw + gx), y = b.y + r * (th + gy);
+      c.fillStyle = on ? FUCHSIA : "rgba(255,255,255,.11)";
+      roundRect(c, x, y, tw, th, 13); c.fill();
+      c.fillStyle = on ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.20)";
+      roundRect(c, x + 14, y + th * .3, tw - 46, 7, 4); c.fill();
+      roundRect(c, x + 14, y + th * .55, tw - 72, 6, 3); c.fill();
+    }
+    if (note) cap(c, note, b.x + b.w / 2, b.y + b.h - 6, 20);
+  },
+
+  /** Events along a line, clustered toward the deadline. */
+  timeline(c, b, { marks, endLabel, startLabel }) {
+    const y = b.y + b.h / 2, x0 = b.x + 30, x1 = b.x + b.w - 54;
+    c.fillStyle = "rgba(255,255,255,.14)"; roundRect(c, x0, y - 7, x1 - x0, 14, 7); c.fill();
+    marks.forEach((t, i) => {
+      const x = x0 + (x1 - x0) * t, late = t > .6, h = late ? 74 + (i % 3) * 22 : 40;
+      c.fillStyle = late ? FUCHSIA : VIOLET;
+      roundRect(c, x - 10, y - h, 20, h, 10); c.fill();
+    });
+    c.fillStyle = "rgba(255,255,255,.65)"; roundRect(c, x1 + 6, y - 92, 14, 184, 7); c.fill();
+    c.fillStyle = VIOLET; c.beginPath(); c.arc(x0, y, 14, 0, 7); c.fill();
+    if (startLabel) cap(c, startLabel, x0 + 30, y + 74, 19);
+    if (endLabel) cap(c, endLabel, x1 - 40, y + 74, 19);
+  },
+
+  /** A closed loop of labelled stages. */
+  cycle(c, b, { labels }) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) / 2 - 54;
+    c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = 4;
+    c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
+    labels.forEach((lab, i) => {
+      const a = (i / labels.length) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      c.fillStyle = mix(i / Math.max(1, labels.length - 1));
+      c.beginPath(); c.arc(x, y, 26, 0, 7); c.fill();
+      c.fillStyle = PAPER; c.font = "800 22px Cairo, sans-serif";
+      c.textAlign = "center"; c.direction = "ltr"; c.fillText(String(i + 1), x, y + 8);
+      const lx = cx + Math.cos(a) * (R + 56), ly = cy + Math.sin(a) * (R + 56);
+      cap(c, lab, lx, ly + 7, 18);
+    });
+  },
+
+  /** Ordered severity steps with one marked. */
+  scale(c, b, { labels, mark }) {
+    const n = labels.length, gap = 14;
+    const bw = (b.w - gap * (n - 1)) / n, y = b.y + b.h / 2 - 40;
+    labels.forEach((lab, i) => {
+      const on = i === mark, x = b.x + i * (bw + gap), h = 46 + i * 26;
+      c.fillStyle = on ? mix(i / (n - 1)) : "rgba(255,255,255,.13)";
+      roundRect(c, x, y + 120 - h, bw, h, 14); c.fill();
+      cap(c, lab, x + bw / 2, y + 158, 19, on ? PAPER : MUTED);
+      if (on) { c.fillStyle = PAPER; c.beginPath(); c.arc(x + bw / 2, y + 120 - h - 24, 10, 0, 7); c.fill(); }
+    });
+  },
+
+  /** Colour field swatches. */
+  swatches(c, b, { colors, labels }) {
+    const n = colors.length, gap = 20, sw = (b.w - gap * (n - 1)) / n;
+    colors.forEach((col, i) => {
+      const x = b.x + i * (sw + gap), h = b.h - 70;
+      c.fillStyle = col; roundRect(c, x, b.y, sw, h, 20); c.fill();
+      c.fillStyle = "rgba(255,255,255,.18)"; roundRect(c, x, b.y, sw, 22, 11); c.fill();
+      if (labels?.[i]) cap(c, labels[i], x + sw / 2, b.y + h + 36, 19);
+    });
+  },
+
+  /** Two pans of a balance, used for "A vs B" subjects. */
+  balance(c, b, { left, right, tilt = .12 }) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, arm = Math.min(b.w / 2 - 50, 230);
+    c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(cx, cy + 96); c.lineTo(cx, cy - 56); c.stroke();
+    const dy = arm * tilt;
+    c.strokeStyle = PAPER; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(cx - arm, cy - 56 + dy); c.lineTo(cx + arm, cy - 56 - dy); c.stroke();
+    [[-1, left, VIOLET], [1, right, FUCHSIA]].forEach(([s, lab, col]) => {
+      const x = cx + s * arm, y = cy - 56 - s * dy;
+      c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 48); c.stroke();
+      c.fillStyle = col; roundRect(c, x - 66, y + 48, 132, 44, 16); c.fill();
+      cap(c, lab, x, y + 78, 20, PAPER);
+    });
+    c.fillStyle = "rgba(255,255,255,.3)"; roundRect(c, cx - 70, cy + 96, 140, 14, 7); c.fill();
+  },
+
+  /** A battery at a given charge. */
+  battery(c, b, { level, label }) {
+    const w = Math.min(b.w - 80, 400), h = 190;
+    const x = b.x + (b.w - w) / 2, y = b.y + (b.h - h) / 2 - 16;
+    c.strokeStyle = "rgba(255,255,255,.45)"; c.lineWidth = 7;
+    roundRect(c, x, y, w, h, 28); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.45)"; roundRect(c, x + w + 8, y + h / 2 - 28, 18, 56, 9); c.fill();
+    const g = c.createLinearGradient(x, 0, x + w, 0);
+    g.addColorStop(0, VIOLET); g.addColorStop(1, FUCHSIA);
+    c.fillStyle = g; roundRect(c, x + 14, y + 14, (w - 28) * level, h - 28, 18); c.fill();
+    if (label) cap(c, label, b.x + b.w / 2, y + h + 50, 21);
+  },
+
+  /** Branching path with a chosen fork. */
+  path(c, b, { labels }) {
+    const x0 = b.x + 40, y = b.y + b.h / 2, x1 = b.x + b.w - 60;
+    c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = 8; c.lineCap = "round";
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + (x1 - x0) * .42, y); c.stroke();
+    const forkX = x0 + (x1 - x0) * .42;
+    const ends = [-1, 0, 1];
+    ends.forEach((s, i) => {
+      const ey = y + s * 96, on = i === 2;
+      c.strokeStyle = on ? FUCHSIA : "rgba(255,255,255,.2)"; c.lineWidth = on ? 9 : 6;
+      c.beginPath(); c.moveTo(forkX, y);
+      c.bezierCurveTo(forkX + 70, y, x1 - 90, ey, x1, ey); c.stroke();
+      c.fillStyle = on ? FUCHSIA : "rgba(255,255,255,.22)";
+      c.beginPath(); c.arc(x1, ey, on ? 20 : 13, 0, 7); c.fill();
+      if (labels?.[i]) cap(c, labels[i], x1 - 92, ey - 28, 18, on ? PAPER : MUTED);
+    });
+    c.fillStyle = VIOLET; c.beginPath(); c.arc(x0, y, 15, 0, 7); c.fill();
+  },
+
+  /** A night of sleep as stacked cycles. */
+  sleep(c, b, { label }) {
+    const x0 = b.x + 40, x1 = b.x + b.w - 40, mid = b.y + b.h / 2;
+    c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = 2.5;
+    for (let i = 0; i < 4; i++) {
+      const yy = mid - 70 + i * 46;
+      c.beginPath(); c.moveTo(x0, yy); c.lineTo(x1, yy); c.stroke();
+    }
+    c.strokeStyle = PAPER; c.lineWidth = 5; c.lineJoin = "round"; c.beginPath();
+    for (let i = 0; i <= 240; i++) {
+      const t = i / 240, X = x0 + (x1 - x0) * t;
+      const depth = Math.sin(t * Math.PI * 4 - Math.PI / 2) * (1 - t * .45);
+      const Y = mid - 70 + (1 + depth) * 69;
+      i ? c.lineTo(X, Y) : c.moveTo(X, Y);
+    }
+    c.stroke();
+    const g = c.createLinearGradient(x0, 0, x1, 0);
+    g.addColorStop(0, VIOLET); g.addColorStop(1, FUCHSIA);
+    c.strokeStyle = g; c.lineWidth = 5; c.stroke();
+    if (label) cap(c, label, b.x + b.w / 2, b.y + b.h - 18, 21);
+  },
+
+  /** Clock near the final hour. */
+  clock(c, b) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2, R = Math.min(b.w, b.h) / 2 - 34;
+    c.strokeStyle = "rgba(255,255,255,.16)"; c.lineWidth = 11;
+    c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
+    c.strokeStyle = VIOLET; c.lineWidth = 11;
+    c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * .74); c.stroke();
+    c.strokeStyle = FUCHSIA; c.lineWidth = 17;
+    c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2 + Math.PI * 2 * .74, -Math.PI / 2 + Math.PI * 2); c.stroke();
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      c.strokeStyle = i % 3 === 0 ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.22)"; c.lineWidth = 4;
+      c.beginPath();
+      c.moveTo(cx + Math.sin(a) * (R - 34), cy - Math.cos(a) * (R - 34));
+      c.lineTo(cx + Math.sin(a) * (R - 54), cy - Math.cos(a) * (R - 54));
+      c.stroke();
+    }
+    c.strokeStyle = PAPER; c.lineWidth = 9; c.lineCap = "round";
+    c.beginPath(); c.moveTo(cx, cy);
+    c.lineTo(cx + Math.sin(Math.PI * 2 * .92) * (R - 70), cy - Math.cos(Math.PI * 2 * .92) * (R - 70)); c.stroke();
+    c.strokeStyle = FUCHSIA; c.lineWidth = 7;
+    c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx, cy + R - 100); c.stroke();
+    c.fillStyle = PAPER; c.beginPath(); c.arc(cx, cy, 14, 0, 7); c.fill();
+  },
+
+  /** Overlapping sets, for "what is the difference between" subjects. */
+  venn(c, b, { labels }) {
+    const cy = b.y + b.h / 2, R = Math.min(b.h / 2 - 34, 128);
+    const n = labels.length, step = R * 1.08;
+    const x0 = b.x + b.w / 2 - (step * (n - 1)) / 2;
+    c.globalCompositeOperation = "lighter";
+    labels.forEach((_, i) => {
+      c.fillStyle = i === 0 ? "rgba(236,72,153,.42)" : i === 1 ? "rgba(124,58,237,.46)" : "rgba(192,80,210,.40)";
+      c.beginPath(); c.arc(x0 + i * step, cy, R, 0, 7); c.fill();
+    });
+    c.globalCompositeOperation = "source-over";
+    labels.forEach((lab, i) => {
+      c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 3;
+      c.beginPath(); c.arc(x0 + i * step, cy, R, 0, 7); c.stroke();
+      cap(c, lab, x0 + i * step, cy + R + 40, 20, PAPER);
+    });
+  },
+
+  /** Stacked bricks, for habit/compounding subjects. */
+  bricks(c, b, { label }) {
+    const cols = 7, rows = 4, gx = 12, gy = 12;
+    const bw = (b.w - 120 - gx * (cols - 1)) / cols, bh = 40;
+    const x0 = b.x + 60, y0 = b.y + b.h / 2 - (rows * bh + (rows - 1) * gy) / 2 - 16;
+    for (let r = 0; r < rows; r++) for (let k = 0; k < cols - r; k++) {
+      c.fillStyle = mix(r / (rows - 1));
+      c.globalAlpha = .55 + .45 * (1 - r / rows);
+      roundRect(c, x0 + k * (bw + gx) + r * ((bw + gx) / 2), y0 + (rows - 1 - r) * (bh + gy), bw, bh, 10);
+      c.fill(); c.globalAlpha = 1;
+    }
+    if (label) cap(c, label, b.x + b.w / 2, b.y + b.h - 14, 21);
+  },
+};
+
+/* ───────────────────────── covers ─────────────────────────
+ * file -> { chip, title, fig }  (fig omitted = typographic cover)
+ * ───────────────────────────────────────────────────────── */
+
+const C = { psych: "علم النفس", pers: "الشخصية", iq: "الذكاء", career: "المسار المهني",
+            life: "نمط الحياة", rel: "العلاقات" };
+
+const COVERS = {
+  /* ── new articles ── */
+  "article-big-five": { chip: C.pers, title: "نموذج العوامل الخمسة الكبرى",
+    fig: ["radar", { labels: ["الانفتاح", "يقظة الضمير", "الانبساط", "الوداعة", "الحساسية"], values: [.92, .7, .84, .58, .76] }] },
+  "article-attachment": { chip: C.rel, title: "أنماط التعلق في العلاقات",
+    fig: ["plane", { axisX: "التجنّب", axisY: "القلق", quads: ["قلق", "مضطرب", "متجنّب", "آمن"], mark: 3 }] },
+  "article-barnum": { chip: C.psych, title: "لماذا تبدو نتيجة الاختبار دقيقة؟",
+    fig: ["grid", { rows: 4, cols: 4, highlight: 5, note: "الوصف نفسه يناسب الجميع" }] },
+  "article-emotional-intelligence": { chip: C.psych, title: "الذكاء العاطفي: ما يثبته البحث",
+    fig: ["rings", { labels: ["الإدراك", "الاستخدام", "الفهم", "التنظيم"] }] },
+  "article-burnout": { chip: C.life, title: "الاحتراق الوظيفي: الأعراض الثلاثة",
+    fig: ["bars", { labels: ["استنفاد الطاقة", "الابتعاد الذهني", "تراجع الكفاءة"], values: [.95, .66, .38] }] },
+  "article-procrastination": { chip: C.psych, title: "التسويف ليس مشكلة في إدارة الوقت",
+    fig: ["timeline", { marks: [.05, .18, .34, .5, .72, .78, .84, .89, .93], startLabel: "البداية", endLabel: "الموعد" }] },
+
+  /* ── new quizzes ── */
+  "quiz-big-five": { chip: C.pers, title: "اختبار العوامل الخمسة الكبرى",
+    fig: ["radar", { labels: ["الانفتاح", "يقظة الضمير", "الانبساط", "الوداعة", "الحساسية"], values: [.86, .95, .62, .78, .54] }] },
+  "quiz-attachment": { chip: C.rel, title: "اختبار نمط التعلق",
+    fig: ["plane", { axisX: "التجنّب", axisY: "القلق", quads: ["قلق", "مضطرب", "متجنّب", "آمن"], mark: 1 }] },
+  "quiz-burnout": { chip: C.career, title: "مقياس الاحتراق الوظيفي",
+    fig: ["scale", { labels: ["لا مؤشرات", "مبكر", "متوسط", "مرتفع"], mark: 2 }] },
+  "quiz-procrastination": { chip: C.pers, title: "ما مستوى التسويف لديك؟", fig: ["clock", {}] },
+  "quiz-emotional-intelligence": { chip: C.pers, title: "اختبار الذكاء العاطفي",
+    fig: ["rings", { labels: ["الإدراك", "الاستخدام", "الفهم", "التنظيم"] }] },
+
+  /* ── existing articles (replacing dead top4top links) ── */
+  "article-leadership": { chip: C.pers, title: "صفات الشخصية القيادية",
+    fig: ["radar", { labels: ["المبادرة", "الحسم", "الإنصات", "التفويض", "الاتزان"], values: [.9, .82, .6, .7, .76] }] },
+  "article-iq-guide": { chip: C.iq, title: "ما هو اختبار الذكاء وكيف يُقاس؟",
+    fig: ["bell", { label: "المتوسط 100 · انحراف معياري 15" }] },
+  "article-career-choice": { chip: C.career, title: "كيف تختار المهنة المناسبة لك؟",
+    fig: ["path", { labels: ["الميول", "المهارة", "السوق"] }] },
+  "article-sleep": { chip: C.life, title: "أهمية النوم الجيد وتأثيره على الصحة",
+    fig: ["sleep", { label: "دورات النوم عبر الليل" }] },
+  "article-personality-formation": { chip: C.pers, title: "كيف تتكون الشخصية؟",
+    fig: ["venn", { labels: ["الوراثة", "البيئة", "الخبرة"] }] },
+  "article-grief": { chip: C.psych, title: "كيف تتعامل مع الحزن؟",
+    fig: ["cycle", { labels: ["الصدمة", "الألم", "التكيّف", "الاستعادة"] }] },
+  "article-anger": { chip: C.psych, title: "كيف تتعامل مع الغضب؟",
+    fig: ["cycle", { labels: ["المثير", "التفسير", "الاستثارة", "الاستجابة"] }] },
+  "article-anxiety": { chip: C.psych, title: "القلق: أسبابه وأعراضه والتعامل معه",
+    fig: ["scale", { labels: ["منخفض", "خفيف", "متوسط", "مرتفع"], mark: 1 }] },
+  "article-loneliness": { chip: C.psych, title: "كيف تتخلص من الشعور بالوحدة؟",
+    fig: ["grid", { rows: 3, cols: 5, highlight: 7, note: "الوحدة شعور لا عدد" }] },
+  "article-habits": { chip: C.psych, title: "كيف تبني عادات تدوم؟",
+    fig: ["bricks", { label: "التكرار يبني الأثر" }] },
+  "article-fear-failure": { chip: C.pers, title: "لماذا نخاف من الفشل؟",
+    fig: ["balance", { left: "كلفة المحاولة", right: "كلفة التجنّب", tilt: -.14 }] },
+  "article-overthinking": { chip: C.psych, title: "كيف تتوقف عن التفكير الزائد؟",
+    fig: ["cycle", { labels: ["فكرة", "اجترار", "قلق", "تجنّب"] }] },
+  "article-forgiveness": { chip: C.life, title: "لماذا يصعب علينا مسامحة الآخرين؟",
+    fig: ["balance", { left: "الاحتفاظ", right: "المسامحة", tilt: .1 }] },
+  "article-love-attachment": { chip: C.rel, title: "الفرق بين الحب والتعلق والإعجاب",
+    fig: ["venn", { labels: ["الإعجاب", "الحب", "التعلق"] }] },
+
+  /* ── existing quizzes ── */
+  "quiz-iq": { chip: C.iq, title: "اختبر مستوى ذكائك IQ", fig: ["bell", { label: "أين تقع درجتك؟" }] },
+  "quiz-emotional-age": { chip: C.pers, title: "ما هو العمر العاطفي لشخصيتك؟",
+    fig: ["scale", { labels: ["١٢–١٦", "١٧–٢٤", "٢٥–٣٥", "+٣٥"], mark: 2 }] },
+  "quiz-anxiety": { chip: C.psych, title: "هل تعاني من القلق؟",
+    fig: ["scale", { labels: ["منخفض", "خفيف", "متوسط", "مرتفع"], mark: 1 }] },
+  "quiz-love-language": { chip: C.rel, title: "ما لغة الحب الخاصة بك؟",
+    fig: ["radar", { labels: ["الكلمات", "الوقت", "الهدايا", "الخدمة", "اللمس"], values: [.92, .74, .5, .66, .58] }] },
+  "quiz-energy-drain": { chip: C.pers, title: "ما الذي يستنزف طاقتك النفسية؟",
+    fig: ["battery", { level: .34, label: "ما المتبقي من طاقتك؟" }] },
+  "quiz-stubbornness": { chip: C.pers, title: "ما نسبة العناد لديك؟",
+    fig: ["gauge", { pct: .7, label: "التمسّك بالرأي" }] },
+  "quiz-job-readiness": { chip: C.career, title: "اكتشف نسبة جاهزيتك لسوق العمل",
+    fig: ["gauge", { pct: .62, label: "الجاهزية للعمل" }] },
+  "quiz-personality-parts": { chip: C.pers, title: "مم تتكون شخصيتك؟",
+    fig: ["radar", { labels: ["المنطق", "العاطفة", "الفضول", "الطموح", "الكرم", "الهدوء"], values: [.9, .66, .82, .74, .58, .7] }] },
+  "quiz-cognitive-bias": { chip: C.pers, title: "كم مرة يخدعك عقلك؟",
+    fig: ["grid", { rows: 3, cols: 5, highlight: 8, note: "الانحياز يعمل دون أن تلاحظه" }] },
+  "quiz-color": { chip: C.pers, title: "ما اللون الذي يكشف أسرار شخصيتك؟",
+    fig: ["swatches", { colors: ["#3b82f6", "#ef4444", "#eab308", "#22c55e"], labels: ["الأزرق", "الأحمر", "الأصفر", "الأخضر"] }] },
+  "quiz-engineer": { chip: C.career, title: "هل تصلح لتكون مهندسًا؟",
+    fig: ["path", { labels: ["التحليل", "التصميم", "التنفيذ"] }] },
+  "quiz-manager": { chip: C.career, title: "هل تصلح أن تكون مديرًا؟",
+    fig: ["radar", { labels: ["القرار", "التفويض", "الإنصات", "التحفيز"], values: [.88, .6, .74, .8] }] },
+  "quiz-animal": { chip: C.pers, title: "ما الحيوان الذي يشبه شخصيتك؟",
+    fig: ["radar", { labels: ["الجرأة", "التحليل", "الاجتماعية", "الاستقلال", "الوفاء", "الاتزان"], values: [.86, .7, .9, .62, .78, .56] }] },
+};
+
+/* ───────────────────────── render ───────────────────────── */
+
+function draw(c, spec) {
+  field(c, (spec.title.length * 7) % 90);
+  const right = W - 56;
+  chip(c, spec.chip, right, 52);
+  const titleBottom = title(c, spec.title, right, 128, spec.fig ? 540 : 900, spec.fig ? 50 : 62);
+  wordmark(c);
+  if (!spec.fig) return;
+  const [kind, opts] = spec.fig;
+  const box = { x: 56, y: 118, w: W - 540 - 110, h: H - 190 };
+  c.save(); FIG[kind](c, box, opts); c.restore();
+  // Hairline separating the figure from the text column.
+  c.strokeStyle = "rgba(255,255,255,.10)"; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(W - 596, 118); c.lineTo(W - 596, H - 72); c.stroke();
+  void titleBottom;
+}
+
+async function renderAll(only) {
+  await document.fonts.load("800 54px Cairo");
+  await document.fonts.load("600 20px Cairo");
+  await document.fonts.ready;
+  const stage = document.getElementById("stage");
+  stage.innerHTML = "";
+  const names = only ? [only] : Object.keys(COVERS);
+  let n = 0;
+  for (const name of names) {
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H; stage.appendChild(cv);
+    draw(cv.getContext("2d"), COVERS[name]);
+    const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+    await fetch("/save/" + name + ".png", { method: "POST", body: blob });
+    n++;
+    document.getElementById("log").textContent = `${n}/${names.length} ${name}`;
+  }
+  return { rendered: n, font: document.fonts.check("800 54px Cairo") };
+}
+window.renderAll = renderAll;
+window.COVERS = COVERS;
+</script>
+</body>
+</html>
