@@ -28,6 +28,7 @@ const S = "https://www.al-maarefah.com";
 const ARTICLES: NewArticle[] = [
   {
     slug: "نموذج-العوامل-الخمسة-الكبرى",
+    image: "/thumbnails/article-big-five.png",
     title: "نموذج العوامل الخمسة الكبرى: نموذج الشخصية الذي يستخدمه الباحثون فعلًا",
     category: "Personality",
     excerpt:
@@ -132,6 +133,7 @@ const ARTICLES: NewArticle[] = [
 
   {
     slug: "انماط-التعلق-في-العلاقات",
+    image: "/thumbnails/article-attachment.png",
     title: "أنماط التعلق في العلاقات: ما يقوله البحث فعلًا عن الآمن والقلق والمتجنب",
     category: "Psychology",
     excerpt:
@@ -231,6 +233,7 @@ const ARTICLES: NewArticle[] = [
 
   {
     slug: "لماذا-تبدو-نتائج-اختبارات-الشخصية-دقيقة",
+    image: "/thumbnails/article-barnum.png",
     title: "لماذا تبدو نتيجة اختبار الشخصية دقيقة جدًا؟ أثر بارنوم",
     category: "Psychology",
     excerpt:

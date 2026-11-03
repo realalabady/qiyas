@@ -44,6 +44,7 @@ const branch = (id: string): NewQuizAnswer[] => [
 const QUIZZES: NewQuiz[] = [
   {
     slug: "مقياس-الاحتراق-الوظيفي",
+    thumbnail: "/thumbnails/quiz-burnout.png",
     title: "مقياس الاحتراق الوظيفي: الأعراض الثلاثة، لا التعب وحده",
     category: "Career Tests",
     description:
@@ -168,6 +169,7 @@ const QUIZZES: NewQuiz[] = [
 
   {
     slug: "مستوى-التسويف-لديك",
+    thumbnail: "/thumbnails/quiz-procrastination.png",
     title: "ما مستوى التسويف لديك؟ وأي سبب يقف خلفه؟",
     category: "Personality Tests",
     description:
@@ -281,6 +283,7 @@ const QUIZZES: NewQuiz[] = [
 
   {
     slug: "اختبار-الذكاء-العاطفي",
+    thumbnail: "/thumbnails/quiz-emotional-intelligence.png",
     title: "اختبار الذكاء العاطفي: أي المهارات الأربع أقوى عندك؟",
     category: "Personality Tests",
     description:

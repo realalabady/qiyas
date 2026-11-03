@@ -58,6 +58,8 @@ export interface NewArticle {
   category: string;
   tags?: string[];
   faq?: { question: string; answer: string }[];
+  /** Path under public/, e.g. "/thumbnails/article-big-five.png". */
+  image?: string;
   /** ISO date. Defaults to now. */
   publishedAt?: string;
 }
@@ -96,6 +98,8 @@ export interface NewQuiz {
   quizType: "weighted_personality" | "score_based" | "personality_based" | "percentage_matching";
   questions: NewQuizQuestion[];
   results: NewQuizResult[];
+  /** Path under public/, e.g. "/thumbnails/quiz-big-five.png". */
+  thumbnail?: string;
   publishedAt?: string;
 }
 
@@ -207,7 +211,7 @@ export async function runAddArticles(
         // in one place rather than baked into every document.
         author: "Admin",
         tags: a.tags ?? [],
-        image: "",
+        image: a.image ?? "",
         published: true,
         ...(a.faq?.length ? { faq: a.faq } : {}),
         views: 0,
@@ -286,7 +290,7 @@ export async function runAddQuizzes(
         description: q.description,
         longDescription: q.longDescription,
         category: q.category,
-        thumbnail: "",
+        thumbnail: q.thumbnail ?? "",
         seoTitle: q.seoTitle,
         seoDescription: q.seoDescription,
         quizType: q.quizType,
