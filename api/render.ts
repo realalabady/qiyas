@@ -49,20 +49,68 @@ const SITE_TAGLINE =
 let shellCache: string | null = null;
 
 /**
+ * Does this look like our built SPA shell, rather than something that merely
+ * answered with 200?
+ *
+ * This check exists because of a real incident. The shell is fetched over HTTP
+ * from the function back to its own public domain, and Vercel's bot protection
+ * answered that internal request with its own challenge page — a Next.js
+ * document carrying the Kasada SDK and a "Log in to Vercel" form. That reply
+ * is a 200, so `res.ok` was true, the page was cached in `shellCache` for the
+ * life of the warm instance, and `render()` dutifully injected our title and
+ * `<html lang="ar">` into Vercel's login page and served it to visitors.
+ *
+ * So a 200 is not evidence of anything. The body has to carry our own
+ * fingerprints: the React mount point and a hashed asset from our build, and
+ * none of Next.js's.
+ */
+function looksLikeShell(html: string): boolean {
+  return (
+    html.includes('id="root"') &&
+    html.includes("/assets/") &&
+    !html.includes("/_next/")
+  );
+}
+
+/**
  * Fetch the built SPA shell.
  *
  * The build emits it as `app.html`, not `index.html`, so that no file sits at
  * `/` — Vercel checks the filesystem before rewrites, and an `index.html`
  * would shadow the homepage rewrite. See the plugin in vite.config.ts.
+ *
+ * Fails closed. If what comes back is not our shell, this throws rather than
+ * returning it, which lands in the caller's catch and produces a 503 with
+ * `no-store`. That matters: a successful render is sent with `s-maxage=60`, so
+ * serving a bad shell even once would put it in the CDN for every visitor.
+ * A 503 is retried; a cached login page is not.
  */
 async function getShell(origin: string): Promise<string> {
   if (shellCache) return shellCache;
-  const res = await fetch(`${origin}/app.html`, {
-    headers: { "x-ssr-shell": "1" },
-  });
-  if (!res.ok) throw new Error(`shell fetch failed: ${res.status} ${origin}/app.html`);
-  shellCache = await res.text();
-  return shellCache;
+
+  let last = "";
+  // Two attempts: the challenge is not served to every request, so a single
+  // bad reply should not take the instance down.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const url = `${origin}/app.html${attempt ? `?r=${attempt}` : ""}`;
+    const res = await fetch(url, {
+      headers: { "x-ssr-shell": "1", "cache-control": "no-cache" },
+    });
+    if (!res.ok) {
+      last = `status ${res.status}`;
+      continue;
+    }
+    const html = await res.text();
+    if (looksLikeShell(html)) {
+      shellCache = html;
+      return shellCache;
+    }
+    last = html.includes("/_next/")
+      ? "got an interstitial (Vercel challenge or login page), not the app shell"
+      : "response did not contain the app shell markers";
+  }
+
+  throw new Error(`shell fetch failed for ${origin}/app.html: ${last}`);
 }
 
 const absoluteImage = (
