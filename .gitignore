@@ -27,3 +27,7 @@ firebase-export-*/
 *.njsproj
 *.sln
 *.sw?
+
+# Stock photographs fed to the cover studio. The composited PNGs in
+# public/thumbnails are what ships; manifest.json keeps their provenance.
+scripts/thumbnail-studio/photos/*.jpg

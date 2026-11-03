@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Cover studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background:#0b0712; color:#eee; font-family:Cairo,system-ui,sans-serif; margin:0; padding:24px; }
+  #stage { display:grid; grid-template-columns:repeat(2,600px); gap:16px; }
+  canvas { width:600px; height:315px; border-radius:10px; }
+  #log { position:fixed; inset:auto 24px 24px auto; background:#1a0f2e; padding:10px 16px; border-radius:8px; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="log">idle</div>
+<div id="stage"></div>
+<script>
+/*
+ * Photographic covers: a licensed photograph under an Arabic headline.
+ *
+ * The flat geometric covers this replaces read as decoration sitting on an
+ * empty field — a small diagram in a lot of dark space. These are built the
+ * way an editorial cover is: the photograph is full-bleed, the headline is
+ * large enough to read at card size, and a line of subject icons runs along
+ * the foot.
+ *
+ * Eleven unrelated stock photographs would otherwise look like eleven
+ * unrelated covers, so every one goes through the same grade — luminance
+ * preserved, hue pulled toward the brand violet, ink scrim on the text side,
+ * grain and vignette over the top. That is what makes them one set.
+ *
+ * Backgrounds come from scripts/fetch-cover-photos.mjs; run that first.
+ */
+
+const W = 1200, H = 630;
+const INK = "#0b0712", PAPER = "#ffffff";
+const FUCHSIA = "#ec4899", VIOLET = "#7c3aed";
+
+/* ───────────────────────── photo grade ───────────────────────── */
+
+/** Draw `img` to fill WxH without distortion (object-fit: cover). */
+function coverDraw(c, img) {
+  const s = Math.max(W / img.width, H / img.height);
+  const w = img.width * s, h = img.height * s;
+  // Bias the crop upward: faces and skylines sit in the top half far more
+  // often than the bottom, and the foot of the frame is covered by the scrim.
+  c.drawImage(img, (W - w) / 2, (H - h) * 0.38, w, h);
+}
+
+let grainPattern = null;
+function grain(c) {
+  if (!grainPattern) {
+    const t = document.createElement("canvas");
+    t.width = t.height = 160;
+    const tc = t.getContext("2d");
+    const d = tc.createImageData(160, 160);
+    for (let i = 0; i < d.data.length; i += 4) {
+      const v = 110 + Math.random() * 90;
+      d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
+      d.data[i + 3] = 255;
+    }
+    tc.putImageData(d, 0, 0);
+    grainPattern = c.createPattern(t, "repeat");
+  }
+  c.save();
+  c.globalCompositeOperation = "overlay";
+  c.globalAlpha = 0.055;
+  c.fillStyle = grainPattern;
+  c.fillRect(0, 0, W, H);
+  c.restore();
+}
+
+/**
+ * One grade for all eleven. `color` keeps the photograph's luminance and
+ * replaces its hue, which is what stops a warm café shot and a cold office
+ * shot from looking like they came off different sites.
+ */
+function grade(c) {
+  c.save();
+
+  c.globalCompositeOperation = "color";
+  c.globalAlpha = 0.42;
+  const tint = c.createLinearGradient(W, 0, 0, H);
+  tint.addColorStop(0, VIOLET);
+  tint.addColorStop(1, "#5b21b6");
+  c.fillStyle = tint;
+  c.fillRect(0, 0, W, H);
+
+  c.globalCompositeOperation = "multiply";
+  c.globalAlpha = 0.30;
+  c.fillStyle = "#2a1248";
+  c.fillRect(0, 0, W, H);
+
+  c.restore();
+
+  // Ink scrim under the text column. RTL, so it is heaviest on the right.
+  const scrim = c.createLinearGradient(W, 0, W * 0.18, 0);
+  scrim.addColorStop(0, "rgba(9,5,16,.94)");
+  scrim.addColorStop(0.42, "rgba(9,5,16,.80)");
+  scrim.addColorStop(0.78, "rgba(9,5,16,.34)");
+  scrim.addColorStop(1, "rgba(9,5,16,.10)");
+  c.fillStyle = scrim;
+  c.fillRect(0, 0, W, H);
+
+  // Foot scrim, so the icon row reads against any photograph.
+  const foot = c.createLinearGradient(0, H, 0, H - 240);
+  foot.addColorStop(0, "rgba(9,5,16,.92)");
+  foot.addColorStop(1, "transparent");
+  c.fillStyle = foot;
+  c.fillRect(0, H - 240, W, 240);
+
+  // Vignette.
+  const vig = c.createRadialGradient(W / 2, H / 2, H * 0.30, W / 2, H / 2, W * 0.78);
+  vig.addColorStop(0, "transparent");
+  vig.addColorStop(1, "rgba(0,0,0,.55)");
+  c.fillStyle = vig;
+  c.fillRect(0, 0, W, H);
+
+  // A single accent bloom keeps the brand colour present in every frame.
+  const bloom = c.createRadialGradient(150, 120, 0, 150, 120, 520);
+  bloom.addColorStop(0, FUCHSIA);
+  bloom.addColorStop(1, "transparent");
+  c.save();
+  c.globalCompositeOperation = "screen";
+  c.globalAlpha = 0.16;
+  c.fillStyle = bloom;
+  c.fillRect(0, 0, W, H);
+  c.restore();
+
+  grain(c);
+}
+
+/* ───────────────────────── chrome ───────────────────────── */
+
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+
+function chip(c, text, right, y) {
+  c.font = "700 27px Cairo, sans-serif";
+  c.direction = "rtl"; c.textAlign = "right";
+  const w = c.measureText(text).width + 46, h = 50;
+  c.fillStyle = "rgba(12,6,20,.62)";
+  roundRect(c, right - w, y, w, h, 25); c.fill();
+  c.strokeStyle = "rgba(249,168,212,.55)"; c.lineWidth = 2; c.stroke();
+  c.fillStyle = "#fbcfe8";
+  c.fillText(text, right - 23, y + 35);
+}
+
+/** Wrap to at most `maxLines`, shrinking the type until it fits. */
+function fitLines(c, text, weight, maxW, maxLines, from, to) {
+  for (let size = from; size >= to; size -= 2) {
+    c.font = `${weight} ${size}px Cairo, sans-serif`;
+    const lines = [];
+    let line = "";
+    for (const word of text.split(/\s+/)) {
+      const t = line ? line + " " + word : word;
+      if (c.measureText(t).width > maxW && line) { lines.push(line); line = word; }
+      else line = t;
+    }
+    if (line) lines.push(line);
+    if (lines.length <= maxLines) return { size, lines };
+  }
+  c.font = `${weight} ${to}px Cairo, sans-serif`;
+  return { size: to, lines: [text] };
+}
+
+/* ───────────────────────── subject icons ─────────────────────────
+ * Stroked in a 0..100 box so one call can place any of them. They name the
+ * subject of the piece rather than dressing the frame: the burnout covers
+ * carry a flame, a battery and a clock because that is what the article is
+ * about.
+ * ───────────────────────────────────────────────────────────────── */
+
+const ICON = {
+  brain(c) {
+    c.beginPath();
+    c.moveTo(50, 12); c.bezierCurveTo(26, 12, 14, 28, 20, 42);
+    c.bezierCurveTo(8, 54, 18, 74, 34, 74); c.bezierCurveTo(36, 88, 62, 90, 66, 76);
+    c.bezierCurveTo(86, 76, 94, 56, 82, 44); c.bezierCurveTo(90, 28, 74, 12, 50, 12);
+    c.closePath(); c.stroke();
+    c.beginPath(); c.moveTo(50, 14); c.lineTo(50, 84); c.stroke();
+    c.beginPath(); c.moveTo(50, 36); c.lineTo(32, 46); c.stroke();
+    c.beginPath(); c.moveTo(50, 58); c.lineTo(70, 66); c.stroke();
+  },
+  heart(c) {
+    c.beginPath();
+    c.moveTo(50, 84);
+    c.bezierCurveTo(6, 56, 14, 20, 34, 20); c.bezierCurveTo(44, 20, 50, 30, 50, 34);
+    c.bezierCurveTo(50, 30, 56, 20, 66, 20); c.bezierCurveTo(86, 20, 94, 56, 50, 84);
+    c.closePath(); c.stroke();
+  },
+  link(c) {
+    c.beginPath(); c.arc(34, 50, 20, Math.PI * 0.5, Math.PI * 1.5); c.stroke();
+    c.beginPath(); c.arc(66, 50, 20, Math.PI * 1.5, Math.PI * 0.5); c.stroke();
+    c.beginPath(); c.moveTo(34, 30); c.lineTo(58, 30); c.stroke();
+    c.beginPath(); c.moveTo(34, 70); c.lineTo(58, 70); c.stroke();
+  },
+  clock(c) {
+    c.beginPath(); c.arc(50, 52, 36, 0, 7); c.stroke();
+    c.beginPath(); c.moveTo(50, 30); c.lineTo(50, 54); c.lineTo(68, 62); c.stroke();
+  },
+  flame(c) {
+    c.beginPath();
+    c.moveTo(50, 10); c.bezierCurveTo(74, 34, 82, 50, 82, 60);
+    c.bezierCurveTo(82, 78, 68, 90, 50, 90); c.bezierCurveTo(32, 90, 18, 78, 18, 60);
+    c.bezierCurveTo(18, 48, 28, 40, 36, 52); c.bezierCurveTo(38, 34, 44, 22, 50, 10);
+    c.closePath(); c.stroke();
+  },
+  battery(c) {
+    roundRect(c, 12, 32, 68, 40, 8); c.stroke();
+    c.beginPath(); c.moveTo(86, 44); c.lineTo(86, 60); c.stroke();
+    c.fillStyle = c.strokeStyle;
+    roundRect(c, 20, 40, 20, 24, 4); c.fill();
+  },
+  target(c) {
+    for (const r of [36, 22, 8]) { c.beginPath(); c.arc(50, 50, r, 0, 7); c.stroke(); }
+  },
+  users(c) {
+    c.beginPath(); c.arc(38, 36, 15, 0, 7); c.stroke();
+    c.beginPath(); c.arc(70, 40, 11, 0, 7); c.stroke();
+    c.beginPath(); c.moveTo(14, 82); c.bezierCurveTo(14, 60, 62, 60, 62, 82); c.stroke();
+    c.beginPath(); c.moveTo(66, 82); c.bezierCurveTo(66, 66, 92, 64, 92, 82); c.stroke();
+  },
+  eye(c) {
+    c.beginPath();
+    c.moveTo(8, 50); c.bezierCurveTo(28, 22, 72, 22, 92, 50);
+    c.bezierCurveTo(72, 78, 28, 78, 8, 50); c.closePath(); c.stroke();
+    c.beginPath(); c.arc(50, 50, 14, 0, 7); c.stroke();
+  },
+  compass(c) {
+    c.beginPath(); c.arc(50, 50, 38, 0, 7); c.stroke();
+    c.beginPath();
+    c.moveTo(66, 34); c.lineTo(56, 56); c.lineTo(34, 66); c.lineTo(44, 44);
+    c.closePath(); c.stroke();
+  },
+  chart(c) {
+    c.beginPath(); c.moveTo(14, 86); c.lineTo(86, 86); c.stroke();
+    c.fillStyle = c.strokeStyle;
+    roundRect(c, 20, 56, 16, 26, 3); c.fill();
+    roundRect(c, 42, 36, 16, 46, 3); c.fill();
+    roundRect(c, 64, 20, 16, 62, 3); c.fill();
+  },
+  scale(c) {
+    c.beginPath(); c.moveTo(50, 14); c.lineTo(50, 86); c.stroke();
+    c.beginPath(); c.moveTo(14, 30); c.lineTo(86, 24); c.stroke();
+    c.beginPath(); c.arc(16, 30, 14, 0, Math.PI); c.stroke();
+    c.beginPath(); c.arc(84, 24, 14, 0, Math.PI); c.stroke();
+    c.beginPath(); c.moveTo(32, 86); c.lineTo(68, 86); c.stroke();
+  },
+  spark(c) {
+    c.beginPath();
+    c.moveTo(50, 8); c.lineTo(60, 40); c.lineTo(92, 50); c.lineTo(60, 60);
+    c.lineTo(50, 92); c.lineTo(40, 60); c.lineTo(8, 50); c.lineTo(40, 40);
+    c.closePath(); c.stroke();
+  },
+  grid(c) {
+    for (let r = 0; r < 3; r++)
+      for (let k = 0; k < 3; k++) {
+        roundRect(c, 14 + k * 26, 20 + r * 26, 18, 18, 4);
+        if (r === 1 && k === 1) { c.fillStyle = c.strokeStyle; c.fill(); } else c.stroke();
+      }
+  },
+};
+
+/** The icon strip along the foot of the frame. */
+function iconRow(c, names, left, y) {
+  const size = 40, gap = 30;
+  let x = left;
+  names.forEach((n, i) => {
+    if (i) {
+      c.strokeStyle = "rgba(255,255,255,.20)"; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(x - gap / 2, y - 4); c.lineTo(x - gap / 2, y + size + 4); c.stroke();
+    }
+    c.save();
+    c.translate(x, y);
+    c.scale(size / 100, size / 100);
+    c.strokeStyle = "rgba(255,255,255,.80)";
+    c.lineWidth = 6;
+    c.lineJoin = "round";
+    c.lineCap = "round";
+    ICON[n](c);
+    c.restore();
+    x += size + gap;
+  });
+}
+
+/* ───────────────────────── covers ───────────────────────── */
+
+const C = { psych: "علم النفس", pers: "الشخصية", career: "المسار المهني",
+            life: "نمط الحياة", rel: "العلاقات" };
+
+const COVERS = {
+  "article-big-five": {
+    chip: C.pers,
+    title: "نموذج العوامل الخمسة الكبرى",
+    sub: "أكثر نماذج الشخصية دعمًا بالبحث — خمسة أبعاد تفسّر الفروق بين الناس",
+    icons: ["brain", "chart", "users", "target"],
+  },
+  "article-attachment": {
+    chip: C.rel,
+    title: "أنماط التعلق في العلاقات",
+    sub: "كيف تشكّل علاقاتك المبكرة طريقة ارتباطك بالآخرين اليوم",
+    icons: ["heart", "link", "users", "compass"],
+  },
+  "article-barnum": {
+    chip: C.psych,
+    title: "لماذا تبدو نتائج اختبارات الشخصية دقيقة؟",
+    sub: "أثر بارنوم: وصف عام يظنّ كل قارئ أنه كُتب عنه وحده",
+    icons: ["eye", "grid", "users", "spark"],
+  },
+  "article-emotional-intelligence": {
+    chip: C.psych,
+    title: "الذكاء العاطفي: ما الذي يثبته البحث؟",
+    sub: "أربع قدرات قابلة للقياس — وما تقوله الدراسات عن حدودها",
+    icons: ["heart", "brain", "users", "chart"],
+  },
+  "article-burnout": {
+    chip: C.life,
+    title: "الاحتراق الوظيفي: الأعراض والتعامل",
+    sub: "ثلاثة أبعاد تعرّفها منظمة الصحة العالمية — وما الذي يفيد فعلًا",
+    icons: ["flame", "battery", "clock", "chart"],
+  },
+  "article-procrastination": {
+    chip: C.psych,
+    title: "التسويف: لماذا نؤجل وكيف نتوقف؟",
+    sub: "ليس مشكلة في إدارة الوقت، بل هروب من شعور تثيره المهمة",
+    icons: ["clock", "brain", "target", "spark"],
+  },
+
+  "quiz-big-five": {
+    chip: C.pers,
+    title: "اختبار العوامل الخمسة الكبرى",
+    sub: "عبارات تقيس أبعادك الخمسة وتعطيك ملفًا شخصيًا مفصّلًا",
+    icons: ["brain", "chart", "target", "spark"],
+  },
+  "quiz-attachment": {
+    chip: C.rel,
+    title: "اختبار نمط التعلق",
+    sub: "آمن، قلق، متجنّب أو مضطرب — اعرف كيف ترتبط بمن حولك",
+    icons: ["heart", "link", "compass", "users"],
+  },
+  "quiz-burnout": {
+    chip: C.career,
+    title: "مقياس الاحتراق الوظيفي",
+    sub: "قِس أبعاد الاحتراق الثلاثة واعرف أين تقف اليوم",
+    icons: ["flame", "battery", "clock", "scale"],
+  },
+  "quiz-procrastination": {
+    chip: C.pers,
+    title: "ما مستوى التسويف لديك؟",
+    sub: "اثنا عشر سؤالًا تقيس مقدار تأجيلك — ونتيجة تشرح السبب",
+    icons: ["clock", "target", "brain", "spark"],
+  },
+  "quiz-emotional-intelligence": {
+    chip: C.pers,
+    title: "اختبار الذكاء العاطفي",
+    sub: "قدرتك على إدراك المشاعر وفهمها وتنظيمها في مواقف واقعية",
+    icons: ["heart", "brain", "eye", "users"],
+  },
+};
+
+/* ───────────────────────── render ───────────────────────── */
+
+function draw(c, spec, img) {
+  c.clearRect(0, 0, W, H);
+  if (img) coverDraw(c, img);
+  else { c.fillStyle = INK; c.fillRect(0, 0, W, H); }
+  grade(c);
+
+  const right = W - 64, maxW = 660;
+  chip(c, spec.chip, right, 54);
+
+  c.direction = "rtl";
+  c.textAlign = "right";
+
+  // The block is laid out upward from a fixed floor rather than down from a
+  // fixed ceiling, so a long headline can never push the standfirst into the
+  // icon row. Within that, the headline takes the largest size that still
+  // clears the chip.
+  //
+  // The gaps are measured, not assumed. Arabic descenders (ق, ج, ؟) drop far
+  // below the baseline and vary line by line, so a fixed offset put the accent
+  // rule through the headline on five of the eleven covers.
+  const FLOOR = 470, CEILING = 124;
+  const s = fitLines(c, spec.sub, 600, maxW, 2, 30, 24);
+  const subFirst = FLOOR - (s.lines.length - 1) * s.size * 1.45;
+  const ruleY = subFirst - s.size - 30;
+
+  let t = null, titleFirst = 0;
+  for (let cap = 70; cap >= 40; cap -= 2) {
+    const trial = fitLines(c, spec.title, 900, maxW, 3, cap, cap);
+    if (trial.lines.length > 3) continue;
+    c.font = `900 ${cap}px Cairo, sans-serif`;
+    const m = trial.lines.map((l) => c.measureText(l));
+    const descent = Math.max(...m.map((x) => x.actualBoundingBoxDescent));
+    const ascent = Math.max(...m.map((x) => x.actualBoundingBoxAscent));
+    const first = ruleY - 16 - descent - (trial.lines.length - 1) * cap * 1.32;
+    if (first - ascent >= CEILING || cap === 40) { t = trial; titleFirst = first; break; }
+  }
+
+  c.save();
+  c.shadowColor = "rgba(0,0,0,.65)";
+  c.shadowBlur = 26;
+  c.fillStyle = PAPER;
+  c.font = `900 ${t.size}px Cairo, sans-serif`;
+  let y = titleFirst;
+  for (const line of t.lines) { c.fillText(line, right, y); y += t.size * 1.32; }
+  c.restore();
+
+  // Accent rule between headline and standfirst, hung on the right margin.
+  const rule = c.createLinearGradient(right, 0, right - 150, 0);
+  rule.addColorStop(0, FUCHSIA);
+  rule.addColorStop(1, "rgba(236,72,153,0)");
+  c.fillStyle = rule;
+  c.fillRect(right - 150, ruleY, 150, 5);
+
+  c.save();
+  c.shadowColor = "rgba(0,0,0,.6)";
+  c.shadowBlur = 16;
+  c.fillStyle = "rgba(255,255,255,.80)";
+  c.font = `600 ${s.size}px Cairo, sans-serif`;
+  let sy = subFirst;
+  for (const line of s.lines) { c.fillText(line, right, sy); sy += s.size * 1.45; }
+  c.restore();
+
+  iconRow(c, spec.icons, 64, H - 112);
+
+  c.font = "700 25px Cairo, sans-serif";
+  c.textAlign = "right";
+  c.fillStyle = "rgba(255,255,255,.55)";
+  c.fillText("المعرفة", right, H - 44);
+}
+
+function loadPhoto(name) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `/photos/${name}.jpg?v=${Date.now()}`;
+  });
+}
+
+async function renderAll(only) {
+  await document.fonts.load("900 70px Cairo");
+  await document.fonts.load("600 30px Cairo");
+  await document.fonts.load("700 27px Cairo");
+  await document.fonts.ready;
+
+  const stage = document.getElementById("stage");
+  stage.innerHTML = "";
+  const names = only ? (Array.isArray(only) ? only : [only]) : Object.keys(COVERS);
+  const missing = [];
+  let n = 0;
+
+  for (const name of names) {
+    const img = await loadPhoto(name);
+    if (!img) missing.push(name);
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    stage.appendChild(cv);
+    draw(cv.getContext("2d"), COVERS[name], img);
+    const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+    const res = await fetch("/save/" + name + ".png", { method: "POST", body: blob });
+    if (!res.ok) missing.push(name + " (save failed)");
+    n++;
+    document.getElementById("log").textContent = `${n}/${names.length} ${name}`;
+  }
+  return { rendered: n, missingPhotos: missing, font: document.fonts.check("900 70px Cairo") };
+}
+/** Draw to the page without writing anything, for checking layout. */
+async function preview(only) {
+  await document.fonts.ready;
+  const stage = document.getElementById("stage");
+  stage.innerHTML = "";
+  const names = only ? (Array.isArray(only) ? only : [only]) : Object.keys(COVERS);
+  for (const name of names) {
+    const img = await loadPhoto(name);
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    stage.appendChild(cv);
+    draw(cv.getContext("2d"), COVERS[name], img);
+  }
+  document.getElementById("log").textContent = `preview ${names.length}`;
+  return names.length;
+}
+window.preview = preview;
+window.renderAll = renderAll;
+window.COVERS = COVERS;
+</script>
+</body>
+</html>

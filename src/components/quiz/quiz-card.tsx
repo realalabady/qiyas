@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Clock, Users, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Badge } from "@/components/ui/badge";
@@ -85,10 +85,6 @@ export function QuizCard({ quiz, loading = false }: QuizCardProps) {
                 <span className="flex items-center gap-1">
                   <Clock className="size-3" />
                   {quiz.estimatedMinutes}m
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="size-3" />
-                  {quiz.completions.toLocaleString()}
                 </span>
               </div>
               <span className="flex items-center gap-0.5 text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">

@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from "react";
-import { displayAuthor } from "@/lib/authors";
 import { Link, useSearchParams } from "react-router-dom";
 import { useArticles } from "@/stores/articles-store";
 import { Card } from "@/components/ui/card";
@@ -151,12 +150,6 @@ export function ArticlesPage() {
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">
                       {article.excerpt}
                     </p>
-
-                    {/* Meta */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{displayAuthor(article.author, language)}</span>
-                      <span>{article.views.toLocaleString()} {t("articles.views_suffix")}</span>
-                    </div>
 
                     {/* Read More */}
                     <div className="mt-4 inline-flex items-center gap-2 text-sm text-primary group/btn">

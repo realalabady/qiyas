@@ -21,7 +21,15 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(process.cwd(), "public", "thumbnails");
 fs.mkdirSync(OUT, { recursive: true });
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
+const TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+};
 
 http
   .createServer((req, res) => {

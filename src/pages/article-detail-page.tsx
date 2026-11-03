@@ -5,9 +5,6 @@ import {
   ArrowLeft,
   Share2,
   Check,
-  User,
-  CalendarDays,
-  RefreshCw,
   Clock,
   ListTree,
 } from "lucide-react";
@@ -27,7 +24,6 @@ import { setSEOMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/content/breadcrumbs";
 import { ArticleBody, extractHeadings } from "@/components/content/article-body";
 import { ContentDisclaimer } from "@/components/content/content-disclaimer";
-import { displayAuthor, isTeamByline } from "@/lib/authors";
 import { ContentRail } from "@/components/content/content-rail";
 import { ArticleCard } from "@/components/content/article-card";
 import { QuizRailCard } from "@/components/content/quiz-rail-card";
@@ -105,23 +101,6 @@ export function ArticleDetailPage() {
     );
   }
 
-  const locale = language === "ar" ? "ar-EG" : "en-US";
-  // "Admin" is not a byline. Attribute to the editorial team and let
-  // /editorial-policy say who that is. See @/lib/authors.
-  const byline = displayAuthor(article.author, language);
-  const publishedDate = new Date(article.createdAt).toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const updatedDate = new Date(article.updatedAt).toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const showUpdated =
-    new Date(article.updatedAt).getTime() - new Date(article.createdAt).getTime() >
-    24 * 60 * 60 * 1000;
   const minutes = readingTimeMinutes(article.content);
   const headings = extractHeadings(article.content);
 
@@ -199,7 +178,7 @@ export function ArticleDetailPage() {
                   {article.title}
                 </h1>
 
-                {/* Meta row: category · author · published · updated · reading time */}
+                {/* Meta row: category · reading time */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                   <Link
                     to={`/articles?category=${categorySlug(article.category)}`}
@@ -207,20 +186,6 @@ export function ArticleDetailPage() {
                   >
                     {categoryLabel(article.category, t)}
                   </Link>
-                  <span className="inline-flex items-center gap-1.5">
-                    <User className="size-3.5" />
-                    {byline}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="size-3.5" />
-                    {publishedDate}
-                  </span>
-                  {showUpdated && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <RefreshCw className="size-3.5" />
-                      {t("article.updated")} {updatedDate}
-                    </span>
-                  )}
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="size-3.5" />
                     {minutes} {t("article.min_read")}
@@ -289,13 +254,11 @@ export function ArticleDetailPage() {
                     "@type": "WebPage",
                     "@id": window.location.href,
                   },
-                  author: isTeamByline(article.author)
-                    ? {
-                        "@type": "Organization",
-                        name: byline,
-                        url: `${window.location.origin}/editorial-policy`,
-                      }
-                    : { "@type": "Person", name: byline },
+                  author: {
+                    "@type": "Organization",
+                    name: t("site.name"),
+                    url: `${window.location.origin}/editorial-policy`,
+                  },
                   publisher: {
                     "@type": "Organization",
                     name: "Al-Maarefah",

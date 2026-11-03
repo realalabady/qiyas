@@ -19,7 +19,6 @@
 
 import { getQuizIntro } from "../src/data/quiz-intros.js";
 import { migratedSlug } from "../src/data/slug-migrations.js";
-import { displayAuthor, isTeamByline } from "../src/lib/authors.js";
 import { translations } from "../src/lib/translations.js";
 import {
   CANONICAL_HOST,
@@ -444,7 +443,7 @@ const articleForClient = (
   excerpt: clean(a.excerpt),
   content: full ? String(a.content ?? "") : "",
   category: clean(a.category),
-  author: displayAuthor(a.author, "ar"),
+  author: clean(a.author),
   tags: Array.isArray(a.tags) ? a.tags : [],
   image: a.image ?? null,
   published: true,
@@ -716,7 +715,6 @@ export default async function handler(req: any, res: any) {
       if (article) {
         const title = `${clean(article.title)} · ${SITE_NAME}`;
         const description = clean(article.excerpt);
-        const author = displayAuthor(article.author, "ar");
         const published = String(article.createdAt ?? "");
         const modified = String(article.updatedAt ?? published);
         const url = `${origin}/articles/${encodeURIComponent(slug)}`;
@@ -725,13 +723,7 @@ export default async function handler(req: any, res: any) {
         const contentHtml =
           `<main>${siteNav(origin)}<article>` +
           `<h1>${escapeHtml(clean(article.title))}</h1>` +
-          `<p>${escapeHtml(author)}` +
-          (published
-            ? ` · <time datetime="${escapeHtml(published)}">${escapeHtml(
-                published.slice(0, 10),
-              )}</time>`
-            : "") +
-          ` · ${escapeHtml(clean(article.category))}</p>` +
+          `<p>${escapeHtml(clean(article.category))}</p>` +
           paragraphs(article.excerpt) +
           markdownToHtml(article.content) +
           DISCLAIMER +
@@ -754,9 +746,11 @@ export default async function handler(req: any, res: any) {
                 description,
                 inLanguage: "ar",
                 mainEntityOfPage: { "@type": "WebPage", "@id": url },
-                author: isTeamByline(article.author)
-                  ? { "@type": "Organization", name: author, url: `${origin}/editorial-policy` }
-                  : { "@type": "Person", name: author },
+                author: {
+                  "@type": "Organization",
+                  name: SITE_NAME,
+                  url: `${origin}/editorial-policy`,
+                },
                 publisher: {
                   "@type": "Organization",
                   name: SITE_NAME,
