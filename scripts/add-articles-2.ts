@@ -23,7 +23,7 @@ const S = "https://www.al-maarefah.com";
 const ARTICLES: NewArticle[] = [
   {
     slug: "الذكاء-العاطفي-ما-يثبته-البحث",
-    image: "/thumbnails/article-emotional-intelligence.png",
+    image: "/thumbnails/article-emotional-intelligence.jpg",
     title: "الذكاء العاطفي: ما يثبته البحث وما لا يثبته",
     category: "Psychology",
     excerpt:
@@ -148,7 +148,7 @@ const ARTICLES: NewArticle[] = [
 
   {
     slug: "الاحتراق-الوظيفي-اعراضه-وكيف-تتعامل-معه",
-    image: "/thumbnails/article-burnout.png",
+    image: "/thumbnails/article-burnout.jpg",
     title: "الاحتراق الوظيفي: ثلاثة أعراض، وسبب واحد غالبًا ليس فيك",
     category: "Lifestyle",
     excerpt:
@@ -264,7 +264,7 @@ const ARTICLES: NewArticle[] = [
 
   {
     slug: "التسويف-لماذا-نؤجل-وكيف-نتوقف",
-    image: "/thumbnails/article-procrastination.png",
+    image: "/thumbnails/article-procrastination.jpg",
     title: "التسويف: ليس مشكلة في إدارة الوقت",
     category: "Psychology",
     excerpt:

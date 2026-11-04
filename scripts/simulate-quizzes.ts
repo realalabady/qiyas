@@ -150,6 +150,56 @@ async function main() {
               )[0],
           );
         }
+
+        // A fourth, stateful pass. The three above choose each question in
+        // isolation, so on a question that cannot help the target they keep
+        // handing their spare vote to whichever rival happens to sort first —
+        // and that rival wins on a tie the reader would never have created.
+        // This one tracks the running totals and feeds the weakest rival,
+        // which is what someone steering toward a result actually does.
+        const total: Record<string, number> = Object.fromEntries(
+          ids.map((id) => [id, 0]),
+        );
+        record((q: any) => {
+          let best: any = null;
+          let bestScore = -Infinity;
+          for (const a of q.answers) {
+            const gain: Record<string, number> =
+              type === "personality_based"
+                ? a.resultId
+                  ? { [String(a.resultId)]: 1 }
+                  : {}
+                : Object.fromEntries(
+                    Object.entries(a.weights ?? {}).map(([k, v]) => [
+                      k,
+                      Number(v) || 0,
+                    ]),
+                  );
+            const mine = (total[target] ?? 0) + (gain[target] ?? 0);
+            const rival = Math.max(
+              0,
+              ...ids
+                .filter((id) => id !== target)
+                .map((id) => (total[id] ?? 0) + (gain[id] ?? 0)),
+            );
+            const score = mine - rival;
+            if (score > bestScore) {
+              bestScore = score;
+              best = a;
+            }
+          }
+          const chosen = best ?? q.answers[0];
+          const gain: Record<string, number> =
+            type === "personality_based"
+              ? chosen.resultId
+                ? { [String(chosen.resultId)]: 1 }
+                : {}
+              : (chosen.weights ?? {});
+          for (const [k, v] of Object.entries(gain)) {
+            if (k in total) total[k] += Number(v) || 0;
+          }
+          return chosen;
+        });
       }
     }
 

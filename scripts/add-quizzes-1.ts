@@ -67,7 +67,7 @@ const avoidanceItem = (): NewQuizAnswer[] => [
 const QUIZZES: NewQuiz[] = [
   {
     slug: "اختبار-العوامل-الخمسة-الكبرى",
-    thumbnail: "/thumbnails/quiz-big-five.png",
+    thumbnail: "/thumbnails/quiz-big-five.jpg",
     title: "اختبار العوامل الخمسة الكبرى: أي سمة أبرز في شخصيتك؟",
     category: "Personality Tests",
     description:
@@ -204,7 +204,7 @@ const QUIZZES: NewQuiz[] = [
 
   {
     slug: "اختبار-نمط-التعلق",
-    thumbnail: "/thumbnails/quiz-attachment.png",
+    thumbnail: "/thumbnails/quiz-attachment.jpg",
     title: "اختبار نمط التعلق: أين تقع على بُعدَي القلق والتجنّب؟",
     category: "Relationship Tests",
     description:

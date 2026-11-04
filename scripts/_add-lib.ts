@@ -58,7 +58,7 @@ export interface NewArticle {
   category: string;
   tags?: string[];
   faq?: { question: string; answer: string }[];
-  /** Path under public/, e.g. "/thumbnails/article-big-five.png". */
+  /** Path under public/, e.g. "/thumbnails/article-big-five.jpg". */
   image?: string;
   /** ISO date. Defaults to now. */
   publishedAt?: string;
@@ -98,7 +98,7 @@ export interface NewQuiz {
   quizType: "weighted_personality" | "score_based" | "personality_based" | "percentage_matching";
   questions: NewQuizQuestion[];
   results: NewQuizResult[];
-  /** Path under public/, e.g. "/thumbnails/quiz-big-five.png". */
+  /** Path under public/, e.g. "/thumbnails/quiz-big-five.jpg". */
   thumbnail?: string;
   publishedAt?: string;
 }
