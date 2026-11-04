@@ -13,7 +13,7 @@ import {
   staggerContainer,
   staggerItem,
 } from "@/lib/motion";
-import { Share2, Copy, RotateCcw, Sparkles } from "lucide-react";
+import { Share2, Copy, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuizzesAdmin } from "@/stores/quizzes-admin-store";
 import { useQuizTakeStore } from "@/stores/quiz-take-store";
@@ -105,6 +105,17 @@ export function QuizResultPage() {
   const suggestedQuizzes = quizStore.quizzes
     .filter((q) => q.category === quiz?.category && q.slug !== slug)
     .slice(0, 3);
+
+  // A shared result link opens with only seed content in the store, so the
+  // quiz legitimately looks missing until Firestore answers. Saying "Result
+  // Not Found" in that window turns every shared link into a dead end.
+  if (!quiz && !quizStore.hydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!quiz || !result) {
     return (

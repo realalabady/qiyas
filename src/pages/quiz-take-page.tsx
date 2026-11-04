@@ -17,7 +17,7 @@ import {
   staggerContainer,
   staggerItem,
 } from "@/lib/motion";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { validateQuizConfig } from "@/lib/quiz-validation";
 import { useLanguage } from "@/lib/i18n";
 import { localizedQuiz } from "@/lib/localized-content";
@@ -41,7 +41,10 @@ export function QuizTakePage() {
 
   useEffect(() => {
     if (!quiz) {
-      navigate("/not-found");
+      // Only a miss *after* Firestore has answered means the quiz is gone.
+      // Before that the store still holds seed content, and redirecting here
+      // sent every direct visit to /quiz/:slug/take straight to /not-found.
+      if (quizStore.hydrated) navigate("/not-found");
       return;
     }
 
@@ -78,9 +81,16 @@ export function QuizTakePage() {
       // Count this as a quiz start (real analytics).
       analyticsStore.recordStart(quiz.id);
     }
-  }, [quiz, navigate, quizTakeStore, analyticsStore, validation?.isValid]);
+  }, [quiz, navigate, quizTakeStore, analyticsStore, validation?.isValid, quizStore.hydrated]);
 
-  if (!quiz) return null;
+  if (!quiz) {
+    // Still waiting on Firestore; the effect above redirects once it answers.
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!validation?.isValid) {
     return (

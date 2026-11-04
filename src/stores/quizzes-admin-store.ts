@@ -117,6 +117,17 @@ export interface QuizFormData extends Omit<
 interface QuizzesStore {
   quizzes: Quiz[];
   editingId: string | null;
+  /**
+   * True once hydrate() has settled, either way.
+   *
+   * The store opens on seed or SSR content, so "slug not found" means
+   * nothing until Firestore has answered. /quiz/:slug/take gets no SSR
+   * payload — the rewrite only covers /quiz/:slug — so it opened on the
+   * retired seed list, failed to find the quiz and redirected to
+   * /not-found before hydrate() returned. Never persisted: a fresh page
+   * load has to wait for a fresh fetch.
+   */
+  hydrated: boolean;
 
   // Actions
   setQuizzes: (quizzes: Quiz[]) => void;
@@ -196,6 +207,7 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
       // real published quizzes — see @/lib/ssr-data. Seed data is a local-dev
       // fallback only.
       quizzes: (ssrQuizzes<Quiz>() ?? seedQuizzes()).map(normalizeQuiz),
+      hydrated: false,
       editingId: null,
 
   setQuizzes: (quizzes) => set({ quizzes }),
@@ -215,6 +227,8 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
       }
     } catch (error) {
       console.error("quizzes hydrate failed", error);
+    } finally {
+      set({ hydrated: true });
     }
   },
 
@@ -338,6 +352,9 @@ export const useQuizzesAdmin = create<QuizzesStore>()(
         return {
           ...currentState,
           quizzes: merged ?? cached ?? currentState.quizzes,
+          // Rehydrating from localStorage is not the same as having heard
+          // from Firestore.
+          hydrated: false,
         };
       },
     },
