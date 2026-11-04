@@ -693,7 +693,7 @@ export default async function handler(req: any, res: any) {
         const resultsHtml = results
           .map(
             (r: any) =>
-              `<h3>${escapeHtml(r?.title ?? "")}</h3>${paragraphs(r?.description)}`,
+              `<h3>${escapeHtml(r?.title ?? "")}</h3>${markdownToHtml(r?.description)}`,
           )
           .join("");
         const contentHtml =

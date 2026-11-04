@@ -27,7 +27,7 @@ export function QuizResultPage() {
   const location = useLocation();
   const quizStore = useQuizzesAdmin();
   const quizTakeStore = useQuizTakeStore();
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   // Find the quiz and localize its display text to the active language.
@@ -221,13 +221,13 @@ export function QuizResultPage() {
             <Sparkles size={32} className="text-green-500" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Quiz Complete!
+            {t("result.complete")}
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             {timeSpent && (
               <>
-                You completed this in {Math.floor(timeSpent / 60)} minutes and{" "}
-                {timeSpent % 60} seconds.
+                {t("result.completed_in")} {Math.floor(timeSpent / 60)}{" "}
+                {t("result.minutes")} {timeSpent % 60} {t("result.seconds")}
               </>
             )}
           </p>
@@ -262,7 +262,7 @@ export function QuizResultPage() {
         >
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Share2 size={24} />
-            Share Your Result
+            {t("result.share_heading")}
           </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -272,7 +272,7 @@ export function QuizResultPage() {
               className="gap-2 justify-center"
             >
               <Copy size={18} />
-              <span>{copied ? "Copied!" : "Copy Link"}</span>
+              <span>{copied ? t("result.copied") : t("result.copy_link")}</span>
             </Button>
             <Button
               onClick={handleShareTwitter}
@@ -308,7 +308,7 @@ export function QuizResultPage() {
         >
           <Button onClick={handleRetakeQuiz} className="gap-2">
             <RotateCcw size={18} />
-            Retake Quiz
+            {t("result.retake")}
           </Button>
           <Button
             onClick={() => navigate("/explore")}
@@ -316,7 +316,7 @@ export function QuizResultPage() {
             className="gap-2"
           >
             <Sparkles size={18} />
-            Take More Quizzes
+            {t("result.more_quizzes")}
           </Button>
         </motion.div>
 
@@ -329,7 +329,7 @@ export function QuizResultPage() {
             transition={{ delay: 0.4 }}
           >
             <h2 className="text-3xl font-bold text-white mb-8">
-              Similar Quizzes
+              {t("result.similar")}
             </h2>
             <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {suggestedQuizzes.map((rawSuggested) => {

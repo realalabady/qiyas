@@ -4,6 +4,8 @@ import { Clock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/lib/i18n";
+import { categoryLabel } from "@/lib/category-i18n";
 import { staggerItem, tapScale } from "@/lib/motion";
 
 export interface QuizCardData {
@@ -25,6 +27,7 @@ interface QuizCardProps {
 }
 
 export function QuizCard({ quiz, loading = false }: QuizCardProps) {
+  const { t } = useLanguage();
   if (loading) {
     return (
       <div className="quiz-card rounded-2xl overflow-hidden">
@@ -67,7 +70,7 @@ export function QuizCard({ quiz, loading = false }: QuizCardProps) {
               className="absolute top-3 left-3 backdrop-blur-sm"
               variant="secondary"
             >
-              {quiz.category}
+              {categoryLabel(quiz.category, t)}
             </Badge>
           </div>
 
@@ -88,7 +91,7 @@ export function QuizCard({ quiz, loading = false }: QuizCardProps) {
                 </span>
               </div>
               <span className="flex items-center gap-0.5 text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                Start <ChevronRight className="size-3" />
+                {t("quiz.start")} <ChevronRight className="size-3" />
               </span>
             </div>
           </div>

@@ -8,11 +8,10 @@
 
 import {
   type ArticleBlock,
-  type InlineSegment,
   parseArticleBlocks,
-  parseInline,
   slugifyHeading,
 } from "@/lib/article-blocks";
+import { InlineMarkdown } from "@/components/content/inline-markdown";
 
 export interface Heading {
   id: string;
@@ -49,29 +48,6 @@ export function extractHeadings(content: string): Heading[] {
   return out;
 }
 
-function Inline({ text }: { text: string }) {
-  return (
-    <>
-      {parseInline(text).map((seg: InlineSegment, i: number) => {
-        if (seg.kind === "strong") return <strong key={i}>{seg.text}</strong>;
-        if (seg.kind === "em") return <em key={i}>{seg.text}</em>;
-        if (seg.kind === "link")
-          return (
-            <a
-              key={i}
-              href={seg.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2"
-            >
-              {seg.text}
-            </a>
-          );
-        return <span key={i}>{seg.text}</span>;
-      })}
-    </>
-  );
-}
 
 export function ArticleBody({ content }: { content: string }) {
   const blocks = parseArticleBlocks(content);
@@ -85,7 +61,7 @@ export function ArticleBody({ content }: { content: string }) {
             <ul key={i} className="list-disc ps-6 space-y-1">
               {block.items.map((item, j) => (
                 <li key={j}>
-                  <Inline text={item} />
+                  <InlineMarkdown text={item} />
                 </li>
               ))}
             </ul>
@@ -98,7 +74,7 @@ export function ArticleBody({ content }: { content: string }) {
               id={ids.get(block)}
               className="text-2xl font-bold mt-8 mb-3 scroll-mt-24"
             >
-              <Inline text={block.text} />
+              <InlineMarkdown text={block.text} />
             </h2>
           );
         }
@@ -109,13 +85,13 @@ export function ArticleBody({ content }: { content: string }) {
               id={ids.get(block)}
               className="text-xl font-semibold mt-6 mb-2 scroll-mt-24"
             >
-              <Inline text={block.text} />
+              <InlineMarkdown text={block.text} />
             </h3>
           );
         }
         return (
           <p key={i}>
-            <Inline text={block.text} />
+            <InlineMarkdown text={block.text} />
           </p>
         );
       })}

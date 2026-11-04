@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2, Download, ArrowRight } from "lucide-react";
 import type { QuizResult } from "@/lib/quiz-engine";
+import { InlineMarkdown } from "@/components/content/inline-markdown";
+import { useLanguage } from "@/lib/i18n";
 
 interface ResultsDisplayProps {
   result: QuizResult;
@@ -17,6 +19,7 @@ export function ResultsDisplay({
   onDownload,
   onContinue,
 }: ResultsDisplayProps) {
+  const { t } = useLanguage();
   const primaryResult = result.primaryResult;
   const topMatches = result.allResults.slice(1, 4); // Top 3 additional matches
 
@@ -64,7 +67,7 @@ export function ResultsDisplay({
                   <span className="text-3xl font-bold text-primary">
                     {primaryResult.percentage}%
                   </span>{" "}
-                  match
+                  {t("result.match")}
                 </motion.div>
               )}
 
@@ -81,7 +84,9 @@ export function ResultsDisplay({
                   .map((para) => para.trim())
                   .filter(Boolean)
                   .map((para, i) => (
-                    <p key={i}>{para}</p>
+                    <p key={i}>
+                      <InlineMarkdown text={para} />
+                    </p>
                   ))}
               </motion.div>
 
@@ -95,7 +100,7 @@ export function ResultsDisplay({
                     className="mb-8"
                   >
                     <h3 className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">
-                      Your Strengths
+                      {t("result.strengths")}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {primaryResult.strengths.map((strength) => (
@@ -120,7 +125,7 @@ export function ResultsDisplay({
                     className="mb-8"
                   >
                     <h3 className="text-sm font-semibold uppercase tracking-widest text-accent mb-3">
-                      Potential Challenges
+                      {t("result.challenges")}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {primaryResult.weaknesses.map((weakness) => (
@@ -144,7 +149,7 @@ export function ResultsDisplay({
                   className="mb-8"
                 >
                   <h3 className="text-sm font-semibold uppercase tracking-widest text-green-400 mb-3">
-                    Suggested Careers
+                    {t("result.careers")}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {primaryResult.careers.map((career) => (
@@ -169,7 +174,7 @@ export function ResultsDisplay({
                 {onShare && (
                   <Button onClick={onShare} variant="outline" className="gap-2">
                     <Share2 className="w-4 h-4" />
-                    Share Result
+                    {t("result.share")}
                   </Button>
                 )}
                 {onDownload && (
@@ -179,12 +184,12 @@ export function ResultsDisplay({
                     className="gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Download
+                    {t("result.download")}
                   </Button>
                 )}
                 {onContinue && (
                   <Button onClick={onContinue} className="gap-2 ml-auto">
-                    Continue
+                    {t("result.continue")}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 )}
@@ -200,7 +205,7 @@ export function ResultsDisplay({
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
           >
-            <h2 className="text-2xl font-bold mb-4">Your Other Matches</h2>
+            <h2 className="text-2xl font-bold mb-4">{t("result.other_matches")}</h2>
             <div className="grid gap-4">
               {topMatches.map((match, index) => (
                 <motion.div
@@ -216,7 +221,7 @@ export function ResultsDisplay({
                           {match.title}
                         </h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {match.description}
+                          <InlineMarkdown text={String(match.description ?? "")} />
                         </p>
                       </div>
                       {match.percentage !== undefined && (
@@ -225,7 +230,7 @@ export function ResultsDisplay({
                             {match.percentage}%
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            match
+                            {t("result.match")}
                           </div>
                         </div>
                       )}

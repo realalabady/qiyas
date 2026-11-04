@@ -486,6 +486,27 @@ export const translations: Record<Language, Record<string, string>> = {
     "content.disclaimer":
       "Al-Maarefah quizzes and articles are for entertainment and self-reflection. They are not a psychological or medical diagnosis and are not a substitute for professional advice.",
 
+    // Quiz result page
+    "result.complete": "Quiz Complete!",
+    "result.completed_in": "You finished in",
+    "result.minutes": "min",
+    "result.seconds": "sec",
+    "result.match": "match",
+    "result.strengths": "Your Strengths",
+    "result.challenges": "Potential Challenges",
+    "result.careers": "Suggested Careers",
+    "result.share": "Share Result",
+    "result.download": "Download",
+    "result.continue": "Continue",
+    "result.other_matches": "Your Other Matches",
+    "result.share_heading": "Share Your Result",
+    "result.copy_link": "Copy Link",
+    "result.copied": "Copied!",
+    "result.retake": "Retake Quiz",
+    "result.more_quizzes": "Take More Quizzes",
+    "result.similar": "Similar Quizzes",
+    "quiz.start": "Start",
+
     // Image credits page
     "credits.title": "Image Credits",
     "credits.subtitle": "Where the photographs on this site come from.",
@@ -1153,6 +1174,27 @@ export const translations: Record<Language, Record<string, string>> = {
 
     "content.disclaimer":
       "اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.",
+
+    // Quiz result page
+    "result.complete": "انتهى الاختبار",
+    "result.completed_in": "أنهيته في",
+    "result.minutes": "دقيقة",
+    "result.seconds": "ثانية",
+    "result.match": "تطابق",
+    "result.strengths": "نقاط قوتك",
+    "result.challenges": "تحديات محتملة",
+    "result.careers": "مجالات مهنية مقترحة",
+    "result.share": "شارك النتيجة",
+    "result.download": "حفظ صورة",
+    "result.continue": "اختبار آخر",
+    "result.other_matches": "نتائج أخرى قريبة منك",
+    "result.share_heading": "شارك نتيجتك",
+    "result.copy_link": "نسخ الرابط",
+    "result.copied": "تم النسخ",
+    "result.retake": "أعد الاختبار",
+    "result.more_quizzes": "اختبارات أخرى",
+    "result.similar": "اختبارات مشابهة",
+    "quiz.start": "ابدأ",
 
     // Image credits page
     "credits.title": "مصادر الصور",
