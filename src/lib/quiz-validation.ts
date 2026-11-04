@@ -60,26 +60,46 @@ export function validateQuizConfig(
       errors.push(`${prefix}: ${t("admin.quiz.validation.min_answers")}`);
     }
 
+    // Weighting is checked per question, not per answer.
+    //
+    // Requiring a positive weight on every single answer breaks the ordinary
+    // Likert item, where "does not apply to me at all" is supposed to add
+    // nothing — that is what the bottom of the scale means. Two published
+    // quizzes scored on a 0-4 agreement scale were rejected by that rule and
+    // showed "Quiz Setup Incomplete" instead of running.
+    //
+    // What actually matters is that the question can move some result, and
+    // that no answer points at a result that does not exist.
+    if (
+      quiz.quizType === "weighted_personality" ||
+      quiz.quizType === "percentage_matching"
+    ) {
+      let movesAResult = false;
+      question.answers.forEach((answer, answerIndex) => {
+        const entries = Object.entries(answer.weights ?? {});
+        if (entries.some(([id]) => !resultIds.has(id))) {
+          errors.push(
+            `${prefix} A${answerIndex + 1}: ${t("admin.quiz.validation.answer_weight_unknown_result")}`,
+          );
+        }
+        if (
+          entries.some(
+            ([id, value]) =>
+              resultIds.has(id) && Number.isFinite(value) && value > 0,
+          )
+        ) {
+          movesAResult = true;
+        }
+      });
+      if (!movesAResult) {
+        errors.push(`${prefix}: ${t("admin.quiz.validation.question_weight_required")}`);
+      }
+    }
+
     question.answers.forEach((answer, answerIndex) => {
       const answerPrefix = `${prefix} A${answerIndex + 1}`;
       if (!answer.text.trim()) {
         errors.push(`${answerPrefix}: ${t("admin.quiz.validation.answer_text_required")}`);
-      }
-
-      if (
-        quiz.quizType === "weighted_personality" ||
-        quiz.quizType === "percentage_matching"
-      ) {
-        const weights = answer.weights ?? {};
-        const validWeightedEntries = Object.entries(weights).filter(
-          ([resultId, value]) =>
-            resultIds.has(resultId) && Number.isFinite(value) && value > 0,
-        );
-        if (validWeightedEntries.length === 0) {
-          errors.push(
-            `${answerPrefix}: ${t("admin.quiz.validation.answer_weight_required")}`,
-          );
-        }
       }
 
       if (quiz.quizType === "personality_based") {

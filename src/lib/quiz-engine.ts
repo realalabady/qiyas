@@ -330,9 +330,30 @@ export class QuizEngine {
       0,
     );
 
-    if (maxPossible <= 0) return this.config.results[0];
+    // Bands have to span the range a reader can actually reach, not 0..max.
+    // Where every question's lowest option scores 1, the lowest possible
+    // total is already one point per question, so a band measured from zero
+    // can sit entirely below it — three published quizzes could never return
+    // their own lowest result. Quizzes whose scale does start at 0 are
+    // unaffected: minPossible is then 0 and this is the old formula.
+    const minPossible = this.config.questions.reduce(
+      (sum, question) =>
+        sum +
+        Math.min(
+          ...question.answers.map((answer) =>
+            Number.isFinite(answer.score) ? Number(answer.score) : 0,
+          ),
+        ),
+      0,
+    );
 
-    const normalized = Math.max(0, Math.min(1, totalScore / maxPossible));
+    const span = maxPossible - minPossible;
+    if (span <= 0) return this.config.results[0];
+
+    const normalized = Math.max(
+      0,
+      Math.min(1, (totalScore - minPossible) / span),
+    );
     const index = Math.min(
       this.config.results.length - 1,
       Math.floor(normalized * this.config.results.length),

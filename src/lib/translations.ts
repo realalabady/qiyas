@@ -325,7 +325,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "admin.quiz.validation.question_text_required": "question text is required.",
     "admin.quiz.validation.min_answers": "add at least 2 answers.",
     "admin.quiz.validation.answer_text_required": "answer text is required.",
-    "admin.quiz.validation.answer_weight_required": "add at least one positive weight mapped to a valid result ID.",
+    "admin.quiz.validation.question_weight_required":
+      "at least one answer must carry a positive weight toward a valid result.",
+    "admin.quiz.validation.answer_weight_unknown_result":
+      "this answer is weighted toward a result ID that does not exist.",
     "admin.quiz.validation.answer_result_required": "map the answer to an existing result ID.",
     "admin.quiz.validation.answer_score_required": "score must be a valid number.",
 
@@ -973,7 +976,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "admin.quiz.validation.question_text_required": "نص السؤال مطلوب.",
     "admin.quiz.validation.min_answers": "أضف إجابتين على الأقل.",
     "admin.quiz.validation.answer_text_required": "نص الإجابة مطلوب.",
-    "admin.quiz.validation.answer_weight_required": "أضف وزنًا موجبًا واحدًا على الأقل مرتبطًا بمعرّف نتيجة صالح.",
+    "admin.quiz.validation.question_weight_required":
+      "يجب أن تحمل إجابة واحدة على الأقل وزنًا موجبًا نحو نتيجة صالحة.",
+    "admin.quiz.validation.answer_weight_unknown_result":
+      "هذه الإجابة مرتبطة بمعرّف نتيجة غير موجود.",
     "admin.quiz.validation.answer_result_required": "اربط الإجابة بمعرّف نتيجة موجود.",
     "admin.quiz.validation.answer_score_required": "يجب أن تكون النقاط رقمًا صالحًا.",
 
