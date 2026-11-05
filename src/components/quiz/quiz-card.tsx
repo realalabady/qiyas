@@ -108,15 +108,16 @@ export function SectionHeader({
   title: React.ReactNode;
   viewAllTo?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center justify-between mb-6">
       <h2 className="text-xl font-bold text-foreground sm:text-2xl">{title}</h2>
       {viewAllTo && (
         <Link
           to={viewAllTo}
-          className="text-sm text-primary hover:underline flex items-center gap-1 transition-colors"
+          className="text-sm text-primary hover:underline flex min-h-10 sm:min-h-0 items-center gap-1 transition-colors"
         >
-          View All <ChevronRight className="size-4" />
+          {t("btn.view_all")} <ChevronRight className="size-4" />
         </Link>
       )}
     </div>

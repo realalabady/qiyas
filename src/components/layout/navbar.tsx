@@ -112,7 +112,7 @@ export function Navbar() {
               <button
                 onClick={() => setOpen((o) => !o)}
                 aria-label={t("nav.toggle_menu")}
-                className="md:hidden flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-white/5 transition hover:bg-white/10"
+                className="md:hidden flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-white/5 transition hover:bg-white/10"
               >
                 {open ? <X className="size-4" /> : <Menu className="size-4" />}
               </button>

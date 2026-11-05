@@ -227,7 +227,7 @@ export default function QuizDetailPage() {
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="flex min-h-10 sm:min-h-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ChevronLeft className="size-4 rtl:rotate-180" />
           {t("quizDetail.back")}

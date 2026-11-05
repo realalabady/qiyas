@@ -134,7 +134,7 @@ export function ArticleDetailPage() {
             >
               <Link
                 to="/articles"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex min-h-10 sm:min-h-0 items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="size-4 rtl:rotate-180" />
                 {t("quizDetail.back")}
@@ -182,7 +182,7 @@ export function ArticleDetailPage() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                   <Link
                     to={`/articles?category=${categorySlug(article.category)}`}
-                    className="px-2.5 py-1 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                    className="inline-flex min-h-10 sm:min-h-0 items-center px-2.5 py-1 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
                   >
                     {categoryLabel(article.category, t)}
                   </Link>
@@ -204,12 +204,12 @@ export function ArticleDetailPage() {
                       <ListTree className="size-4" />
                       {t("article.toc")}
                     </p>
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-0 sm:space-y-1.5">
                       {headings.map((h) => (
                         <li key={h.id} className={h.level === 3 ? "ps-4" : ""}>
                           <a
                             href={`#${h.id}`}
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                            className="flex min-h-10 sm:min-h-0 items-center text-sm text-muted-foreground hover:text-primary transition-colors"
                           >
                             {h.text}
                           </a>

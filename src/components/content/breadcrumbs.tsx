@@ -49,7 +49,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
               {item.to && !isLast ? (
                 <Link
                   to={item.to}
-                  className="hover:text-foreground transition-colors inline-flex items-center gap-1"
+                  className="hover:text-foreground transition-colors inline-flex min-h-10 sm:min-h-0 items-center gap-1"
                 >
                   {i === 0 && <Home className="size-3.5" />}
                   {item.label}

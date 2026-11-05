@@ -486,6 +486,13 @@ export const translations: Record<Language, Record<string, string>> = {
     "content.disclaimer":
       "Al-Maarefah quizzes and articles are for entertainment and self-reflection. They are not a psychological or medical diagnosis and are not a substitute for professional advice.",
 
+    "take.back": "Back to Quiz",
+    "take.back_all": "Back to Quizzes",
+    "take.question": "Question",
+    "take.of": "of",
+    "take.previous": "Previous",
+    "take.next": "Next",
+    "take.submit": "Submit",
     // Quiz result page
     "result.complete": "Quiz Complete!",
     "result.completed_in": "You finished in",
@@ -1175,6 +1182,13 @@ export const translations: Record<Language, Record<string, string>> = {
     "content.disclaimer":
       "اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.",
 
+    "take.back": "العودة للاختبار",
+    "take.back_all": "العودة للاختبارات",
+    "take.question": "السؤال",
+    "take.of": "من",
+    "take.previous": "السابق",
+    "take.next": "التالي",
+    "take.submit": "عرض النتيجة",
     // Quiz result page
     "result.complete": "انتهى الاختبار",
     "result.completed_in": "أنهيته في",

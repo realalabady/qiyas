@@ -28,7 +28,7 @@ export function QuizTakePage() {
   const quizStore = useQuizzesAdmin();
   const quizTakeStore = useQuizTakeStore();
   const analyticsStore = useAnalyticsStore();
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [startTime] = useState(Date.now());
 
@@ -111,7 +111,7 @@ export function QuizTakePage() {
           </p>
           <Button onClick={() => navigate(`/quiz/${slug}`)} className="gap-2">
             <ArrowLeft size={18} />
-            Back to Quiz
+            {t("take.back")}
           </Button>
         </div>
       </motion.div>
@@ -140,7 +140,7 @@ export function QuizTakePage() {
           </p>
           <Button onClick={() => navigate("/explore")} className="gap-2">
             <ArrowLeft size={18} />
-            Back to Quizzes
+            {t("take.back_all")}
           </Button>
         </div>
       </motion.div>
@@ -234,15 +234,16 @@ export function QuizTakePage() {
       <div className="max-w-2xl mx-auto mb-8">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6"
+          className="flex min-h-10 sm:min-h-0 items-center gap-2 text-slate-400 hover:text-white transition mb-6"
         >
           <ArrowLeft size={20} />
-          <span>Back to Quiz</span>
+          <span>{t("take.back")}</span>
         </button>
 
         <Progress value={progress} className="h-2 mb-4" />
         <p className="text-sm text-slate-400">
-          Question {currentQuestionIndex + 1} of {questions.length}
+          {t("take.question")} {currentQuestionIndex + 1} {t("take.of")}{" "}
+          {questions.length}
         </p>
       </div>
 
@@ -320,7 +321,7 @@ export function QuizTakePage() {
             className="gap-2"
           >
             <ArrowLeft size={18} />
-            Previous
+            {t("take.previous")}
           </Button>
 
           <Button
@@ -331,11 +332,11 @@ export function QuizTakePage() {
             {isLastQuestion ? (
               <>
                 <Check size={18} />
-                Submit
+                {t("take.submit")}
               </>
             ) : (
               <>
-                <span>Next</span>
+                <span>{t("take.next")}</span>
                 <ArrowRight size={18} />
               </>
             )}

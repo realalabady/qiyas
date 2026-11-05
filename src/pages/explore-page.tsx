@@ -153,7 +153,7 @@ export default function ExplorePage() {
               setSelectedCat("");
               updateParam("category", "");
             }}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            className={`inline-flex min-h-10 sm:min-h-0 items-center px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               !selectedCat
                 ? "bg-primary text-primary-foreground"
                 : "bg-white/5 text-muted-foreground hover:bg-white/10"
@@ -169,7 +169,7 @@ export default function ExplorePage() {
                 setSelectedCat(next);
                 updateParam("category", next);
               }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`inline-flex min-h-10 sm:min-h-0 items-center px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 selectedCat === cat.slug
                   ? "bg-primary text-primary-foreground"
                   : "bg-white/5 text-muted-foreground hover:bg-white/10"
@@ -180,8 +180,10 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* Sort */}
-        <div className="flex gap-2 shrink-0">
+        {/* Sort — wraps on a phone. Four chips need 358px and a 320px
+            screen leaves 289, so shrink-0 on its own pushed the row past the
+            viewport and gave the whole document a horizontal scrollbar. */}
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
           {SORT_OPTIONS.map((opt) => (
             <Button
               key={opt.value}

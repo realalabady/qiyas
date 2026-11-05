@@ -41,15 +41,24 @@ function FooterCol({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
+    // The gap closes up on a phone because each link grows its own padding
+    // there; the rhythm stays about the same but the targets become tappable.
+    <div className="flex flex-col gap-0 sm:gap-3">
+      <p className="text-sm font-semibold text-foreground mb-1 sm:mb-0">{title}</p>
       {children}
     </div>
   );
 }
 
+// Two columns on a 320px screen leave about 128px per link, and clamping an
+// article title to one line there produced stubs like "التسويف: ليس مشك…"
+// that tell a reader nothing. Two lines on a phone, one from sm up.
+//
+// A 20px-tall link is a poor target for a thumb. The vertical padding below
+// the sm breakpoint takes the hit area to 40px without moving anything on
+// desktop, and keeps line-clamp working (padding does not break it, flex would).
 const footerLink =
-  "text-sm text-muted-foreground hover:text-foreground transition-colors line-clamp-1";
+  "text-sm text-muted-foreground hover:text-foreground transition-colors line-clamp-2 sm:line-clamp-1 py-2.5 sm:py-0";
 
 export function Footer() {
   const { t, language } = useLanguage();
@@ -90,7 +99,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={label}
-                className="flex size-8 items-center justify-center rounded-lg border border-border/50 bg-white/5 text-muted-foreground hover:text-foreground hover:border-border transition-colors text-xs font-bold"
+                className="flex size-10 sm:size-8 items-center justify-center rounded-lg border border-border/50 bg-white/5 text-muted-foreground hover:text-foreground hover:border-border transition-colors text-xs font-bold"
               >
                 {abbr}
               </a>
