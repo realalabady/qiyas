@@ -289,9 +289,17 @@ const siteNav = (origin: string, locale: Locale = DEFAULT_LOCALE): string =>
  * These quizzes are entertainment, and psychology-adjacent content needs the
  * disclaimer visible on the page itself — not buried in Terms §4.
  */
-const DISCLAIMER =
-  "<p><small>تنبيه: اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، " +
-  "وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.</small></p>";
+const DISCLAIMER_BY: Record<Locale, string> = {
+  ar:
+    "<p><small>تنبيه: اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، " +
+    "وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.</small></p>",
+  en:
+    "<p><small>Note: Al-Maarefah's quizzes and articles are for entertainment " +
+    "and self-reflection. They are not a psychological or medical diagnosis " +
+    "and are no substitute for a qualified professional.</small></p>",
+};
+
+const disclaimer = (locale: Locale): string => DISCLAIMER_BY[locale];
 
 /**
  * The stored doc as it reads in `locale`.
@@ -735,7 +743,7 @@ export default async function handler(req: any, res: any) {
           `<main>${siteNav(origin, locale)}<h1>${escapeHtml(t("articles.title", locale))}</h1>` +
           `<p>${escapeHtml(t("articles.subtitle", locale) || siteTagline(locale))}</p>` +
           cardList(origin, "/articles", articles, "excerpt", locale) +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</main>`;
         meta = {
           locale,
@@ -761,7 +769,7 @@ export default async function handler(req: any, res: any) {
                 `</section>`,
             )
             .join("") +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</main>`;
         meta = {
           locale,
@@ -776,7 +784,7 @@ export default async function handler(req: any, res: any) {
           `<main>${siteNav(origin, locale)}<h1>${escapeHtml(t("explore.title", locale))}</h1>` +
           `<p>${escapeHtml(siteTagline(locale))}</p>` +
           cardList(origin, "/quiz", quizzes, "description", locale) +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</main>`;
         meta = {
           locale,
@@ -803,7 +811,7 @@ export default async function handler(req: any, res: any) {
           `<section><h2>${escapeHtml(t("articles.title", locale))}</h2>` +
           cardList(origin, "/articles", articles, "excerpt", locale) +
           `</section>` +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</main>`;
         meta = {
           locale,
@@ -882,7 +890,7 @@ export default async function handler(req: any, res: any) {
           `<p><a href="${origin}${pathForLocale(`/quiz/${encodeURIComponent(slug)}/take`, locale)}">${escapeHtml(
             locale === "ar" ? "ابدأ الاختبار" : "Start the quiz",
           )}</a></p>` +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</article></main>`;
         return send(
           {
@@ -935,7 +943,7 @@ export default async function handler(req: any, res: any) {
           `<p>${escapeHtml(clean(view.category))}</p>` +
           paragraphs(view.excerpt) +
           markdownToHtml(view.content) +
-          DISCLAIMER +
+          disclaimer(locale) +
           `</article></main>`;
 
         return send(
