@@ -52,6 +52,22 @@
     />
     <meta name="twitter:image" content="/al-maarefah-header.png" />
 
+    <!--
+      Default to noindex, and let the server-side renderer take it off.
+
+      This file ships as app.html, the shell every unmatched path falls
+      through to. Those paths answered 200 with an empty #root and no robots
+      directive — so /search, a quiz's /take and /result pages, /not-found
+      itself, and any mistyped URL all looked to Google like a real page with
+      no content. That is what Search Console reports as Soft 404, and the
+      set of such URLs is unbounded.
+
+      Pages that genuinely should be indexed never keep this tag: api/render.ts
+      strips every robots meta out of the shell before injecting its own, so an
+      SSR-rendered page emits noindex only when it actually means it.
+    -->
+    <meta name="robots" content="noindex" />
+
     <!-- Google AdSense -->
     <script
       async

@@ -31,6 +31,8 @@ const { default: handler } = await import("../api/render.ts");
 const { fetchPublished } = await import("../api/_shared.ts");
 
 const HOST = process.env.SSR_HOST || "www.al-maarefah.com";
+// Point at a local `vite preview` to test a shell that has not shipped yet.
+const PROTO = process.env.SSR_PROTO || "https";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -75,7 +77,7 @@ function mockRes(): { res: any; done: Promise<Captured> } {
 async function render(query: Record<string, string>): Promise<Captured> {
   const { res, done } = mockRes();
   const req: any = {
-    headers: { host: HOST, "x-forwarded-proto": "https" },
+    headers: { host: HOST, "x-forwarded-proto": PROTO },
     query,
   };
   await handler(req, res);
@@ -100,7 +102,7 @@ function expect(
 }
 
 async function main() {
-  const base = `https://${HOST}`;
+  const base = `${PROTO}://${HOST}`;
 
   const cases: Array<
     [string, Record<string, string>, Record<string, string>]
