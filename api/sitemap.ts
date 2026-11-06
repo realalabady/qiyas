@@ -16,6 +16,11 @@ import {
   fetchPublished,
   isIndexableArticle,
 } from "./_shared.js";
+import {
+  hasEnglishArticle,
+  hasEnglishQuiz,
+  pathForLocale,
+} from "../src/lib/locale-routing.js";
 
 const STATIC_ROUTES: Array<{
   path: string;
@@ -38,15 +43,42 @@ const STATIC_ROUTES: Array<{
 const toLastmod = (value: unknown): string | undefined =>
   typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : undefined;
 
+/**
+ * One entry, optionally declaring its translation.
+ *
+ * Where a page exists in both languages, each side lists both alternates and
+ * names Arabic as x-default. Google discards an hreflang pair that does not
+ * point back, so the two entries have to agree — hence both links are built
+ * from one shared path rather than written out per side.
+ */
 const urlEntry = (
   loc: string,
   changefreq: string,
   priority: string,
   lastmod?: string,
-) =>
-  `  <url>\n    <loc>${loc}</loc>\n${
-    lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""
-  }    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+  alternates?: { ar: string; en: string },
+) => {
+  const alt = alternates
+    ? `    <xhtml:link rel="alternate" hreflang="ar" href="${alternates.ar}"/>
+` +
+      `    <xhtml:link rel="alternate" hreflang="en" href="${alternates.en}"/>
+` +
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${alternates.ar}"/>
+`
+    : "";
+  return (
+    `  <url>
+    <loc>${loc}</loc>
+` +
+    (lastmod ? `    <lastmod>${lastmod}</lastmod>
+` : "") +
+    alt +
+    `    <changefreq>${changefreq}</changefreq>
+` +
+    `    <priority>${priority}</priority>
+  </url>`
+  );
+};
 
 export default async function handler(req: any, res: any) {
   // Build absolute URLs from the host that requested the sitemap so they always
@@ -63,14 +95,35 @@ export default async function handler(req: any, res: any) {
     changefreq: string,
     priority: string,
     lastmod?: string,
+    alternates?: { ar: string; en: string },
   ) => {
     if (seenLocs.has(loc)) return; // skip duplicate URLs
     seenLocs.add(loc);
-    urls.push(urlEntry(loc, changefreq, priority, lastmod));
+    urls.push(urlEntry(loc, changefreq, priority, lastmod, alternates));
   };
 
+  /**
+   * List a path in Arabic, and in English too when there is real English
+   * behind it. An /en URL that merely re-serves the Arabic is a duplicate,
+   * so it stays out of the sitemap exactly as it stays out of the index.
+   */
+  const addPair = (
+    path: string,
+    changefreq: string,
+    priority: string,
+    lastmod?: string,
+    translated = true,
+  ) => {
+    const ar = `${BASE_URL}${pathForLocale(path, "ar")}`;
+    const en = `${BASE_URL}${pathForLocale(path, "en")}`;
+    const alt = translated ? { ar, en } : undefined;
+    addEntry(ar, changefreq, priority, lastmod, alt);
+    if (translated) addEntry(en, changefreq, priority, lastmod, alt);
+  };
+
+  // Every fixed page is fully translated — its strings come from one map.
   for (const r of STATIC_ROUTES) {
-    addEntry(`${BASE_URL}${r.path}`, r.changefreq, r.priority);
+    addPair(r.path, r.changefreq, r.priority);
   }
 
   try {
@@ -82,11 +135,12 @@ export default async function handler(req: any, res: any) {
     for (const quiz of quizzes) {
       const slug = quiz.slug;
       if (typeof slug === "string" && slug.trim()) {
-        addEntry(
-          `${BASE_URL}/quiz/${encodeURIComponent(slug.trim())}`,
+        addPair(
+          `/quiz/${encodeURIComponent(slug.trim())}`,
           "weekly",
           "0.7",
           toLastmod(quiz.updatedAt),
+          hasEnglishQuiz(quiz),
         );
       }
     }
@@ -97,11 +151,12 @@ export default async function handler(req: any, res: any) {
       // rather than inviting Google to crawl and rate them.
       if (!isIndexableArticle(article)) continue;
       if (typeof slug === "string" && slug.trim()) {
-        addEntry(
-          `${BASE_URL}/articles/${encodeURIComponent(slug.trim())}`,
+        addPair(
+          `/articles/${encodeURIComponent(slug.trim())}`,
           "weekly",
           "0.6",
           toLastmod(article.updatedAt),
+          hasEnglishArticle(article),
         );
       }
     }
@@ -110,7 +165,7 @@ export default async function handler(req: any, res: any) {
     console.error("sitemap generation failed", error);
   }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join(
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join(
     "\n",
   )}\n</urlset>\n`;
 

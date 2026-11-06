@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, type RouteObject } from "react-router-dom";
 
 import AdminLayout from "@/layouts/admin-layout";
 import PublicLayout from "@/layouts/public-layout";
@@ -29,11 +29,13 @@ import { ArticleDetailPage } from "@/pages/article-detail-page";
 import { ProtectedAdminRoute } from "@/components/auth/protected-admin-route";
 import NotFoundPage from "@/pages/not-found-page";
 
-export const appRouter = createBrowserRouter([
-  {
-    path: "/",
-    element: <PublicLayout />,
-    children: [
+/**
+ * The public tree is mounted twice: unprefixed for Arabic and under /en for
+ * English. Same components either way — PublicLayout reads the prefix and
+ * switches the language — so English finally has URLs of its own for Google
+ * to index instead of living only in localStorage.
+ */
+const publicRoutes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: "explore", element: <ExplorePage /> },
       { path: "categories", element: <CategoriesPage /> },
@@ -56,7 +58,18 @@ export const appRouter = createBrowserRouter([
       { path: "terms", element: <TermsPage /> },
       { path: "editorial-policy", element: <EditorialPolicyPage /> },
       { path: "image-credits", element: <ImageCreditsPage /> },
-    ],
+];
+
+export const appRouter = createBrowserRouter([
+  {
+    path: "/",
+    element: <PublicLayout />,
+    children: publicRoutes,
+  },
+  {
+    path: "/en",
+    element: <PublicLayout />,
+    children: publicRoutes,
   },
   {
     path: "/admin",

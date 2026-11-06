@@ -1,0 +1,28 @@
+{
+  /*
+   * The serverless functions under api/ were never type-checked.
+   *
+   * `tsconfig.app.json` includes only `src`, so `tsc -b` walked straight past
+   * the SSR renderer — the one piece of this codebase that, when it goes
+   * wrong, serves a broken page to Google rather than throwing in a test. It
+   * is in the build now.
+   *
+   * These compile under Node on Vercel, not through Vite, hence the separate
+   * project: NodeNext resolution and node globals.
+   */
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.api.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["api"]
+}

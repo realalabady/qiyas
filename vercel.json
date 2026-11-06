@@ -13,18 +13,27 @@
     {
       "source": "/ads.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=3600"
+        }
       ]
     },
     {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
       ]
     },
     {
-      "source": "/((?!assets/|api/|quiz/|articles/|sitemap|ads.txt|robots.txt).*)",
+      "source": "/((?!assets/|api/|quiz/|articles/|en/quiz/|en/articles/|sitemap|ads.txt|robots.txt).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -34,24 +43,46 @@
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-
-    { "source": "/", "destination": "/api/render?type=home" },
-    { "source": "/explore", "destination": "/api/render?type=explore" },
-    { "source": "/categories", "destination": "/api/render?type=categories" },
-    { "source": "/articles", "destination": "/api/render?type=articles-index" },
-
-    { "source": "/about", "destination": "/api/render?type=page&name=about" },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/",
+      "destination": "/api/render?type=home"
+    },
+    {
+      "source": "/explore",
+      "destination": "/api/render?type=explore"
+    },
+    {
+      "source": "/categories",
+      "destination": "/api/render?type=categories"
+    },
+    {
+      "source": "/articles",
+      "destination": "/api/render?type=articles-index"
+    },
+    {
+      "source": "/about",
+      "destination": "/api/render?type=page&name=about"
+    },
     {
       "source": "/contact",
       "destination": "/api/render?type=page&name=contact"
     },
-    { "source": "/faq", "destination": "/api/render?type=page&name=faq" },
+    {
+      "source": "/faq",
+      "destination": "/api/render?type=page&name=faq"
+    },
     {
       "source": "/privacy-policy",
       "destination": "/api/render?type=page&name=privacy-policy"
     },
-    { "source": "/terms", "destination": "/api/render?type=page&name=terms" },
+    {
+      "source": "/terms",
+      "destination": "/api/render?type=page&name=terms"
+    },
     {
       "source": "/editorial-policy",
       "destination": "/api/render?type=page&name=editorial-policy"
@@ -60,7 +91,6 @@
       "source": "/image-credits",
       "destination": "/api/render?type=page&name=image-credits"
     },
-
     {
       "source": "/quiz/:slug",
       "destination": "/api/render?type=quiz&slug=:slug"
@@ -69,7 +99,65 @@
       "source": "/articles/:slug",
       "destination": "/api/render?type=article&slug=:slug"
     },
-
-    { "source": "/(.*)", "destination": "/app.html" }
+    {
+      "source": "/en",
+      "destination": "/api/render?type=home&lang=en"
+    },
+    {
+      "source": "/en/explore",
+      "destination": "/api/render?type=explore&lang=en"
+    },
+    {
+      "source": "/en/categories",
+      "destination": "/api/render?type=categories&lang=en"
+    },
+    {
+      "source": "/en/articles",
+      "destination": "/api/render?type=articles-index&lang=en"
+    },
+    {
+      "source": "/en/about",
+      "destination": "/api/render?type=page&name=about&lang=en"
+    },
+    {
+      "source": "/en/contact",
+      "destination": "/api/render?type=page&name=contact&lang=en"
+    },
+    {
+      "source": "/en/faq",
+      "destination": "/api/render?type=page&name=faq&lang=en"
+    },
+    {
+      "source": "/en/privacy-policy",
+      "destination": "/api/render?type=page&name=privacy-policy&lang=en"
+    },
+    {
+      "source": "/en/terms",
+      "destination": "/api/render?type=page&name=terms&lang=en"
+    },
+    {
+      "source": "/en/editorial-policy",
+      "destination": "/api/render?type=page&name=editorial-policy&lang=en"
+    },
+    {
+      "source": "/en/image-credits",
+      "destination": "/api/render?type=page&name=image-credits&lang=en"
+    },
+    {
+      "source": "/en/quiz/:slug",
+      "destination": "/api/render?type=quiz&slug=:slug&lang=en"
+    },
+    {
+      "source": "/en/articles/:slug",
+      "destination": "/api/render?type=article&slug=:slug&lang=en"
+    },
+    {
+      "source": "/en/(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/app.html"
+    }
   ]
 }

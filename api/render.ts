@@ -20,6 +20,16 @@
 import { getQuizIntro } from "../src/data/quiz-intros.js";
 import { migratedSlug } from "../src/data/slug-migrations.js";
 import { IMAGE_CREDITS } from "../src/data/image-credits.js";
+import {
+  DEFAULT_LOCALE,
+  hasEnglishArticle,
+  hasEnglishQuiz,
+  isLocale,
+  localeDir,
+  ogLocale,
+  pathForLocale,
+  type Locale,
+} from "../src/lib/locale-routing.js";
 import { translations } from "../src/lib/translations.js";
 import {
   CANONICAL_HOST,
@@ -30,9 +40,14 @@ import {
   paragraphs,
 } from "./_shared.js";
 
-/** Arabic is the canonical, indexed language — see api/_shared.ts. */
-const t = (key: string): string =>
-  translations.ar[key] || translations.en[key] || "";
+/**
+ * Arabic remains canonical, but English now has its own URLs under /en, so
+ * every string has to be resolved against the locale being rendered rather
+ * than hardcoded. Falls back through Arabic so a missing English key shows
+ * real text instead of a blank.
+ */
+const t = (key: string, locale: Locale = DEFAULT_LOCALE): string =>
+  translations[locale]?.[key] || translations.ar[key] || translations.en[key] || "";
 
 /**
  * Contact address. The site is al-maarefah.com; the copy previously pointed at
@@ -44,6 +59,14 @@ const CONTACT_EMAIL = "info@al-maarefah.com";
 const SITE_NAME = "المعرفة";
 const SITE_TAGLINE =
   "منصة عربية مجانية للاختبارات النفسية واختبارات الذكاء والمقالات في علم النفس وتطوير الذات.";
+
+const siteName = (locale: Locale): string =>
+  locale === "ar" ? SITE_NAME : "Al-Maarefah";
+
+const siteTagline = (locale: Locale): string =>
+  locale === "ar"
+    ? SITE_TAGLINE
+    : "A free Arabic platform for personality and IQ tests, with articles on psychology and self-development.";
 
 // The built shell (with hashed asset tags) is cached per warm instance.
 let shellCache: string | null = null;
@@ -128,6 +151,17 @@ const absoluteImage = (
 };
 
 interface Meta {
+  /** Language this page is being rendered in. Drives lang/dir/og:locale. */
+  locale: Locale;
+  /**
+   * Unprefixed path of this page, set when the OTHER locale has a real
+   * version of it. Emits the reciprocal hreflang pair; omitted when there is
+   * no translation, because pointing hreflang at a page that just re-serves
+   * Arabic is worse than saying nothing.
+   */
+  altPath?: string;
+  /** Overrides the canonical — used to point an untranslated /en page home. */
+  canonicalUrl?: string;
   title: string;
   description: string;
   url: string;
@@ -145,6 +179,23 @@ interface Meta {
   ssrData?: { articles?: unknown[]; quizzes?: unknown[] };
 }
 
+/**
+ * Reciprocal hreflang for the two language trees, plus x-default on Arabic.
+ *
+ * Only emitted when the page genuinely exists in both languages — see the
+ * note on Meta.altPath. Google drops an hreflang pair that does not point
+ * back, so both sides must agree.
+ */
+function alternatesHtml(meta: Meta): string {
+  if (!meta.altPath) return "";
+  const origin = new URL(meta.url).origin;
+  const link = (hreflang: string, path: string) =>
+    `<link rel="alternate" hreflang="${hreflang}" href="${escapeHtml(origin + path)}" />`;
+  const ar = pathForLocale(meta.altPath, "ar");
+  const en = pathForLocale(meta.altPath, "en");
+  return link("ar", ar) + link("en", en) + link("x-default", ar);
+}
+
 function render(shell: string, meta: Meta): string {
   const head =
     `<title>${escapeHtml(meta.title)}</title>` +
@@ -152,13 +203,14 @@ function render(shell: string, meta: Meta): string {
     `<meta property="og:title" content="${escapeHtml(meta.title)}" />` +
     `<meta property="og:description" content="${escapeHtml(meta.description)}" />` +
     `<meta property="og:url" content="${escapeHtml(meta.url)}" />` +
-    `<meta property="og:locale" content="ar_AR" />` +
+    `<meta property="og:locale" content="${ogLocale(meta.locale)}" />` +
     (meta.image
       ? `<meta property="og:image" content="${escapeHtml(meta.image)}" />`
       : "") +
     `<meta name="twitter:title" content="${escapeHtml(meta.title)}" />` +
     `<meta name="twitter:description" content="${escapeHtml(meta.description)}" />` +
-    `<link rel="canonical" href="${escapeHtml(meta.url)}" />` +
+    `<link rel="canonical" href="${escapeHtml(meta.canonicalUrl ?? meta.url)}" />` +
+    alternatesHtml(meta) +
     (meta.noindex
       ? `<meta name="robots" content="noindex,follow" />`
       : "") +
@@ -182,8 +234,10 @@ function render(shell: string, meta: Meta): string {
     : "";
 
   let html = shell;
-  // Every server-rendered page is the canonical Arabic version.
-  html = html.replace(/<html[^>]*>/i, `<html lang="ar" dir="rtl" class="dark">`);
+  html = html.replace(
+    /<html[^>]*>/i,
+    `<html lang="${meta.locale}" dir="${localeDir(meta.locale)}" class="dark">`,
+  );
   // Drop the shell's existing <title> so ours wins.
   html = html.replace(/<title>[\s\S]*?<\/title>/i, "");
   // Drop the shell's static SEO tags too — crawlers take the FIRST og:* tag,
@@ -193,6 +247,7 @@ function render(shell: string, meta: Meta): string {
     "",
   );
   html = html.replace(/<link[^>]*rel="canonical"[^>]*>/gi, "");
+  html = html.replace(/<link[^>]*hreflang="[^"]*"[^>]*>/gi, "");
   html = html.replace(/<meta[^>]*name="robots"[^>]*>/gi, "");
   // Inject our head tags right before </head>. The data payload goes last so
   // it is defined before the app bundle executes.
@@ -206,26 +261,26 @@ function render(shell: string, meta: Meta): string {
 }
 
 /** Site-wide chrome so every rendered page has real navigation for crawlers. */
-const siteNav = (origin: string): string =>
+const siteNav = (origin: string, locale: Locale = DEFAULT_LOCALE): string =>
   `<nav><ul>` +
   (
     [
-      ["/", t("nav.home")],
-      ["/explore", t("nav.explore")],
-      ["/categories", t("nav.categories")],
-      ["/articles", t("nav.articles")],
-      ["/about", t("nav.about")],
-      ["/contact", t("nav.contact")],
-      ["/faq", t("faq.title")],
-      ["/privacy-policy", t("privacy.title")],
-      ["/terms", t("terms.title")],
-      ["/editorial-policy", t("editorial.title")],
-      ["/image-credits", t("credits.title")],
+      ["/", t("nav.home", locale)],
+      ["/explore", t("nav.explore", locale)],
+      ["/categories", t("nav.categories", locale)],
+      ["/articles", t("nav.articles", locale)],
+      ["/about", t("nav.about", locale)],
+      ["/contact", t("nav.contact", locale)],
+      ["/faq", t("faq.title", locale)],
+      ["/privacy-policy", t("privacy.title", locale)],
+      ["/terms", t("terms.title", locale)],
+      ["/editorial-policy", t("editorial.title", locale)],
+      ["/image-credits", t("credits.title", locale)],
     ] as Array<[string, string]>
   )
     .map(
       ([path, label]) =>
-        `<li><a href="${origin}${path}">${escapeHtml(label)}</a></li>`,
+        `<li><a href="${origin}${pathForLocale(path, locale)}">${escapeHtml(label)}</a></li>`,
     )
     .join("") +
   `</ul></nav>`;
@@ -237,6 +292,45 @@ const siteNav = (origin: string): string =>
 const DISCLAIMER =
   "<p><small>تنبيه: اختبارات ومقالات المعرفة مخصّصة للترفيه والتأمل الذاتي، " +
   "وهي ليست تشخيصًا نفسيًا أو طبيًا ولا تُغني عن استشارة مختص.</small></p>";
+
+/**
+ * The stored doc as it reads in `locale`.
+ *
+ * localizedArticle/localizedQuiz in src/ do this for the UI, but they pull in
+ * the translation runtime, which has no business in a render function. This
+ * covers only the fields that reach the crawled HTML.
+ */
+function inLocale(
+  doc: Record<string, unknown>,
+  locale: Locale,
+): Record<string, unknown> {
+  if (locale === DEFAULT_LOCALE) return doc;
+  const en = (doc as { i18n?: Record<string, Record<string, unknown>> }).i18n?.en;
+  if (!en) return doc;
+  const take = (k: string) => {
+    const v = en[k];
+    return typeof v === "string" && v.trim() ? v : doc[k];
+  };
+  const results = Array.isArray(doc.results)
+    ? (doc.results as Record<string, unknown>[]).map((r) => {
+        const lr = (en.results as Record<string, Record<string, unknown>>)?.[
+          String(r.id)
+        ];
+        return lr ? { ...r, title: lr.title ?? r.title, description: lr.description ?? r.description } : r;
+      })
+    : doc.results;
+  return {
+    ...doc,
+    title: take("title"),
+    description: take("description"),
+    excerpt: take("excerpt"),
+    content: take("content"),
+    longDescription: take("longDescription"),
+    seoTitle: take("seoTitle"),
+    seoDescription: take("seoDescription"),
+    results,
+  };
+}
 
 /** Fields may be a plain string or an { ar, en } pair depending on the doc. */
 const localized = (doc: Record<string, unknown>, field: string): string => {
@@ -260,16 +354,25 @@ const cardList = (
   base: string,
   docs: Record<string, unknown>[],
   descField: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): string =>
   `<ul>` +
   docs
     .filter((d) => typeof d.slug === "string" && (d.slug as string).trim())
     .map((d) => {
       const slug = encodeURIComponent(String(d.slug).trim());
-      const title = localized(d, "title");
-      const desc = localized(d, descField) || localized(d, "description");
+      // Cards on an /en page link into the English tree and use the English
+      // title where one exists, so the listing is not half-translated.
+      const en = (d as { i18n?: Record<string, Record<string, unknown>> }).i18n?.en;
+      const useEn = locale === "en" && en;
+      const title = (useEn && String(en.title ?? "").trim()) || localized(d, "title");
+      const desc =
+        (useEn && String(en[descField] ?? en.description ?? "").trim()) ||
+        localized(d, descField) ||
+        localized(d, "description");
+      const href = `${origin}${pathForLocale(`${base}/${slug}`, locale)}`;
       return (
-        `<li><h3><a href="${origin}${base}/${slug}">${escapeHtml(title)}</a></h3>` +
+        `<li><h3><a href="${href}">${escapeHtml(title)}</a></h3>` +
         (desc ? `<p>${escapeHtml(desc)}</p>` : "") +
         `</li>`
       );
@@ -287,7 +390,8 @@ interface StaticPageSpec {
   subtitleKey?: string;
   /** [headingKey | null, ...bodyKeys] */
   blocks: Array<[string | null, ...string[]]>;
-  extraHtml?: string;
+  /** A finished block, or one that depends on the locale. */
+  extraHtml?: string | ((locale: Locale) => string);
 }
 
 const mailtoHtml = `<p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>`;
@@ -296,13 +400,13 @@ const mailtoHtml = `<p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p
  * Unsplash's terms want the photographer credited with a link back, so the
  * credit has to survive in the crawled HTML too, not only in the React page.
  */
-const imageCreditsHtml =
+const imageCreditsHtml = (locale: Locale): string =>
   "<ul>" +
   IMAGE_CREDITS.map(
     (c) =>
-      `<li>${escapeHtml(c.title)} — ${escapeHtml(t("credits.photo_by"))} ` +
+      `<li>${escapeHtml(c.title)} — ${escapeHtml(t("credits.photo_by", locale))} ` +
       `<a href="${escapeHtml(c.photographerUrl)}" rel="nofollow noopener">${escapeHtml(c.photographer)}</a> ` +
-      `(<a href="${escapeHtml(c.source)}" rel="nofollow noopener">${escapeHtml(t("credits.on_unsplash"))}</a>)</li>`,
+      `(<a href="${escapeHtml(c.source)}" rel="nofollow noopener">${escapeHtml(t("credits.on_unsplash", locale))}</a>)</li>`,
   ).join("") +
   "</ul>";
 
@@ -392,33 +496,39 @@ const STATIC_PAGES: Record<string, StaticPageSpec> = {
   },
 };
 
-function renderStaticPage(origin: string, spec: StaticPageSpec): Meta {
-  const title = t(spec.titleKey);
-  const subtitle = spec.subtitleKey ? t(spec.subtitleKey) : "";
+function renderStaticPage(
+  origin: string,
+  spec: StaticPageSpec,
+  locale: Locale = DEFAULT_LOCALE,
+): Meta {
+  const title = t(spec.titleKey, locale);
+  const subtitle = spec.subtitleKey ? t(spec.subtitleKey, locale) : "";
   const body = spec.blocks
     .map(([headingKey, ...bodyKeys]) => {
-      const heading = headingKey ? t(headingKey) : "";
+      const heading = headingKey ? t(headingKey, locale) : "";
       return (
         `<section>` +
         (heading ? `<h2>${escapeHtml(heading)}</h2>` : "") +
-        bodyKeys.map((k) => `<p>${escapeHtml(t(k))}</p>`).join("") +
+        bodyKeys.map((k) => `<p>${escapeHtml(t(k, locale))}</p>`).join("") +
         `</section>`
       );
     })
     .join("");
 
   const contentHtml =
-    `<main>${siteNav(origin)}<article>` +
+    `<main>${siteNav(origin, locale)}<article>` +
     `<h1>${escapeHtml(title)}</h1>` +
     (subtitle ? `<p>${escapeHtml(subtitle)}</p>` : "") +
     body +
-    (spec.extraHtml ?? "") +
+    (typeof spec.extraHtml === "function" ? spec.extraHtml(locale) : (spec.extraHtml ?? "")) +
     `</article></main>`;
 
   return {
-    title: `${title} · ${SITE_NAME}`,
-    description: subtitle || SITE_TAGLINE,
-    url: `${origin}${spec.path}`,
+    locale,
+    altPath: spec.path,
+    title: `${title} · ${siteName(locale)}`,
+    description: subtitle || siteTagline(locale),
+    url: `${origin}${pathForLocale(spec.path, locale)}`,
     contentHtml,
   };
 }
@@ -474,6 +584,7 @@ const articleForClient = (
   createdAt: a.createdAt ?? null,
   updatedAt: a.updatedAt ?? null,
   ...(full && Array.isArray(a.faq) ? { faq: a.faq } : {}),
+  ...i18nForClient(a, full),
 });
 
 const quizForClient = (
@@ -495,7 +606,36 @@ const quizForClient = (
   published: true,
   createdAt: q.createdAt ?? null,
   updatedAt: q.updatedAt ?? null,
+  ...i18nForClient(q, full),
 });
+
+/**
+ * Carry the translation into the hydration payload.
+ *
+ * The client localizes from `i18n` at render time, and this payload used to
+ * drop it — so an /en page would paint English from the server and then swap
+ * itself back to Arabic the moment React mounted. The page subject gets the
+ * whole map; list items get only the few fields a card shows, which keeps the
+ * payload from ballooning with every translated question.
+ */
+const i18nForClient = (
+  doc: Record<string, unknown>,
+  full: boolean,
+): Record<string, unknown> => {
+  const i18n = doc.i18n as Record<string, Record<string, unknown>> | undefined;
+  if (!i18n) return {};
+  if (full) return { i18n };
+  const light: Record<string, Record<string, unknown>> = {};
+  for (const [lang, v] of Object.entries(i18n)) {
+    if (!v) continue;
+    light[lang] = {
+      ...(v.title ? { title: v.title } : {}),
+      ...(v.description ? { description: v.description } : {}),
+      ...(v.excerpt ? { excerpt: v.excerpt } : {}),
+    };
+  }
+  return { i18n: light };
+};
 
 /** Build the payload, marking one item as "full" when it is the page subject. */
 const buildSsrData = (
@@ -529,6 +669,9 @@ export default async function handler(req: any, res: any) {
   const type = (req?.query?.type as string) || "";
   const slug = (req?.query?.slug as string) || "";
   const name = (req?.query?.name as string) || "";
+  // vercel.json rewrites /en/<path> here with lang=en; everything else is ar.
+  const langParam = req?.query?.lang as string | undefined;
+  const locale: Locale = isLocale(langParam) ? langParam : DEFAULT_LOCALE;
 
   const send = (meta: Meta, shell: string, sMaxAge = 300) => {
     res
@@ -557,7 +700,7 @@ export default async function handler(req: any, res: any) {
         ]);
         return send(
           {
-            ...renderStaticPage(origin, spec),
+            ...renderStaticPage(origin, spec, locale),
             ssrData: buildSsrData(articles, quizzes),
           },
           shell,
@@ -589,17 +732,17 @@ export default async function handler(req: any, res: any) {
 
       if (type === "articles-index") {
         contentHtml =
-          `<main>${siteNav(origin)}<h1>${escapeHtml(t("articles.title"))}</h1>` +
-          `<p>${escapeHtml(t("articles.subtitle") || SITE_TAGLINE)}</p>` +
-          cardList(origin, "/articles", articles, "excerpt") +
+          `<main>${siteNav(origin, locale)}<h1>${escapeHtml(t("articles.title", locale))}</h1>` +
+          `<p>${escapeHtml(t("articles.subtitle", locale) || siteTagline(locale))}</p>` +
+          cardList(origin, "/articles", articles, "excerpt", locale) +
           DISCLAIMER +
           `</main>`;
         meta = {
-          title: `${t("articles.title")} · ${SITE_NAME}`,
-          description:
-            t("articles.subtitle") ||
-            "مقالات في علم النفس والشخصية والذكاء وتطوير الذات.",
-          url: `${origin}/articles`,
+          locale,
+          altPath: "/articles",
+          title: `${t("articles.title", locale)} · ${siteName(locale)}`,
+          description: t("articles.subtitle", locale) || siteTagline(locale),
+          url: `${origin}${pathForLocale("/articles", locale)}`,
         };
       } else if (type === "categories") {
         const byCategory = new Map<string, Record<string, unknown>[]>();
@@ -609,51 +752,68 @@ export default async function handler(req: any, res: any) {
           byCategory.get(cat)!.push(q);
         }
         contentHtml =
-          `<main>${siteNav(origin)}<h1>${escapeHtml(t("categories.title"))}</h1>` +
+          `<main>${siteNav(origin, locale)}<h1>${escapeHtml(t("categories.title", locale))}</h1>` +
           [...byCategory.entries()]
             .map(
               ([cat, items]) =>
                 `<section><h2>${escapeHtml(cat)}</h2>` +
-                cardList(origin, "/quiz", items, "description") +
+                cardList(origin, "/quiz", items, "description", locale) +
                 `</section>`,
             )
             .join("") +
           DISCLAIMER +
           `</main>`;
         meta = {
-          title: `${t("categories.title")} · ${SITE_NAME}`,
-          description: "تصفح اختبارات المعرفة حسب التصنيف.",
-          url: `${origin}/categories`,
+          locale,
+          altPath: "/categories",
+          title: `${t("categories.title", locale)} · ${siteName(locale)}`,
+          description:
+            t("categories.subtitle", locale) || siteTagline(locale),
+          url: `${origin}${pathForLocale("/categories", locale)}`,
         };
       } else if (type === "explore") {
         contentHtml =
-          `<main>${siteNav(origin)}<h1>${escapeHtml(t("explore.title"))}</h1>` +
-          `<p>${escapeHtml(SITE_TAGLINE)}</p>` +
-          cardList(origin, "/quiz", quizzes, "description") +
+          `<main>${siteNav(origin, locale)}<h1>${escapeHtml(t("explore.title", locale))}</h1>` +
+          `<p>${escapeHtml(siteTagline(locale))}</p>` +
+          cardList(origin, "/quiz", quizzes, "description", locale) +
           DISCLAIMER +
           `</main>`;
         meta = {
-          title: `${t("explore.title")} · ${SITE_NAME}`,
-          description: `تصفح جميع اختبارات المعرفة (${quizzes.length} اختبارًا).`,
-          url: `${origin}/explore`,
+          locale,
+          altPath: "/explore",
+          title: `${t("explore.title", locale)} · ${siteName(locale)}`,
+          description:
+            locale === "ar"
+              ? `تصفح جميع اختبارات المعرفة (${quizzes.length} اختبارًا).`
+              : `Browse all ${quizzes.length} Al-Maarefah quizzes.`,
+          url: `${origin}${pathForLocale("/explore", locale)}`,
         };
       } else {
         contentHtml =
-          `<main>${siteNav(origin)}` +
-          `<h1>${escapeHtml(SITE_NAME)} — اختبارات شخصية وذكاء ومقالات نفسية</h1>` +
-          `<p>${escapeHtml(SITE_TAGLINE)}</p>` +
-          `<section><h2>${escapeHtml(t("home.trending"))}</h2>` +
-          cardList(origin, "/quiz", quizzes, "description") +
+          `<main>${siteNav(origin, locale)}` +
+          `<h1>${escapeHtml(
+            locale === "ar"
+              ? `${SITE_NAME} — اختبارات شخصية وذكاء ومقالات نفسية`
+              : "Al-Maarefah — personality and IQ tests, and psychology articles",
+          )}</h1>` +
+          `<p>${escapeHtml(siteTagline(locale))}</p>` +
+          `<section><h2>${escapeHtml(t("home.trending", locale))}</h2>` +
+          cardList(origin, "/quiz", quizzes, "description", locale) +
           `</section>` +
-          `<section><h2>${escapeHtml(t("articles.title"))}</h2>` +
-          cardList(origin, "/articles", articles, "excerpt") +
+          `<section><h2>${escapeHtml(t("articles.title", locale))}</h2>` +
+          cardList(origin, "/articles", articles, "excerpt", locale) +
           `</section>` +
           DISCLAIMER +
           `</main>`;
         meta = {
-          title: `${SITE_NAME} — اختبارات شخصية وذكاء ومقالات نفسية مجانًا`,
-          description: SITE_TAGLINE,
-          url: `${origin}/`,
+          locale,
+          altPath: "/",
+          title:
+            locale === "ar"
+              ? `${siteName(locale)} — اختبارات شخصية وذكاء ومقالات نفسية مجانًا`
+              : `${siteName(locale)} — free personality and IQ tests, and psychology articles`,
+          description: siteTagline(locale),
+          url: `${origin}${pathForLocale("/", locale)}`,
         };
       }
 
@@ -666,9 +826,9 @@ export default async function handler(req: any, res: any) {
             {
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: SITE_NAME,
+              name: siteName(locale),
               url: `${origin}/`,
-              inLanguage: "ar",
+              inLanguage: locale,
             },
           ],
         },
@@ -686,10 +846,17 @@ export default async function handler(req: any, res: any) {
       if (!quiz && redirectIfMigrated(res, origin, "quiz", "quiz", slug, quizzes))
         return;
       if (quiz) {
-        const title = `${clean(quiz.title)} · ${SITE_NAME}`;
+        // An /en page for a quiz with no English translation would just be
+        // the Arabic one on a second URL, so it is served noindex with its
+        // canonical pointing home rather than claiming to be a translation.
+        const translated = hasEnglishQuiz(quiz);
+        const usable = locale === "ar" || translated;
+        const view = usable ? inLocale(quiz, locale) : quiz;
+        const arUrl = `${origin}/quiz/${encodeURIComponent(slug)}`;
+        const title = `${clean(view.title)} · ${siteName(locale)}`;
         const description =
-          clean(quiz.seoDescription) || clean(quiz.description);
-        const results = Array.isArray(quiz.results) ? quiz.results : [];
+          clean(view.seoDescription) || clean(view.description);
+        const results = Array.isArray(view.results) ? view.results : [];
         const resultsHtml = results
           .map(
             (r: any) =>
@@ -697,23 +864,34 @@ export default async function handler(req: any, res: any) {
           )
           .join("");
         const contentHtml =
-          `<main>${siteNav(origin)}<article>` +
-          `<h1>${escapeHtml(clean(quiz.title))}</h1>` +
-          paragraphs(quiz.description) +
+          `<main>${siteNav(origin, locale)}<article>` +
+          `<h1>${escapeHtml(clean(view.title))}</h1>` +
+          paragraphs(view.description) +
           // The long-form intro: whatever an editor wrote, else the
           // repo-side fallback. Every quiz in Firestore currently has an
           // empty longDescription, leaving these pages at ~40 words of prose.
-          markdownToHtml(getQuizIntro(quiz.slug, quiz.longDescription)) +
-          `<p>${escapeHtml(clean(quiz.category))}</p>` +
-          (resultsHtml ? `<h2>النتائج المحتملة</h2>${resultsHtml}` : "") +
-          `<p><a href="${origin}/quiz/${encodeURIComponent(slug)}/take">ابدأ الاختبار</a></p>` +
+          markdownToHtml(
+            locale === "en" && typeof view.longDescription === "string" && view.longDescription.trim()
+              ? (view.longDescription as string)
+              : getQuizIntro(quiz.slug, view.longDescription),
+          ) +
+          `<p>${escapeHtml(clean(view.category))}</p>` +
+          (resultsHtml
+            ? `<h2>${escapeHtml(locale === "ar" ? "النتائج المحتملة" : "Possible results")}</h2>${resultsHtml}`
+            : "") +
+          `<p><a href="${origin}${pathForLocale(`/quiz/${encodeURIComponent(slug)}/take`, locale)}">${escapeHtml(
+            locale === "ar" ? "ابدأ الاختبار" : "Start the quiz",
+          )}</a></p>` +
           DISCLAIMER +
           `</article></main>`;
         return send(
           {
+            locale,
+            ...(translated ? { altPath: `/quiz/${encodeURIComponent(slug)}` } : {}),
+            ...(usable ? {} : { canonicalUrl: arUrl, noindex: true }),
             title,
             description,
-            url: `${origin}/quiz/${encodeURIComponent(slug)}`,
+            url: `${origin}${pathForLocale(`/quiz/${encodeURIComponent(slug)}`, locale)}`,
             image: absoluteImage(origin, quiz.thumbnail, "quiz", slug),
             contentHtml,
             ssrData: buildSsrData(articles, quizzes, slug),
@@ -736,30 +914,41 @@ export default async function handler(req: any, res: any) {
       )
         return;
       if (article) {
-        const title = `${clean(article.title)} · ${SITE_NAME}`;
-        const description = clean(article.excerpt);
+        // Five of the twenty articles have no English yet. Those /en URLs
+        // render the Arabic but say so with noindex + a canonical home, so
+        // Google never sees two URLs claiming the same text.
+        const translated = hasEnglishArticle(article);
+        const usable = locale === "ar" || translated;
+        const view = usable ? inLocale(article, locale) : article;
+        const path = `/articles/${encodeURIComponent(slug)}`;
+        const arUrl = `${origin}${path}`;
+        const title = `${clean(view.title)} · ${siteName(locale)}`;
+        const description = clean(view.excerpt);
         const published = String(article.createdAt ?? "");
         const modified = String(article.updatedAt ?? published);
-        const url = `${origin}/articles/${encodeURIComponent(slug)}`;
+        const url = `${origin}${pathForLocale(path, locale)}`;
         const image = absoluteImage(origin, article.image, "article", slug);
 
         const contentHtml =
-          `<main>${siteNav(origin)}<article>` +
-          `<h1>${escapeHtml(clean(article.title))}</h1>` +
-          `<p>${escapeHtml(clean(article.category))}</p>` +
-          paragraphs(article.excerpt) +
-          markdownToHtml(article.content) +
+          `<main>${siteNav(origin, locale)}<article>` +
+          `<h1>${escapeHtml(clean(view.title))}</h1>` +
+          `<p>${escapeHtml(clean(view.category))}</p>` +
+          paragraphs(view.excerpt) +
+          markdownToHtml(view.content) +
           DISCLAIMER +
           `</article></main>`;
 
         return send(
           {
+            locale,
+            ...(translated ? { altPath: path } : {}),
+            ...(usable ? {} : { canonicalUrl: arUrl }),
             title,
             description,
             url,
             image,
             contentHtml,
-            noindex: !isIndexableArticle(article),
+            noindex: !usable || !isIndexableArticle(article),
             ssrData: buildSsrData(articles, quizzes, slug),
             jsonLd: [
               {
@@ -767,16 +956,16 @@ export default async function handler(req: any, res: any) {
                 "@type": "Article",
                 headline: clean(article.title),
                 description,
-                inLanguage: "ar",
+                inLanguage: locale,
                 mainEntityOfPage: { "@type": "WebPage", "@id": url },
                 author: {
                   "@type": "Organization",
-                  name: SITE_NAME,
+                  name: siteName(locale),
                   url: `${origin}/editorial-policy`,
                 },
                 publisher: {
                   "@type": "Organization",
-                  name: SITE_NAME,
+                  name: siteName(locale),
                   logo: {
                     "@type": "ImageObject",
                     url: `${origin}/al-maarefah-icon.png`,
@@ -814,7 +1003,7 @@ export default async function handler(req: any, res: any) {
       .setHeader("Retry-After", "120");
     return res.send(
       `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">` +
-        `<title>${SITE_NAME}</title></head><body><h1>${SITE_NAME}</h1>` +
+        `<title>${siteName(locale)}</title></head><body><h1>${siteName(locale)}</h1>` +
         `<p>تعذّر تحميل الصفحة مؤقتًا. يرجى المحاولة بعد قليل.</p></body></html>`,
     );
   }

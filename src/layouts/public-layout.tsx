@@ -1,12 +1,24 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { useLanguage } from "@/lib/i18n";
+import { splitLocale } from "@/lib/locale-routing";
 
 function PublicLayout() {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const { pathname } = useLocation();
+
+  // The URL decides the language, not the stored preference. Both trees mount
+  // this layout, so landing on /en/… switches the app to English even when
+  // localStorage still says Arabic — otherwise a shared English link would
+  // open in Arabic for anyone who had used the site before.
+  const urlLocale = splitLocale(pathname).locale;
+  useEffect(() => {
+    if (language !== urlLocale) setLanguage(urlLocale);
+  }, [urlLocale, language, setLanguage]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
